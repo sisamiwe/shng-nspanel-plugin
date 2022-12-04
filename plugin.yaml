@@ -75,13 +75,31 @@ parameters:
                  -1 shows all table entries on one page.'
 
 item_attributes:
-    # Definition of item attributes defined by this plugin (enter 'item_attributes: NONE', if section should be empty)
 
-item_structs:
+    nspanel_topic:
+        type: str
+        description:
+            de: Topic um mit dem NSPanels zu kommunizieren (%topic%)
+            en: Topic to be used to communicate with the NSPanels (%topic%)
+
+    nspanel_attr:
+        type: str
+        default: online
+        description:
+            de: "Zu lesendes/schreibendes Attribut des NSPanels."
+            en: "Attribute of NSPanels shall be read/written."
+        valid_list:
+            - online
+            - temp_analog
+            - temp_esp32
+            - power1
+            - power2
+
+item_structs: NONE
     # Definition of item-structure templates for this plugin (enter 'item_structs: NONE', if section should be empty)
 
-plugin_functions:
+plugin_functions: NONE
     # Definition of plugin functions defined by this plugin (enter 'plugin_functions: NONE', if section should be empty)
 
-logic_parameters:
+logic_parameters: NONE
     # Definition of logic parameters defined by this plugin (enter 'logic_parameters: NONE', if section should be empty)

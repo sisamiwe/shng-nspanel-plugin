@@ -83,6 +83,7 @@ class NSPanel(MqttPlugin):
         self.current_page = 0
         self.tasmota_devices = {}
         self.custom_msg_queue = queue.Queue(maxsize=50)  # Queue containing last 50 messages containing "CustomRecv"
+        self.nspanel_items = []
         self.alive = None
 
         # read panel config file
@@ -164,26 +165,28 @@ class NSPanel(MqttPlugin):
                         with the item, caller, source and dest as arguments and in case of the knx plugin the value
                         can be sent to the knx with a knx write function within the knx plugin.
         """
-        if self.has_iattr(item.conf, 'foo_itemid'):
-            self.logger.debug(f"parse item: {item.property.path}")
+        if self.has_iattr(item.conf, 'nspanel_topic'):
+            nspanel_topic = self.get_iattr_value(item.conf, 'nspanel_topic')
+            self.logger.info(f"parsing item: {item.id()} with nspanel_topic={nspanel_topic}")
+            nspanel_attr = self.get_iattr_value(item.conf, 'nspanel_attr')
 
-            # subscribe to topic for relay state
-            # mqtt_id = self.get_iattr_value(item.conf, 'foo_itemid').upper()
-            # payload_type = item.property.type
-            # topic = 'shellies/shellyplug-' + mqtt_id + '/relay/0'
-            # bool_values = ['off','on']
-            # self.add_subscription(topic, payload_type, bool_values, item=item)
+            if nspanel_attr:
+                self.logger.info(f"Item={item.id()} identified for NSPanel with nspanel_attr={nspanel_attr}")
+                nspanel_attr = nspanel_attr.lower()
 
-            # alternative:
-            #   self.add_subscription(topic, payload_type, bool_values, callback=self.on_mqtt_message)
-            # and implement callback:
-            #   def on_mqtt_message(self, topic, payload, qos=None, retain=None):
+            # setup dict for new device
+            if not self.tasmota_devices.get(nspanel_topic):
+                self._add_new_device_to_tasmota_devices(nspanel_topic)
+                self.tasmota_devices[nspanel_topic]['status'] = 'item.conf'
 
-            # todo
-            # if interesting item for sending values:
-            #   return self.update_item
+            # fill tasmota_device dict
+            self.tasmota_devices[nspanel_topic]['connected_to_item'] = True
+            self.tasmota_devices[nspanel_topic]['connected_items'][f'item_{nspanel_attr}'] = item
 
-            # if the item is changed in SmartHomeNG and shall update the mqtt device, enable:
+            # append to list used for web interface
+            if item not in self.nspanel_items:
+                self.nspanel_items.append(item)
+
             # return self.update_item
 
     def parse_logic(self, logic):
@@ -329,9 +332,6 @@ class NSPanel(MqttPlugin):
 
             self.logger.debug(f"on_mqtt_discovery_message - sensor: {device_id=}, {sensor_payload=}, {self.tasmota_devices=}")
 
-            # ToDo: Lösen von "dictionary changed size during iteration" und Übertrag in Tasmota Plugin
-            """
-            # ToDo: Übertrag in Tasmota Plugin (dictionary changed size during iteration)
             # find matching tasmota_topic
             tasmota_topic = None
             for entry in list(self.tasmota_devices.keys()):
@@ -343,7 +343,6 @@ class NSPanel(MqttPlugin):
             if sensor_payload and tasmota_topic:
                 self.logger.info(f"Discovered Tasmota Device with topic={tasmota_topic} and SensorInformation")
                 self._handle_sensor(tasmota_topic, '', sensor_payload)
-            """
 
     def on_mqtt_lwt_message(self, topic: str, payload: bool, qos: int = None, retain: bool = None) -> None:
         """
@@ -1128,22 +1127,32 @@ class NSPanel(MqttPlugin):
 
     def HandleButtonEvent(self, words):
 
+        # words=['event', 'buttonPress2', 'licht.eg.tv_wand_nische', 'OnOff', '1']
+
         pageName = words[2]
         buttonAction = words[3]
 
-        self.logger.debug(f"{words[0]} - {words[1]} - {words[2]} - {words[3]} - {words[4]} - {self.current_page=}")
+        self.logger.debug(f"HandleButtonEvent: {words[0]} - {words[1]} - {words[2]} - {words[3]} - {words[4]} - {self.current_page=}")
 
         if 'navigate' in pageName:
             self.GeneratePage(pageName[8:len(pageName)])
 
         if buttonAction == 'bNext':
-            self.GeneratePage(self.panel_config['cards'][self._next_page()])
+            self.GeneratePage(self._next_page())
 
         elif buttonAction == 'bPrev':
-            self.GeneratePage(self.panel_config['cards'][self._previous_page()])
+            self.GeneratePage(self._previous_page())
 
         elif buttonAction == 'bExit':
-            self.GeneratePage(self.panel_config['cards'][0])
+            self.GeneratePage(0)
+
+        elif buttonAction == 'OnOff':
+            value = words[4]
+            item = self._get_item(words[2])
+            if item is not None:
+                self.logger.debug(f"item={item.id()} will be set to new value={value}")
+                item(value)
+            self.GeneratePage(self.current_page)
 
     def findPageItem(self, searching: str):
         activePage = self.panel_config['cards'][self.current_page]
@@ -1260,23 +1269,39 @@ class NSPanel(MqttPlugin):
         else:
             return f"send_discovery_mqtt_msg done"
 
-    def send_mqtt_from_nspanel(self, msg_no):
+    def send_mqtt_from_nspanel(self, msg):
+
+        self.logger.debug(f"send_mqtt_from_nspanel called with {msg=}")
 
         link = {1: [f'tele/{self.tasmota_topic}/RESULT', '{"CustomRecv": "event,startup,45,eu"}'],
                 2: [f'tele/{self.tasmota_topic}/RESULT', '{"CustomRecv": "event,buttonPress2,licht.eg.tv_wand_nische,OnOff,0"}'],
                 3: [f'tele/{self.tasmota_topic}/RESULT', '{"CustomRecv": "event,buttonPress2,licht.eg.tv_wand_nische,OnOff,1"}'],
                 4: [f'tele/{self.tasmota_topic}/RESULT', '{"CustomRecv": "event,sleepReached,cardEntities"}'],
                 5: [f'tele/{self.tasmota_topic}/RESULT', '{"CustomRecv": "event,buttonPress2,screensaver,bExit,1"}'],
+                6: [f'tele/{self.tasmota_topic}/SENSOR', '{"Time":"2022-12-03T13:11:26","ANALOG":{"Temperature1":26.9},"ESP32":{"Temperature":36.7},"TempUnit":"C"}'],
+                7: [f'tele/{self.tasmota_topic}/STATE',  '{"Time":"2022-12-03T13:11:26","Uptime":"0T00:20:13","UptimeSec":1213,"Heap":126,"SleepMode":"Dynamic","Sleep":0,"LoadAvg":1000,"MqttCount":1,"Berry":{"HeapUsed":14,"Objects":218},"POWER1":"ON","POWER2":"OFF","Wifi":{"AP":1,"SSId":"FritzBox","BSSId":"F0:B0:14:4A:08:CD","Channel":1,"Mode":"11n","RSSI":42,"Signal":-79,"LinkCount":1,"Downtime":"0T00:00:07"}}'],
+               20: [f'tele/{self.tasmota_topic}/LWT', 'Online'],
+               21: [f'tele/{self.tasmota_topic}/LWT', 'Offline'],
                 }
 
-        if msg_no not in link:
-            return "Message No not defined"
+        if isinstance(msg, int):
+            if msg not in link:
+                return "Message No not defined"
 
-        topic = link.get(msg_no, [f'tele/{self.tasmota_topic}/RESULT', ''])[0]
-        payload = link.get(msg_no, ['', ''])[1]
+            topic = link.get(msg, [f'tele/{self.tasmota_topic}/RESULT', ''])[0]
+            payload = link.get(msg, ['', ''])[1]
+            if 'LWT' in topic:
+                retain = True
+
+        elif isinstance(msg, dict):
+            topic = f'tele/{self.tasmota_topic}/RESULT'
+            payload = msg
+
+        else:
+            return f"Message not defined"
 
         try:
-            self.publish_topic(topic=topic, payload=payload)
+            self.publish_topic(topic=topic, payload=payload, retain=False)
         except Exception as e:
             return f"Exception during send_mqtt_from_nspanel: {e}"
         else:
