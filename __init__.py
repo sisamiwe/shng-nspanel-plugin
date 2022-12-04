@@ -84,6 +84,7 @@ class NSPanel(MqttPlugin):
         self.tasmota_devices = {}
         self.custom_msg_queue = queue.Queue(maxsize=50)  # Queue containing last 50 messages containing "CustomRecv"
         self.nspanel_items = []
+        self.nspanel_init = False
         self.alive = None
 
         # read panel config file
@@ -1054,12 +1055,13 @@ class NSPanel(MqttPlugin):
 
         if typ == 'event':
             if method == 'startup':
-                self.screensaverEnabled = False
-                self.panel_version = words[2]
-                self.panel_model = words[3]
-                self.HandleStartupProcess()
-                self.current_page = 0
-                self.HandleScreensaver()
+                if not self.nspanel_init:
+                    self.screensaverEnabled = False
+                    self.panel_version = words[2]
+                    self.panel_model = words[3]
+                    self.HandleStartupProcess()
+                    self.current_page = 0
+                    self.HandleScreensaver()
 
             elif method == 'sleepReached':
                 # event,sleepReached,cardEntities
