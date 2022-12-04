@@ -330,7 +330,7 @@ class NSPanel(MqttPlugin):
             if 'Time' in sensor_payload:
                 sensor_payload.pop('Time')
 
-            self.logger.debug(f"on_mqtt_discovery_message - sensor: {device_id=}, {sensor_payload=}, {self.tasmota_devices=}")
+            self.logger.debug(f"on_mqtt_discovery_message - sensor: device_id={device_id}, sensor_payload={sensor_payload}, tasmota_devices={self.tasmota_devices}")
 
             # find matching tasmota_topic
             tasmota_topic = None
@@ -660,7 +660,7 @@ class NSPanel(MqttPlugin):
         tpc = tpc.replace("%topic%", topic)
         tpc += detail
 
-        # self.logger.debug(f"publish_topic with {tpc=}, {payload=}")
+        # self.logger.debug(f"publish_topic with tpc={tpc}, payload={payload}")
         self.publish_topic(tpc, payload, item, qos, retain, bool_values)
 
     def add_tasmota_subscription(self, prefix: str, topic: str, detail: str, payload_type: str, bool_values: list = None, item=None, callback=None) -> None:
@@ -715,14 +715,14 @@ class NSPanel(MqttPlugin):
             self.logger.debug(f"{tasmota_topic} unknown.")
 
     def _handle_new_discovered_device(self, tasmota_topic):
-        self.logger.debug(f"_handle_new_discovered_device called with {tasmota_topic=}")
+        self.logger.debug(f"_handle_new_discovered_device called with tasmota_topic={tasmota_topic}")
 
         self._add_new_device_to_tasmota_devices(tasmota_topic)
         self.tasmota_devices[tasmota_topic]['status'] = 'discovered'
         # self._interview_device(tasmota_topic)
 
     def _add_new_device_to_tasmota_devices(self, tasmota_topic):
-        self.logger.debug(f"_add_new_device_to_tasmota_devices called with {tasmota_topic=}")
+        self.logger.debug(f"_add_new_device_to_tasmota_devices called with tasmota_topic={tasmota_topic}")
 
         self.tasmota_devices[tasmota_topic] = {}
         self.tasmota_devices[tasmota_topic]['connected_to_item'] = False
@@ -769,7 +769,7 @@ class NSPanel(MqttPlugin):
         :param topic:          tasmota Topic
         """
 
-        self.logger.debug(f"_interview_device called with {topic=}")
+        self.logger.debug(f"_interview_device called with topic={topic}")
 
         # self.logger.debug(f"run: publishing 'cmnd/{topic}/Status0'")
         self.publish_tasmota_topic(prefix='cmnd', detail='Status0', payload='')
@@ -1124,7 +1124,7 @@ class NSPanel(MqttPlugin):
         pageName = words[2]
         buttonAction = words[3]
 
-        self.logger.debug(f"HandleButtonEvent: {words[0]} - {words[1]} - {words[2]} - {words[3]} - {words[4]} - {self.current_page=}")
+        self.logger.debug(f"HandleButtonEvent: {words[0]} - {words[1]} - {words[2]} - {words[3]} - {words[4]} - current_page={self.current_page}")
 
         if 'navigate' in pageName:
             self.GeneratePage(pageName[8:len(pageName)])
@@ -1154,7 +1154,7 @@ class NSPanel(MqttPlugin):
 
     def GeneratePage(self, page):
 
-        self.logger.debug(f"GeneratePage called with {page=}")
+        self.logger.debug(f"GeneratePage called with page={page}")
 
         page_content = self.panel_config['cards'][page]
 
@@ -1188,14 +1188,14 @@ class NSPanel(MqttPlugin):
         self.logger.debug(f"GenerateDetailPage to be implemented")
 
     def GenerateEntitiesPage(self, page) -> list:
-        self.logger.debug(f"GenerateEntitiesPage called with {page=}")
+        self.logger.debug(f"GenerateEntitiesPage called with page={page}")
         out_msgs = list()
         out_msgs.append('pageType~cardEntities')
         out_msgs.append({'payload': self.GeneratePageElements(page)})
         return out_msgs
 
     def GeneratePageElements(self, page) -> str:
-        self.logger.debug(f"GeneratePageElements called with {page=}")
+        self.logger.debug(f"GeneratePageElements called with page={page}")
 
         page_content = self.panel_config['cards'][page]
 
@@ -1226,7 +1226,7 @@ class NSPanel(MqttPlugin):
         return pageData
 
     def SendToPanel(self, payload):
-        self.logger.debug(f"SendToPanel called with {payload=}")
+        self.logger.debug(f"SendToPanel called with payload={payload}")
 
         if isinstance(payload, list):
             for entry in payload:
@@ -1263,7 +1263,7 @@ class NSPanel(MqttPlugin):
 
     def send_mqtt_from_nspanel(self, msg):
 
-        self.logger.debug(f"send_mqtt_from_nspanel called with {msg=}")
+        self.logger.debug(f"send_mqtt_from_nspanel called with msg={msg}")
 
         link = {1: [f'tele/{self.tasmota_topic}/RESULT', '{"CustomRecv": "event,startup,45,eu"}'],
                 2: [f'tele/{self.tasmota_topic}/RESULT', '{"CustomRecv": "event,buttonPress2,licht.eg.tv_wand_nische,OnOff,0"}'],
