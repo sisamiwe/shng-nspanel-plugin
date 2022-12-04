@@ -110,7 +110,7 @@ class NSPanel(MqttPlugin):
         self.add_tasmota_subscription('tele', self.tasmota_topic, 'STATE',   'dict',                                    callback=self.on_mqtt_message)
         self.add_tasmota_subscription('tele', self.tasmota_topic, 'SENSOR',  'dict',                                    callback=self.on_mqtt_message)
         self.add_tasmota_subscription('tele', self.tasmota_topic, 'RESULT',  'dict',                                    callback=self.on_mqtt_message)
-        self.add_tasmota_subscription('tele', self.tasmota_topic, 'INFO3',   'dict',                                    callback=self.on_mqtt_message)
+        self.add_tasmota_subscription('tele', self.tasmota_topic, 'INFO3',   'dict',                                    callback=self.on_mqtt_info_message)
         self.add_tasmota_subscription('stat', self.tasmota_topic, 'POWER',   'num',                                     callback=self.on_mqtt_power_message)
         self.add_tasmota_subscription('stat', self.tasmota_topic, 'POWER1',  'num',                                     callback=self.on_mqtt_power_message)
         self.add_tasmota_subscription('stat', self.tasmota_topic, 'POWER2',  'num',                                     callback=self.on_mqtt_power_message)
@@ -512,6 +512,7 @@ class NSPanel(MqttPlugin):
 
             elif info_topic == 'INFO3':
                 # payload={'Info3': {'RestartReason': 'Software/System restart', 'BootCount': 1395}}
+                # payload={'Info3': {'RestartReason': 'Vbat power on reset', 'BootCount': 64}}
                 self.logger.info(f"Received Message decoded as INFO3 message.")
                 restart_reason = payload['Info3']['RestartReason']
                 self.logger.warning(f"Device {tasmota_topic} (IP={self.tasmota_devices[tasmota_topic]['ip']}) just startet. Reason={restart_reason}")
