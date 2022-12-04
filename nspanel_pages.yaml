@@ -1,0 +1,76 @@
+config:
+  screensaver_timeout: 11       # 0 disable, max. 65 sec
+  brightness_screensaver: 11    # 0-100%
+  brightness_active: 99         # 0-100%
+  sleep_brightness:
+    - time: "7:00:00"
+      value: 10
+    - time: "23:00:00"
+      value: 0
+  update_mode: auto-notify
+
+cards:
+  - pageType: cardEntities
+    heading: Arbeitszimmer
+    navigationLeft: 0
+    navigationRight: 0
+    entities:
+      - entity: Arbeitszimmer Licht
+        type: light
+        internalNameEntity: licht.eg.tv_wand_nische
+        iconId: 1
+        iconColor: 17299
+        displayNameEntity: Arbeitszimmer Licht
+        optionalValue: 0
+      - entity: Arbeitszimmer Rollladen
+        type: shutter
+        internalNameEntity: Arbeitszimmer Rollladen
+        iconId: 0
+        iconColor: 17299
+        displayNameEntity: Arbeitszimmer Rollladen
+        optionalValue: iconUp|iconStop|iconDown
+      - entity: Temperatur
+        type: text
+        internalNameEntity: tasmota.snzb02_01.temp
+        iconId: 3
+        iconColor: 17299
+        displayNameEntity: Temperature
+        optionalValue: 22
+      - entity: Schalter
+        type: switch
+        internalNameEntity: switch.entityName
+        iconId: 4
+        iconColor: 17299
+        displayNameEntity: Switch1
+        optionalValue: 0
+
+  - pageType: cardGrid
+    heading: Example Grid
+    navigationLeft: 0
+    navigationRight: 0
+    entities:
+      - entity: Licht
+      - entity: Schalter
+      - entity: delete
+      - entity: Button
+      - entity: Abdeckung
+      - entity: Navi
+
+  - pageType: cardThermo
+    entity: Klima
+
+    pageType: cardMedia
+    entity: MediaPlayer
+
+  - pageType: cardAlarm
+    entity: AlarmPanel
+
+screensaver:
+    heading: Hello World!
+    text: Hier könnte Ihre Werbung stehen
+    # entity: weather.k3ll3r
+    # weatherOverrideForecast4:
+    #     entity: sensor.example_item
+    #     name: name
+    #     icon: lightbulb
+    # alternativeLayout: True

@@ -1,0 +1,87 @@
+# Metadata for the plugin
+plugin:
+    # Global plugin attributes
+    type: interface                  # plugin type (gateway, interface, protocol, system, web)
+    description:
+        de: 'Beispiel Plugin mit MQTT Protokoll Nutzung für SmartHomeNG v1.7 und höher'
+        en: 'Sample plugin using MQTT protocol for SmartHomeNG v1.7 and up'
+    maintainer: sisamiwe
+#    tester:                         # Who tests this plugin?
+    state: develop                   # change to ready when done with development
+#    keywords: iot xyz
+#    documentation: https://github.com/smarthomeNG/smarthome/wiki/CLI-Plugin        # url of documentation (wiki) page
+#    support: https://knx-user-forum.de/forum/supportforen/smarthome-py
+
+    version: 1.0.0                  # Plugin version
+    sh_minversion: 1.8              # minimum shNG version to use this plugin
+#    sh_maxversion:                 # maximum shNG version to use this plugin (leave empty if latest)
+#    py_minversion: 3.6             # minimum Python version to use for this plugin
+#    py_maxversion:                 # maximum Python version to use for this plugin (leave empty if latest)
+    multi_instance: false           # plugin supports multi instance
+    restartable: unknown
+    classname: NSPanel         # class containing the plugin
+
+parameters:
+    # Definition of parameters to be configured in etc/plugin.yaml (enter 'parameters: NONE', if section should be empty)
+    # This parameter should be included if plugin provides a web interface. It lets users configure the standard number of entries per page
+    full_topic:
+        type: str
+        default: '%prefix%/%topic%/'
+        description:
+            de: Vollständiges Topic (Prefix und Topic) zur Kommunikation mit den NSPanel
+            en: Full topic (prefix und topic) for communication with NSPanel
+
+    topic:
+        type: str
+        default: 'NSPanel1'
+        description:
+            de: Topic des NSPanel
+            en: topic of NSPanel
+
+    telemetry_period:
+        type: int
+        default: 300
+        valid_min: 10
+        valid_max: 3600
+        description:
+            de: Zeitabstand in Sekunden in dem das NSPanel Telemetrie Daten senden sollen
+            en: Timeperiod in seconds in which the NSPanel shall send telemetry data
+
+    config_file_location:
+        type: str
+        description:
+            de: 'Speicherort der Konfigurationsdatei'
+            en: 'Location of Config_file'
+
+    webif_pagelength:
+        type: int
+        valid_list:
+          - -1
+          - 0
+          - 25
+          - 50
+          - 100
+        description:
+            de: 'Anzahl an Items, die standardmäßig in einer Web Interface Tabelle pro Seite angezeigt werden.
+                 0 = automatisch, -1 = alle'
+            en: 'Amount of items being listed in a web interface table per page by default.
+                 0 = automatic, -1 = all'
+        description_long:
+            de: 'Anzahl an Items, die standardmäßig in einer Web Interface Tabelle pro Seite angezeigt werden.\n
+                 Bei 0 wird die Tabelle automatisch an die Höhe des Browserfensters angepasst.\n
+                 Bei -1 werden alle Tabelleneinträge auf einer Seite angezeigt.'
+            en: 'Amount of items being listed in a web interface table per page by default.\n
+                 0 adjusts the table height automatically based on the height of the browser windows.\n
+                 -1 shows all table entries on one page.'
+
+item_attributes:
+    # Definition of item attributes defined by this plugin (enter 'item_attributes: NONE', if section should be empty)
+
+item_structs:
+    # Definition of item-structure templates for this plugin (enter 'item_structs: NONE', if section should be empty)
+
+plugin_functions:
+    # Definition of plugin functions defined by this plugin (enter 'plugin_functions: NONE', if section should be empty)
+
+logic_parameters:
+    # Definition of logic parameters defined by this plugin (enter 'logic_parameters: NONE', if section should be empty)
