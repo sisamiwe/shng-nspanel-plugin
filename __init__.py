@@ -631,7 +631,7 @@ class NSPanel(MqttPlugin):
     # MQTT Stuff
     ################################
 
-    def publish_tasmota_topic(self, prefix: str = 'cmd', topic: str = None, detail: str = None, payload: str = None, item=None, qos: int = None, retain: bool = False, bool_values: list = None) -> None:
+    def publish_tasmota_topic(self, prefix: str = 'cmnd', topic: str = None, detail: str = None, payload: str = None, item=None, qos: int = None, retain: bool = False, bool_values: list = None) -> None:
         """
         build the topic in Tasmota style and publish to mqtt
 
