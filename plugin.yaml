@@ -95,8 +95,22 @@ item_attributes:
             - power1
             - power2
 
-item_structs: NONE
-    # Definition of item-structure templates for this plugin (enter 'item_structs: NONE', if section should be empty)
+item_structs:
+    nspanel:
+        online:
+            type: bool
+            nspanel_topic: ..:.
+            nspanel_attr: online
+
+        temperature_analog:
+            type: num
+            nspanel_topic: ..:.
+            nspanel_attr: temp_analog
+
+        temperature_esp32:
+            type: num
+            nspanel_topic: ..:.
+            nspanel_attr: temp_esp32
 
 plugin_functions: NONE
     # Definition of plugin functions defined by this plugin (enter 'plugin_functions: NONE', if section should be empty)

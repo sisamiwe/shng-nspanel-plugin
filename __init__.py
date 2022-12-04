@@ -464,17 +464,9 @@ class NSPanel(MqttPlugin):
             # get detailed status using payload['StatusSTS']
             status_sts = payload['StatusSTS']
 
-            # Handling Lights and Dimmer
-            if any([i in status_sts for i in self.LIGHT_MSG]):
-                self._handle_lights(tasmota_topic, info_topic, status_sts)
-
             # Handling of Power
             if any(item.startswith("POWER") for item in status_sts.keys()):
                 self._handle_power(tasmota_topic, info_topic, status_sts)
-
-            # Handling of RF messages
-            if any(item.startswith("Rf") for item in status_sts.keys()):
-                self._handle_rf(tasmota_topic, info_topic, status_sts)
 
             # Handling of Wi-Fi
             if 'Wifi' in status_sts:
