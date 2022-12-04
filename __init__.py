@@ -140,7 +140,7 @@ class NSPanel(MqttPlugin):
         # set plugin alive
         self.alive = True
 
-        self.send_mqtt_from_nspanel(1)
+        # self.send_mqtt_from_nspanel(1)
 
     def stop(self):
         """
@@ -609,15 +609,6 @@ class NSPanel(MqttPlugin):
 
         """
 
-        # check for retained message and handle it
-        if bool(retain):
-            if topic not in self.topics_of_retained_messages:
-                self.topics_of_retained_messages.append(topic)
-        else:
-            if topic in self.topics_of_retained_messages:
-                self.topics_of_retained_messages.remove(topic)
-
-        # handle incoming message
         try:
             (topic_type, tasmota_topic, info_topic) = topic.split('/')
             self.logger.info(
