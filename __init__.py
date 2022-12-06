@@ -1236,7 +1236,7 @@ class NSPanel(MqttPlugin):
         self.logger.debug(f"GenerateEntitiesPage called with page={page}")
         out_msgs = list()
         out_msgs.append('pageType~cardEntities')
-        out_msgs.append({'payload': self.GeneratePageElements(page)})
+        out_msgs.append(self.GeneratePageElements(page))
         return out_msgs
 
     def GenerateThermoPage(self, page) -> list:
@@ -1353,7 +1353,7 @@ class NSPanel(MqttPlugin):
                    f'{displayName2}~'                   # displayName
                    f'{optionalValue2}'                 # optionalValue
                    )
-        out_msgs.append({'payload': pageData})
+        out_msgs.append(pageData)
 
         return out_msgs
 
