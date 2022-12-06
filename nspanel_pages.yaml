@@ -2,6 +2,7 @@ config:
   screensaver_timeout: 11       # 0 disable, max. 65 sec
   brightness_screensaver: 11    # 0-100%
   brightness_active: 99         # 0-100%
+  temperatureUnit: °C
   sleep_brightness:
     - time: "7:00:00"
       value: 10
@@ -64,6 +65,50 @@ cards:
 
   - pageType: cardAlarm
     entity: AlarmPanel
+
+  - pageType: cardQR
+    heading: "Gäste WLAN"
+    useColor: true,
+    subPage: true,
+    parent: Subpages_1,
+    internalNameEntity: wlan.gaeste.pwd
+    hidePassword: true
+
+  - pageType: cardThermo
+    entity: Klima1
+    heading: Test Klimaanlage
+    useColor: true
+    subPage: false
+    parent: undefined
+    items:
+        internalNameEntity: alias.0.NSPanel_1.TestKlimaanlage
+        minValue: 50
+        maxValue: 250
+        popupThermoMode1: ['Auto','0','1','2','3']
+        popupThermoMode2: ['Auto','0','1','2','3','4','5']
+        popupThermoMode3: ['Auto','Manual','Boost',]
+        popUpThermoName: ["Schwenk-Modus", 'Speed', 'Temperatur']
+        icon: 'fan'
+        setThermoAlias: ['MODE1','MODE2','MODE3']
+        setThermoDestTemp2: 'ACTUAL2'
+
+  - pageType: cardThermo
+    entity: Klima2
+    heading: Büro Thermostat
+    useColor: true
+    subPage: false
+    parent: undefined
+    items:
+        item_temp_current:  # an item for the actual temperature
+        item_temp_set:      # an item for the set temperature
+        item_mode:          # an item for comfort / standby (3x bit or 1x byte, optional)
+        item_night:         # an item for night (3x bit or 1x byte, optional)
+        item_frost:         # an item for frost (3x bit or 1x byte, optional)
+        item_state:         # an item for the current state of the actuator (optional)
+        item_text:          # an item for additional text, (optional)
+        minSetValue: 50     # min Value which can be set (decimal degrees)
+        maxSetValue: 300    # max Value which can be set (decimal degrees)
+        stepSetValue: 5     # step for Value which can be set (decimal degrees)
 
 screensaver:
     heading: Hello World!

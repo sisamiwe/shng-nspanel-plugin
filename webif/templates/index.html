@@ -119,32 +119,26 @@
 {% set tab1title = "<strong>" ~ p.get_shortname() ~ " Items</strong> (" ~ item_count ~ ")" %}
 {% block bodytab1 %}
 <div class="container-fluid m-2 table-resize">
-	{{ _('Hier kommt der Inhalt des Webinterfaces hin.') }}
 	<table id="maintable">
 		<thead>
 		<tr>
-      <th></th>
+      		<th></th>
 			<th>Item</th>
-      <th>Item Path</th>
-      <th>Item Value</th>
-      <th>Topic In/Out</th>
-      <th>Last Update</th>
-      <th>Last Change</th>
+			<th>Item Path</th>
+			<th>Item Value</th>
+			<th>Last Update</th>
+			<th>Last Change</th>
 		</tr>
 		</thead>
 		{% for item in items %}
-			{% if p.has_iattr(item.conf, 'mqtt_topic_in') or p.has_iattr(item.conf, 'mqtt_topic_out') %}
-				<tr>
-          <td></td>
-					<td class="py-1">{{ item._path }}</td>
-					<td class="py-1">{{ item._type }}</td>
-					<td id="{{ item.id() }}_value" class="py-1">{{ item() }}</td>
-					<td class="py-1">{% if p.has_iattr(item.conf, 'mqtt_topic_in') %}<strong>in &nbsp; : </strong>{{ p.get_iattr_value(item.conf, 'mqtt_topic_in') }}<br>{% endif %}
-						{% if p.has_iattr(item.conf, 'mqtt_topic_out') %}<strong>out: </strong>{{ p.get_iattr_value(item.conf, 'mqtt_topic_out') }}{% endif %}</td>
-					<td id="{{ item.id() }}_last_update" class="py-1">{{ item.last_update().strftime('%d.%m.%Y %H:%M:%S') }}</td>
-					<td id="{{ item.id() }}_last_change" class="py-1">{{ item.last_change().strftime('%d.%m.%Y %H:%M:%S') }}</td>
-				</tr>
-			{% endif %}
+			<tr>
+          		<td></td>
+				<td class="py-1">{{ item._path }}</td>
+				<td class="py-1">{{ item._type }}</td>
+				<td id="{{ item.id() }}_value" class="py-1">{{ item() }}</td>
+				<td id="{{ item.id() }}_last_update" class="py-1">{{ item.last_update().strftime('%d.%m.%Y %H:%M:%S') }}</td>
+				<td id="{{ item.id() }}_last_change" class="py-1">{{ item.last_change().strftime('%d.%m.%Y %H:%M:%S') }}</td>
+			</tr>
 		{% endfor %}
 	</table>
 </div>

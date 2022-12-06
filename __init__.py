@@ -30,9 +30,11 @@ import time
 import yaml
 import queue
 
-
 from lib.model.mqttplugin import MqttPlugin
 from .webif import WebInterface
+
+from . import icon_mapping
+Icons = icon_mapping.IconsSelector()
 
 from lib.item import Items
 items = Items.get_instance()
@@ -85,6 +87,8 @@ class NSPanel(MqttPlugin):
         self.custom_msg_queue = queue.Queue(maxsize=50)  # Queue containing last 50 messages containing "CustomRecv"
         self.nspanel_items = []
         self.nspanel_init = False
+        self.panel_version = 45
+        self.panel_model = 'eu'
         self.alive = None
 
         # read panel config file
@@ -174,6 +178,8 @@ class NSPanel(MqttPlugin):
             if nspanel_attr:
                 self.logger.info(f"Item={item.id()} identified for NSPanel with nspanel_attr={nspanel_attr}")
                 nspanel_attr = nspanel_attr.lower()
+            else:
+                return
 
             # setup dict for new device
             if not self.tasmota_devices.get(nspanel_topic):
@@ -967,18 +973,34 @@ class NSPanel(MqttPlugin):
         self.logger.debug(f"previous_page={self.current_page}")
         return self.current_page
 
-    def _get_item(self, internalNameEntity):
+    def _get_item(self, item_path):
         """
         get item from item path
         """
 
-        self.logger.debug(f"_get_item: look for item for internalNameEntity={internalNameEntity}")
-        item = items.return_item(internalNameEntity)
+        self.logger.debug(f"_get_item: look for item for item_path={item_path}")
+        item = items.return_item(item_path)
         if item is not None:
-            self.logger.debug(f"item={item} for internalNameEntity={internalNameEntity} identified")
+            self.logger.debug(f"item={item} for item_path={item_path} identified")
         else:
-            self.logger.debug(f"No corresponding item for internalNameEntity={internalNameEntity} identified")
+            self.logger.debug(f"No corresponding item for item_path={item_path} identified")
         return item
+
+    def _get_item_value(self, item, default = None):
+        """
+        get item value from item path or item
+        """
+
+        self.logger.debug(f"_get_item_value: look for item value for item={item}")
+        if isinstance(item, str):
+            item = self._get_item(item)
+
+        if item is not None and isinstance(item, Item):
+            self.logger.debug(f"item value={item()} for item={item} identified")
+            return item()
+        else:
+            self.logger.debug(f"No corresponding item value for item={item} identified")
+            return default
 
     def send_current_time(self):
         self.publish_tasmota_topic(payload=f"time~{time.strftime('%H:%M', time.localtime())}")
@@ -1154,29 +1176,28 @@ class NSPanel(MqttPlugin):
 
         if page_content['pageType'] == 'cardEntities':
             self.SendToPanel(self.GenerateEntitiesPage(page))
-        """
+
         elif page_content['pageType'] == 'cardThermo':
-            SendToPanel(GenerateThermoPage(page))
+            self.SendToPanel(self.GenerateThermoPage(page))
     
         elif page_content['pageType'] == 'cardGrid':
-            SendToPanel(GenerateGridPage(page))
+            self.SendToPanel(self.GenerateGridPage(page))
     
         elif page_content['pageType'] == 'cardMedia':
-            logic.useMediaEvents = True
-            SendToPanel(GenerateMediaPage(page))
+            self.useMediaEvents = True
+            self.SendToPanel(self.GenerateMediaPage(page))
     
         elif page_content['pageType'] == 'cardAlarm':
-            SendToPanel(GenerateAlarmPage(page))
-    
+            self.SendToPanel(self.GenerateAlarmPage(page))
+
         elif page_content['pageType'] == 'cardQR':
-            SendToPanel(GenerateQRPage(page))
-    
+            self.SendToPanel(self.GenerateQRPage(page))
+
         elif page_content['pageType'] == 'cardPower':
-            SendToPanel(GeneratePowerPage(page))
+            self.SendToPanel(self.GeneratePowerPage(page))
     
         elif page_content['pageType'] == 'cardChart':
-            SendToPanel(GenerateChartPage(page))
-        """
+            self.SendToPanel(self.GenerateChartPage(page))
 
     def GenerateDetailPage(self, type: str, pageItem: str):
         self.logger.debug(f"GenerateDetailPage to be implemented")
@@ -1187,6 +1208,129 @@ class NSPanel(MqttPlugin):
         out_msgs.append('pageType~cardEntities')
         out_msgs.append({'payload': self.GeneratePageElements(page)})
         return out_msgs
+
+    def GenerateThermoPage(self, page) -> list:
+        self.logger.debug(f"GenerateThermoPage called with page={page}")
+
+        temperatureUnit = self.panel_config.get('config', {}).get('temperatureUnit', '°C')
+
+        out_msgs = list()
+        out_msgs.append('pageType~cardThermo')
+
+        page_content = self.panel_config['cards'][page]
+
+        # Compile PageData according to:
+        # entityUpd~*heading*~*navigation*~*internalNameEntiy*~*currentTemp*~*destTemp*~*status*~*minTemp*~*maxTemp*~*stepTemp*[[~*iconId*~*activeColor*~*state*~*hvac_action*]]~tCurTempLbl~tStateLbl~tALbl~iconTemperature~dstTempTwoTempMode~btDetail
+        # [[]] are not part of the command~ this part repeats 8 times for the buttons
+
+        heading = page_content.get('heading', 'undefined')
+        internalNameEntity = page_content('items', {}).get('item_temp_set', 'undefined')
+        currentTemp = self._get_item_value(page_content('items', {}).get('item_temp_current'), 'undefined')
+        destTemp = self._get_item_value(page_content('items', {}).get('item_temp_set'), 'undefined')
+        statusStr = self._get_item_value(page_content('items', {}).get('item_state'), 'undefined')
+        minTemp = page_content.get('items', {}).get('minSetValue', 50)
+        maxTemp = page_content('items', {}).get('maxSetValue', 300)
+        stepTemp = page_content('items', {}).get('stepSetValue', 5)
+
+        PageData = (
+            'entityUpd~'
+            f'{heading}~'  # Heading
+            f'{self.GetNavigationString(page)}~'  # Page Navigation
+            f'{internalNameEntity}~'  # internalNameEntity
+            f'{currentTemp}{temperatureUnit}~'  # Ist-Temperatur (String)
+            f'{destTemp}~'  # Soll-Temperatur (numerisch ohne Komma)
+            f'{statusStr}~'  # Mode
+            f'{minTemp}~'  # Thermostat Min-Temperatur
+            f'{maxTemp}~'  # Thermostat Max-Temperatur
+            f'{stepTemp}~'  # Schritte für Soll (5°C)
+            f'{icon_res}~'  # Icons Status
+            f'{findLocale("thermostat", "Currently")}~'  # Bezeichner vor Aktueller Raumtemperatur
+            f'{findLocale("thermostat", "State")}~'  # Bezeichner vor State
+            f'{temperatureUnit}~'  # iconTemperature dstTempTwoTempMode
+            f'{destTemp2}~'  # dstTempTwoTempMode --> Wenn Wert, dann 2 Temp
+            f'{thermoPopup}'  # PopUp
+        )
+
+        out_msgs.append(PageData)
+
+        self.logger.debug(f"GenerateThermoPage called with out_msgs={out_msgs}")
+
+        return out_msgs
+
+    def GenerateGridPage(self, page) -> list:
+        self.logger.debug(f"GenerateGridPage to be implemented")
+
+    def GenerateMediaPage(self, page) -> list:
+        self.logger.debug(f"GenerateMediaPage to be implemented")
+
+    def GenerateAlarmPage(self, page) -> list:
+        self.logger.debug(f"GenerateAlarmPage to be implemented")
+
+    def GenerateQRPage(self, page) -> list:
+        self.logger.debug(f"GenerateQRPage called with page={page}")
+
+        out_msgs = list()
+        out_msgs.append('pageType~cardQR')
+
+        page_content = self.panel_config['cards'][page]
+        heading = page_content.get('heading', 'Default')
+        item = self._get_item(page_content.get('internalNameEntity'))
+        textQR = item() if item else 'Test'
+        hiddenPWD = page_content.get('hidePassword', False)
+
+        optionalValue1 = ''
+        optionalValue2 = ''
+
+        textQR = self._get_item_value(page_content.get('internalNameEntity'), 'WIFI:T:undefined;S:undefined;P:undefined;H:undefined')
+        textQR_list = textQR.split(';')
+        for entry in textQR_list:
+            if entry.startswith('S'):
+                optionalValue1 = entry[2:len(entry)]
+            elif entry.startswith('P'):
+                optionalValue2 = entry[2:len(entry)]
+
+        type1 = 'text'
+        internalName1 = 'SSID'
+        iconId1 = Icons.GetIcon('wifi')
+        displayName1 = 'SSID'
+        type2 = 'text'
+        internalName2 = 'Passwort'
+        iconId2 = Icons.GetIcon('key')
+        displayName2 = 'Passwort'
+
+        if hiddenPWD:
+            type2 = 'disable'
+            iconId2 = ''
+            displayName2 = ''
+
+        # Generata PageDate according to: entityUpd, heading, navigation, textQR[, type, internalName, iconId, displayName, optionalValue]x2
+        pageData = (
+                   f'entityUpd~'                        # entityUpd
+                   f'{heading}~'                        # heading
+                   f'{self.GetNavigationString(page)}~' # navigation
+                   f'{textQR}~'                         # textQR
+                   f'{type1}~'                          # type
+                   f'{internalName1}~'                  # internalName
+                   f'{iconId1}~'                        # iconId
+                   f'65535~'                            # iconColor
+                   f'{displayName1}~'                   # displayName
+                   f'{optionalValue1}~'                 # optionalValue
+                   f'{type2}~'                          # type
+                   f'{internalName2}~'                  # internalName
+                   f'{iconId2}~'                        # iconId
+                   f'65535~'                            # iconColor
+                   f'{displayName2}~'                   # displayName
+                   f'{optionalValue2}'                 # optionalValue
+                   )
+        out_msgs.append({'payload': pageData})
+
+        return out_msgs
+
+    def GeneratePowerPage(self, page) -> list:
+        self.logger.debug(f"GeneratePowerPage to be implemented")
+
+    def GenerateChartPage(self, page) -> list:
+        self.logger.debug(f"GenerateChartPage to be implemented")
 
     def GeneratePageElements(self, page) -> str:
         self.logger.debug(f"GeneratePageElements called with page={page}")
@@ -1227,6 +1371,45 @@ class NSPanel(MqttPlugin):
                 self.publish_tasmota_topic(payload=entry)
         else:
             self.publish_tasmota_topic(payload=payload)
+
+    def GetNavigationString(self, page) -> str:
+        """
+        Determination of page navigation (CustomSend - Payload)
+        """
+
+        self.logger.debug(f"GetNavigationString called with page={page}")
+
+        # left navigation arrow | right navigation arrow
+        # X | X
+        # 0 = no arrow
+        # 1 | 1 = right and left navigation arrow
+        # 2 | 0 = (right) up navigation arrow
+        # 2 | 2 = (right) up navigation arrow | (left) home navigation icon
+
+        # ToDo: Handling of SubPages
+        # if (activePage.subPage):
+        #     return '2|2'
+
+        if page == 0:
+            return '1|1'
+        elif page == self.no_of_cards - 1:
+            return '1|1'
+        elif page == -1:
+            return '2|0'
+        elif page == -2:
+            return '2|0'
+        else:
+            return '1|1'
+
+    ################################################################
+    #  Properties
+    ################################################################
+
+    @property
+    def no_of_cards(self):
+        cards = self.panel_config.get('cards')
+        if cards:
+            return len(cards)
 
     ################################################################
     #  Simulation of mqtt messages of NSPanel
