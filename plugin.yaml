@@ -50,8 +50,8 @@ parameters:
     config_file_location:
         type: str
         description:
-            de: 'Speicherort der Konfigurationsdatei'
-            en: 'Location of Config_file'
+            de: 'Speicherort der Konfigurationsdatei relativ zum smarthome Ordner bspw: /usr/local/smarthome/plugins/_priv_nspanel/nspanel_pages.yaml'
+            en: 'Location of Config_file relatively to smarthome directory e.g. /usr/local/smarthome/plugins/_priv_nspanel/nspanel_pages.yaml'
 
     webif_pagelength:
         type: int

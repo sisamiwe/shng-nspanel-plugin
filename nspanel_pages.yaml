@@ -3,6 +3,7 @@ config:
   brightness_screensaver: 11    # 0-100%
   brightness_active: 99         # 0-100%
   temperatureUnit: °C
+  locale: de-DE
   sleep_brightness:
     - time: "7:00:00"
       value: 10

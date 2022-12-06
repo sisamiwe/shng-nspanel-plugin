@@ -29,6 +29,8 @@ from datetime import datetime, timedelta
 import time
 import yaml
 import queue
+import os
+import sys
 
 from lib.model.mqttplugin import MqttPlugin
 from .webif import WebInterface
@@ -96,6 +98,14 @@ class NSPanel(MqttPlugin):
             self.panel_config = self._parse_config_file()
         except Exception as e:
             self.logger.warning(f"Exception during parsing of page config yaml file occurred: {e}")
+            self._init_complete = False
+            return
+
+        # read locale file
+        try:
+            self.locale = self._parse_locale_file()
+        except Exception as e:
+            self.logger.warning(f"Exception during parsing of locals yaml file occurred: {e}")
             self._init_complete = False
             return
 
@@ -928,7 +938,7 @@ class NSPanel(MqttPlugin):
             try:
                 config = yaml.safe_load(stream)
             except yaml.YAMLError as exc:
-                self.logger.warning(f"Exception during parsing of  page config yaml file occurred: {exc}")
+                self.logger.warning(f"Exception during parsing of page config yaml file occurred: {exc}")
                 return None
 
         # ToDo: Für alle Pages die Anzahl der Entities prüfen
@@ -936,6 +946,23 @@ class NSPanel(MqttPlugin):
 
         self.logger.debug(f"_parse_config_file: page-config={config} available!")
         return config
+
+    def _parse_locale_file(self):
+        """
+        Parse the locals file and check for completeness
+        """
+
+        self.logger.debug(f"get_shortname={self.get_shortname()}")
+
+        with open(os.path.join(sys.path[0], "plugins", self.get_shortname(), "locale.yaml"),  "r") as stream:
+            try:
+                locale = yaml.safe_load(stream)
+            except yaml.YAMLError as exc:
+                self.logger.warning(f"Exception during parsing of locale yaml file occurred: {exc}")
+                return None
+
+        self.logger.debug(f"_parse_locale_file: locale={locale} available!")
+        return locale
 
     def _get_items_of_panel_config_to_update_item(self):
         """
@@ -1001,6 +1028,9 @@ class NSPanel(MqttPlugin):
         else:
             self.logger.debug(f"No corresponding item value for item={item} identified")
             return default
+
+    def _get_locale(self, group, entry):
+        return self.locale.get(group, {}).get('entry', {}).get(self.page-config['config'].get(locale, 'de-DE'))
 
     def send_current_time(self):
         self.publish_tasmota_topic(payload=f"time~{time.strftime('%H:%M', time.localtime())}")
@@ -1231,6 +1261,7 @@ class NSPanel(MqttPlugin):
         minTemp = page_content.get('items', {}).get('minSetValue', 50)
         maxTemp = page_content('items', {}).get('maxSetValue', 300)
         stepTemp = page_content('items', {}).get('stepSetValue', 5)
+        icon_res = bt[0] + bt[1] + bt[2] + bt[3] + bt[4] + bt[5] + bt[6] + bt[7]
 
         PageData = (
             'entityUpd~'
@@ -1242,10 +1273,10 @@ class NSPanel(MqttPlugin):
             f'{statusStr}~'  # Mode
             f'{minTemp}~'  # Thermostat Min-Temperatur
             f'{maxTemp}~'  # Thermostat Max-Temperatur
-            f'{stepTemp}~'  # Schritte für Soll (5°C)
+            f'{stepTemp}~'  # Schritte für Soll (0.5°C)
             f'{icon_res}~'  # Icons Status
-            f'{findLocale("thermostat", "Currently")}~'  # Bezeichner vor Aktueller Raumtemperatur
-            f'{findLocale("thermostat", "State")}~'  # Bezeichner vor State
+            f'{self._get_locale("thermostat", "Currently")}~'  # Bezeichner vor aktueller Raumtemperatur
+            f'{self._get_locale("thermostat", "State")}~'  # Bezeichner vor State
             f'{temperatureUnit}~'  # iconTemperature dstTempTwoTempMode
             f'{destTemp2}~'  # dstTempTwoTempMode --> Wenn Wert, dann 2 Temp
             f'{thermoPopup}'  # PopUp
@@ -1349,7 +1380,12 @@ class NSPanel(MqttPlugin):
         if len(page_content['entities']) > maxItems:
             self.logger.warning(f"Page definition contains too many Entities. Max allowed entities for page={page_content['pageType']} is {maxItems}")
 
-        pageData = f"entityUpd~{page_content['heading']}~{page_content['navigationLeft']}|{page_content['navigationRight']}"
+        pageData = (
+                    f"entityUpd~"
+                    f"{page_content['heading']}~"
+                    f"{page_content['navigationLeft']}|"
+                    f"{page_content['navigationRight']}"
+                    )
 
         for idx, entity in enumerate(page_content['entities']):
             self.logger.debug(f"entity={entity}")
@@ -1359,7 +1395,15 @@ class NSPanel(MqttPlugin):
             item = self._get_item(entity['internalNameEntity'])
             value = item() if item else entity.get('optionalValue', 0)
 
-            pageData = f"{pageData}~{entity['type']}~{entity['internalNameEntity']}~{entity['iconId']}~{entity['iconColor']}~{entity['displayNameEntity']}~{value}"
+            pageData = (
+                       f"{pageData}~"
+                       f"{entity['type']}~"
+                       f"{entity['internalNameEntity']}~"
+                       f"{entity['iconId']}~"
+                       f"{entity['iconColor']}~"
+                       f"{entity['displayNameEntity']}~"
+                       f"{value}"
+                       )
 
         return pageData
 

@@ -9,3 +9,500 @@ plugin_translations:
         de: '='
         en: 'Here goes the content of the web interface.'
 
+# translations for plugin
+lights:
+    Brightness:
+        en-US: Brightness
+        de-DE: Helligkeit
+        nl-NL: Helderheid
+        da-DK: Lysstyrke
+        es-ES: Brillo
+        fr-FR: Luminosité
+        it-IT: Luminosità
+        ru-RU: Яркость
+        nb-NO: Lysstyrke
+        nn-NO: Lysstyrke
+        pl-PL: Jasność
+        pt-PT: Brilho
+        af-ZA: Helderheid
+        ar-SY: السطوع
+        bg-BG: Яркост
+        ca-ES: Brillantor
+        cs-CZ: Jas
+        el-GR: Φωτεινότητα
+        et-EE: Heledus
+        fa-IR: روشنایی
+        fi-FI: Kirkkaus
+        he-IL: בהירות
+        hr-xx: Svjetlina
+        hu-HU: Fényerő
+        hy-AM: Պայծառություն
+        id-ID: Kecerahan
+        is-IS: Birtustig
+        lb-xx: Hellegkeet
+        lt-LT: Ryškumas
+        ro-RO: Luminozitate
+        sk-SK: Jas
+        sl-SI: Svetlost
+        sv-SE: Ljusstyrka
+        th-TH: ความสว่าง
+        tr-TR: Parlaklık
+        uk-UA: Яскравість
+        vi-VN: Độ sáng
+        zh-CN: 亮度
+        zh-TW: 亮度
+    
+    Temperature:
+        en-US: Color temperature
+        de-DE: Farbtemperatur
+        nl-NL: Kleurtemperatuur
+        da-DK: Farvetemperatur
+        es-ES: Temperatura del color
+        fr-FR: Température de couleur
+        it-IT: Temperatura colore
+        ru-RU: Цветовая температура
+        nb-NO: Fargetemperatur
+        nn-NO: Fargetemperatur
+        pl-PL: Temperatura barwy
+        pt-PT: Temperatura de cor
+        af-ZA: Kleur temperatuur
+        ar-SY: درجة حرارة اللون
+        bg-BG: Цветова температура
+        ca-ES: Temperatura de color
+        cs-CZ: Teplota barvy
+        el-GR: Θερμοκρασία χρώματος
+        et-EE: Värvustemperatuur
+        fa-IR: دمای رنگ
+        fi-FI: Värilämpötila
+        he-IL: טמפרטורת הצבע
+        hr-xx: Temperatura boje
+        hu-HU: Színhőmérséklet
+        hy-AM: Գունային ջերմաստիճան
+        id-ID: Temperatur warna
+        is-IS: Litastig
+        lb-xx: Faarf Temperatur
+        lt-LT: Spalvos temperatūra
+        ro-RO: Temperatură de culoare
+        sk-SK: Teplota farby
+        sl-SI: Temperatura barve
+        sv-SE: Färgtemperatur
+        th-TH: อุณหภูมิสี
+        tr-TR: Renk sıcaklığı
+        uk-UA: Кольорова температура
+        vi-VN: Nhiệt độ màu
+        zh-CN: 色温
+        zh-TW: 色溫
+window:
+    closed:
+        en-US: Closed
+        de-DE: Geschlossen
+        nl-NL: Dicht
+        da-DK: Lukket
+        es-ES: Cerrada
+        fr-FR: Fermée
+        it-IT: Chiusa
+        ru-RU: Закрыто
+        nb-NO: Lukket
+        nn-NO: Lukka
+        pl-PL: zamknięte
+        pt-PT: Fechada
+        af-ZA: Toe
+        ar-SY: مغلق
+        bg-BG: Затворен
+        ca-ES: Tancada
+        cs-CZ: Zavřeno
+        el-GR: Κλειστό
+        et-EE: Suletud
+        fa-IR: بسته
+        fi-FI: Suljettu
+        he-IL: סגור
+        hr-xx: Zatvoreno
+        hu-HU: Zárva
+        hy-AM: Փակված է
+        id-ID: Tertutup
+        is-IS: Loka
+        lb-xx: Zou
+        lt-LT: Uždaryta
+        ro-RO: Închis
+        sk-SK: Zatvorené
+        sl-SI: Zaprto
+        sv-SE: Stängt
+        th-TH: ปิดแล้ว
+        tr-TR: Kapalı
+        uk-UA: Зачинене
+        vi-VN: Đóng
+        zh-CN: 关闭
+        zh-TW: 關閉
+    
+    opened:
+        en-US: Open
+        de-DE: Offen
+        nl-NL: Open
+        da-DK: Åben
+        es-ES: Abierta
+        fr-FR: Ouverte
+        it-IT: Aperta
+        ru-RU: Открыто
+        nb-NO: Åpent
+        nn-NO: Open
+        pl-PL: otwarte
+        pt-PT: Aberta
+        af-ZA: Oop
+        ar-SY: مفتوح
+        bg-BG: Отворен
+        ca-ES: Oberta
+        cs-CZ: Otevřeno
+        el-GR: Ανοιχτό
+        et-EE: Avatud
+        fa-IR: باز
+        fi-FI: Auki
+        he-IL: פתוח
+        hr-xx: Otvoreno
+        hu-HU: Nyitva
+        hy-AM: Բացել
+        id-ID: Terbuka
+        is-IS: Opna
+        lb-xx: Op
+        lt-LT: Atidaryta
+        ro-RO: Deschis
+        sk-SK: Otvorené
+        sl-SI: Odprto
+        sv-SE: Öppet
+        th-TH: เปิด
+        tr-TR: Açık
+        uk-UA: Відчинене
+        vi-VN: Mở
+        zh-CN: 开启
+        zh-TW: 開啟
+
+door:
+    closed:
+        en-US: Closed
+        de-DE: Geschlossen
+        nl-NL: Dicht
+        da-DK: Lukket
+        es-ES: Cerrada
+        fr-FR: Fermée
+        it-IT: Chiusa
+        ru-RU: Закрыта
+        nb-NO: Lukket
+        nn-NO: Lukka
+        pl-PL: zamknięte
+        pt-PT: Fechada
+        af-ZA: Toe
+        ar-SY: مغلق
+        bg-BG: Затворена
+        ca-ES: Tancada
+        cs-CZ: Zavřeno
+        el-GR: Κλειστή
+        et-EE: Suletud
+        fa-IR: بسته
+        fi-FI: Suljettu
+        he-IL: סגורה
+        hr-xx: Zatvoreno
+        hu-HU: Zárva
+        hy-AM: Փակված է
+        id-ID: Tertutup
+        is-IS: Lokuð
+        lb-xx: Zou
+        lt-LT: Uždaryta
+        ro-RO: Închis
+        sk-SK: Zatvorené
+        sl-SI: Zaprto
+        sv-SE: Stängd
+        th-TH: ปิดแล้ว
+        tr-TR: Kapalı
+        uk-UA: Зачинені
+        vi-VN: Đóng
+        zh-CN: 关闭
+        zh-TW: 已關閉
+    
+    opened:
+        en-US: Open
+        de-DE: Offen
+        nl-NL: Open
+        da-DK: Åben
+        es-ES: Abierta
+        fr-FR: Ouverte
+        it-IT: Aperta
+        ru-RU: Открыта
+        nb-NO: Åpen
+        nn-NO: Open
+        pl-PL: otwarte
+        pt-PT: Aberta
+        af-ZA: Oop
+        ar-SY: مفتوح
+        bg-BG: Отворена
+        ca-ES: Oberta
+        cs-CZ: Otevřeno
+        el-GR: Ανοιχτή
+        et-EE: Avatud
+        fa-IR: باز
+        fi-FI: Auki
+        he-IL: פתוחה
+        hr-xx: Otvori
+        hu-HU: Nyitva
+        hy-AM: Բացել
+        id-ID: Terbuka
+        is-IS: Opin
+        lb-xx: Op
+        lt-LT: Atidaryta
+        ro-RO: Deschis
+        sk-SK: Otvorené
+        sl-SI: Odprto
+        sv-SE: Öppen
+        th-TH: เปิด
+        tr-TR: Açık
+        uk-UA: Відчинені
+        vi-VN: Mở
+        zh-CN: 开启
+        zh-TW: 已開啟
+
+lock:
+    LOCK:
+        en-US: Lock
+        de-DE: Verriegeln
+        nl-NL: Vergrendelen
+        da-DK: Lås
+        es-ES: Bloquear
+        fr-FR: Verrouiller
+        it-IT: Blocca
+        ru-RU: Закрыть
+        nb-NO: Lås
+        nn-NO: Lås
+        pl-PL: Zablokuj
+        pt-PT: Bloquear
+        af-ZA: Sluit toe
+        ar-SY: قفل
+        bg-BG: Заключване
+        ca-ES: Bloquejar
+        cs-CZ: Zamknout
+        el-GR: Κλείδωμα
+        et-EE: Lukusta
+        fa-IR: قفل
+        fi-FI: Lukitse
+        he-IL: נעילה
+        hr-xx: zaključati
+        hu-HU: Bezár
+        hy-AM: Կողպեք
+        id-ID: Kunci
+        is-IS: Læsa
+        lb-xx: Spären
+        lt-LT: Užrakinti
+        ro-RO: Blocat
+        sk-SK: Zamknúť
+        sl-SI: Zakleni
+        sv-SE: Lås
+        th-TH: ล็อค
+        tr-TR: Kilitle
+        uk-UA: Блокувати
+        vi-VN: Khóa
+        zh-CN: 锁定
+        zh-TW: 上鎖
+    
+    UNLOCK:
+        en-US: Unlock
+        de-DE: Entriegeln
+        nl-NL: Ontgrendelen
+        da-DK: Lås op
+        es-ES: Desbloquear
+        fr-FR: Déverrouiller
+        it-IT: Sblocca
+        ru-RU: Открыть
+        nb-NO: Lås opp
+        nn-NO: Lås opp
+        pl-PL: Odblokuj
+        pt-PT: Desbloquear
+        af-ZA: Sluit oop
+        ar-SY: فتح
+        bg-BG: Отключване
+        ca-ES: Desbloquejar
+        cs-CZ: Odemknout
+        el-GR: Ξεκλείδωμα
+        et-EE: Ava
+        fa-IR: باز کردن
+        fi-FI: Avaa lukitus
+        he-IL: ביטול נעילה
+        hr-xx: Otključati
+        hu-HU: Kinyit
+        hy-AM: Բացել
+        id-ID: Buka
+        is-IS: Aflæsa
+        lb-xx: Entspären
+        lt-LT: Atrakinti
+        ro-RO: Deblocare
+        sk-SK: Odomknúť
+        sl-SI: Odkleni
+        sv-SE: Lås upp
+        th-TH: ปลดล็อค
+        tr-TR: Kilidi aç
+        uk-UA: Розблокувати
+        vi-VN: Mở khóa
+        zh-CN: 解锁
+        zh-TW: 解鎖
+
+blinds:
+    Position:
+        en-US: Position
+        de-DE: Position
+        nl-NL: Positie
+        da-DK: Position
+        es-ES: Posición
+        fr-FR: Position
+        it-IT: Apertura
+        ru-RU: Положение
+        nb-NO: Posisjon
+        nn-NO: Posisjon
+        pl-PL: Pozycja
+        pt-PT: Posição
+        af-ZA: Posisie
+        ar-SY: موضع
+        bg-BG: Позиция
+        ca-ES: Posició
+        cs-CZ: Pozice
+        el-GR: Θέση
+        et-EE: Asend
+        fa-IR: موقعیت
+        fi-FI: Sijainti
+        he-IL: מיקום
+        hr-xx: Pozicija
+        hu-HU: Pozíció
+        hy-AM: Դիրք
+        id-ID: Posisi
+        is-IS: Staðsetning
+        lb-xx: Positioun
+        lt-LT: Padėtis
+        ro-RO: Poziţie
+        sk-SK: Poloha
+        sl-SI: Položaj
+        sv-SE: Position
+        th-TH: ตำแหน่ง
+        tr-TR: Pozisyon
+        uk-UA: Положення
+        vi-VN: Vị trí
+        zh-CN: 位置
+        zh-TW: 位置
+
+thermostat:
+    Currently:
+        en-US: Currently
+        de-DE: Aktuell
+        nl-NL: Momenteel
+        da-DK: Aktuelt
+        es-ES: Actualmente
+        fr-FR: Actuellement
+        it-IT: Attualmente
+        ru-RU: Сейчас
+        nb-NO: Er nå
+        nn-NO: Akkurat no
+        pl-PL: Obecnie
+        pt-PT: Atualmente
+        af-ZA: Tans
+        ar-SY: حاليا
+        bg-BG: В момента
+        ca-ES: Actual
+        cs-CZ: Aktuálně
+        el-GR: Αυτή τη στιγμή
+        et-EE: Hetkel
+        fa-IR: در حال حاضر
+        fi-FI: Tällä hetkellä
+        he-IL: כעת
+        hr-xx: Trenutno
+        hu-HU: Jelenleg
+        hy-AM: Ներկայումս
+        id-ID: Saat ini
+        is-IS: Er núna
+        lb-xx: Momentan
+        lt-LT: Šiuo metu
+        ro-RO: În prezent
+        sk-SK: Aktuálne
+        sl-SI: Trenutno
+        sv-SE: Nuvarande
+        th-TH: ในขณะนี้
+        tr-TR: Şu an
+        uk-UA: В даний час
+        vi-VN: Hiện tại
+        zh-CN: 当前
+        zh-TW: 目前狀態
+    
+    State:
+        en-US: State
+        de-DE: Zustand
+        nl-NL: Toestand
+        da-DK: Tilstand
+        es-ES: Estado
+        fr-FR: État
+        it-IT: Stato
+        ru-RU: Состояние
+        nb-NO: Tilstand
+        nn-NO: Tilstand
+        pl-PL: Stan
+        pt-PT: Estado
+        af-ZA: undefined
+        ar-SY: undefined
+        bg-BG: undefined
+        ca-ES: Estat
+        cs-CZ: Stav
+        el-GR: Κατάσταση
+        et-EE: Olek
+        fa-IR: undefined
+        fi-FI: Tila
+        he-IL: מצב
+        hr-xx: undefined
+        hu-HU: Állapot
+        hy-AM: undefined
+        id-ID: Status
+        is-IS: Staða
+        lb-xx: undefined
+        lt-LT: undefined
+        ro-RO: undefined
+        sk-SK: Stav
+        sl-SI: Stanje
+        sv-SE: Tillstånd
+        th-TH: สถานะ
+        tr-TR: Durum
+        uk-UA: Стан
+        vi-VN: undefined
+        zh-CN: 状态
+        zh-TW: 狀態
+    
+    Action:
+        en-US: Operation
+        de-DE: Aktion
+        nl-NL: Werking
+        da-DK: Drifttype
+        es-ES: Modo
+        fr-FR: Opération
+        it-IT: Operazione
+        ru-RU: Режим работы
+        nb-NO: Operasjon
+        nn-NO: Operasjon
+        pl-PL: Tryb pracy
+        pt-PT: Operação
+        af-ZA: Operasie
+        ar-SY: الوضع
+        bg-BG: Режим
+        ca-ES: Funcionament
+        cs-CZ: Provoz
+        el-GR: Λειτουργία
+        et-EE: Töörežiim
+        fa-IR: عملیات
+        fi-FI: Toiminto
+        he-IL: פעולה
+        hr-xx: operacija
+        hu-HU: Működés
+        hy-AM: Գործողություն
+        id-ID: Operasi
+        is-IS: Aðgerð
+        lb-xx: Aktioun
+        lt-LT: Operacija
+        ro-RO: Operație
+        sk-SK: Prevádzka
+        sl-SI: Delovanje
+        sv-SE: Driftläge
+        th-TH: การทำงาน
+        tr-TR: İşlem
+        uk-UA: Режим
+        vi-VN: Chế độ hoạt động
+        zh-CN: 运行模式
+        zh-TW: 運轉模式
