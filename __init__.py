@@ -35,11 +35,12 @@ import sys
 from lib.model.mqttplugin import MqttPlugin
 from .webif import WebInterface
 
-from . import icon_mapping
-Icons = icon_mapping.IconsSelector()
-
 from lib.item import Items
 items = Items.get_instance()
+
+from . import nspanel_icons_colors
+Icons = nspanel_icons_colors.IconsSelector()
+Colors = nspanel_icons_colors.ColorThemes()
 
 
 class NSPanel(MqttPlugin):
@@ -1030,7 +1031,7 @@ class NSPanel(MqttPlugin):
             return default
 
     def _get_locale(self, group, entry):
-        return self.locale.get(group, {}).get('entry', {}).get(self.page-config['config'].get(locale, 'de-DE'))
+        return self.locale.get(group, {}).get('entry', {}).get(self.panel_configget('config', {}).get('locale', 'de-DE'))
 
     def send_current_time(self):
         self.publish_tasmota_topic(payload=f"time~{time.strftime('%H:%M', time.localtime())}")
@@ -1257,29 +1258,56 @@ class NSPanel(MqttPlugin):
         internalNameEntity = page_content('items', {}).get('item_temp_set', 'undefined')
         currentTemp = self._get_item_value(page_content('items', {}).get('item_temp_current'), 'undefined')
         destTemp = self._get_item_value(page_content('items', {}).get('item_temp_set'), 'undefined')
-        statusStr = self._get_item_value(page_content('items', {}).get('item_state'), 'undefined')
+        statusStr = 'MANU'
         minTemp = page_content.get('items', {}).get('minSetValue', 50)
         maxTemp = page_content('items', {}).get('maxSetValue', 300)
         stepTemp = page_content('items', {}).get('stepSetValue', 5)
-        icon_res = bt[0] + bt[1] + bt[2] + bt[3] + bt[4] + bt[5] + bt[6] + bt[7]
+        icon_res = ''
+
+        mode = self._get_item_value(page_content('items', {}).get('item_state'))
+        if mode is not None:
+
+            modes = {1: ('COMFORT', 'COMF',  Icons.GetIcon('alpha-a-circle'), (rgb_dec565(Colors.On), 33840, 33840, 33840), (1, 0, 0, 0)),
+                     2: ('STANDBY', 'STBY',  Icons.GetIcon('power-standby'),  (33840, rgb_dec565(Colors.On), 33840, 33840), (0, 1, 0, 1)),
+                     3: ('NIGHT',   'NIGHT', Icons.GetIcon('weather-night'),  (33840, 33840, rgb_dec565(Colors.On), 33840), (0, 0, 1, 0)),
+                     4: ('FROST',   'FROST', Icons.GetIcon('head-snowflake'), (33840, 33840, 33840, rgb_dec565(Colors.On)), (0, 0, 0, 1)),
+                     }
+
+            statusStr = modes[mode][0]
+            (activeColor_comfort, activeColor_standby, activeColor_night, activeColor_frost) = modes[mode][3]
+            (state_comfort, state_standby, state_night, state_frost) = modes[mode][4]
+
+            bt0 = f"{modes[mode][2]}~{activeColor_comfort}~{state_comfort}~{modes[mode][1]}~"
+            bt1 = f"{modes[mode][2]}~{activeColor_standby}~{state_standby}~{modes[mode][1]}~"
+            bt2 = f"{modes[mode][2]}~{activeColor_night}~{state_night}~{modes[mode][1]}~"
+            bt3 = f"{modes[mode][2]}~{activeColor_frost}~{state_frost}~{modes[mode][1]}~"
+            bt4 = ''
+            bt5 = ''
+            bt6 = ''
+            bt7 = ''
+
+            icon_res = bt0 + bt1 + bt2 + bt3 + bt4 + bt5 + bt6 + bt7
+
+        destTemp2 = ''
+        thermoPopup = 0 if page_content('items', {}).get('popupThermoMode1') is None else 1
 
         PageData = (
             'entityUpd~'
             f'{heading}~'  # Heading
-            f'{self.GetNavigationString(page)}~'  # Page Navigation
-            f'{internalNameEntity}~'  # internalNameEntity
-            f'{currentTemp}{temperatureUnit}~'  # Ist-Temperatur (String)
-            f'{destTemp}~'  # Soll-Temperatur (numerisch ohne Komma)
-            f'{statusStr}~'  # Mode
-            f'{minTemp}~'  # Thermostat Min-Temperatur
-            f'{maxTemp}~'  # Thermostat Max-Temperatur
-            f'{stepTemp}~'  # Schritte für Soll (0.5°C)
-            f'{icon_res}~'  # Icons Status
-            f'{self._get_locale("thermostat", "Currently")}~'  # Bezeichner vor aktueller Raumtemperatur
-            f'{self._get_locale("thermostat", "State")}~'  # Bezeichner vor State
-            f'{temperatureUnit}~'  # iconTemperature dstTempTwoTempMode
-            f'{destTemp2}~'  # dstTempTwoTempMode --> Wenn Wert, dann 2 Temp
-            f'{thermoPopup}'  # PopUp
+            f'{self.GetNavigationString(page)}~'                # Page Navigation
+            f'{internalNameEntity}~'                            # internalNameEntity
+            f'{currentTemp}{temperatureUnit}~'                  # Ist-Temperatur (String)
+            f'{destTemp}~'                                      # Soll-Temperatur (numerisch ohne Komma in Zehntelgrad)
+            f'{statusStr}~'                                     # Mode
+            f'{minTemp}~'                                       # Thermostat Min-Temperatur (numerisch ohne Komma in Zehntelgrad)
+            f'{maxTemp}~'                                       # Thermostat Max-Temperatur (numerisch ohne Komma in Zehntelgrad)
+            f'{stepTemp}~'                                      # Schritte für Soll (0.5°C) (numerisch ohne Komma in Zehntelgrad)
+            f'{icon_res}~'                                      # Icons Status
+            f'{self._get_locale("thermostat", "Currently")}~'   # Bezeichner vor aktueller Raumtemperatur
+            f'{self._get_locale("thermostat", "State")}~'       # Bezeichner vor State
+            f'{temperatureUnit}~'                               # iconTemperature dstTempTwoTempMode
+            f'{destTemp2}~'                                     # dstTempTwoTempMode --> Wenn Wert, dann 2 Temp
+            f'{thermoPopup}'                                    # PopUp
         )
 
         out_msgs.append(PageData)
@@ -1519,3 +1547,7 @@ class NSPanel(MqttPlugin):
             return f"Exception during send_mqtt_from_nspanel: {e}"
         else:
             return f"send_mqtt_from_nspanel with payload={payload} to topic={topic} done"
+
+
+def rgb_dec565(rgb):
+    return ((rgb['red'] >> 3) << 11) | ((rgb['green'] >> 2)) << 5 | ((rgb['blue']) >> 3)

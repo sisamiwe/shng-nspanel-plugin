@@ -6900,3 +6900,81 @@ class IconsSelector(object):
 
     def GetIcon(self, ma_name: str) -> str:
         return self.iconMap.get(ma_name, '')
+
+class ColorThemes(object):
+    HMIOff =           {'red':  68, 'green': 115, 'blue': 158}     # Blau-Off - Original Entity Off
+    HMIDark =          {'red':  29, 'green':  29, 'blue':  29}     # Original Background Color
+    Off =              {'red': 253, 'green': 128, 'blue':   0}     # Orange-Off - schönere Farbübergänge
+    On =               {'red': 253, 'green': 216, 'blue':  53}
+    MSRed =            {'red': 251, 'green': 105, 'blue':  98}
+    MSYellow =         {'red': 255, 'green': 235, 'blue': 156}
+    MSGreen =          {'red': 121, 'green': 222, 'blue': 121}
+    Red =              {'red': 255, 'green':   0, 'blue':   0}
+    White =            {'red': 255, 'green': 255, 'blue': 255}
+    Yellow =           {'red': 255, 'green': 255, 'blue':   0}
+    Green =            {'red':   0, 'green': 255, 'blue':   0}
+    Blue =             {'red':   0, 'green':   0, 'blue': 255}
+    DarkBlue =         {'red':   0, 'green':   0, 'blue': 136}
+    Gray =             {'red': 136, 'green': 136, 'blue': 136}
+    Black =            {'red':   0, 'green':   0, 'blue':   0}
+    colorSpotify =     {'red':  30, 'green': 215, 'blue':  96}
+    colorAlexa =       {'red':  49, 'green': 196, 'blue': 243}
+    colorRadio =       {'red': 255, 'green': 127, 'blue':   0}
+    BatteryFull =      {'red':  96, 'green': 176, 'blue':  62}
+    BatteryEmpty =     {'red': 179, 'green':  45, 'blue':  25}
+
+    #Dynamische Indikatoren
+    colorScale0 =      {'red':  99, 'green': 190, 'blue': 123}
+    colorScale1 =      {'red': 129, 'green': 199, 'blue': 126}
+    colorScale2 =      {'red': 161, 'green': 208, 'blue': 127}
+    colorScale3 =      {'red': 129, 'green': 217, 'blue': 126}
+    colorScale4 =      {'red': 222, 'green': 226, 'blue': 131}
+    colorScale5 =      {'red': 254, 'green': 235, 'blue': 132}
+    colorScale6 =      {'red': 255, 'green': 210, 'blue': 129}
+    colorScale7 =      {'red': 251, 'green': 185, 'blue': 124}
+    colorScale8 =      {'red': 251, 'green': 158, 'blue': 117}
+    colorScale9 =      {'red': 248, 'green': 131, 'blue': 111}
+    colorScale10 =     {'red': 248, 'green': 105, 'blue': 107}
+
+    #Screensaver Default Theme Colors
+    scbackground =     {'red':   0, 'green':   0, 'blue':   0}
+    scbackgroundInd1 = {'red': 255, 'green':   0, 'blue':   0}
+    scbackgroundInd2 = {'red': 121, 'green': 222, 'blue': 121}
+    scbackgroundInd3 = {'red': 255, 'green': 255, 'blue':   0}
+    sctime =           {'red': 255, 'green': 255, 'blue': 255}
+    sctimeAMPM =       {'red': 255, 'green': 255, 'blue': 255}
+    scdate =           {'red': 255, 'green': 255, 'blue': 255}
+    sctMainIcon =      {'red': 255, 'green': 255, 'blue': 255}
+    sctMainText =      {'red': 255, 'green': 255, 'blue': 255}
+    sctForecast1 =     {'red': 255, 'green': 255, 'blue': 255}
+    sctForecast2 =     {'red': 255, 'green': 255, 'blue': 255}
+    sctForecast3 =     {'red': 255, 'green': 255, 'blue': 255}
+    sctForecast4 =     {'red': 255, 'green': 255, 'blue': 255}
+    sctF1Icon =        {'red': 255, 'green': 235, 'blue': 156}
+    sctF2Icon =        {'red': 255, 'green': 235, 'blue': 156}
+    sctF3Icon =        {'red': 255, 'green': 235, 'blue': 156}
+    sctF4Icon =        {'red': 255, 'green': 235, 'blue': 156}
+    sctForecast1Val =  {'red': 255, 'green': 255, 'blue': 255}
+    sctForecast2Val =  {'red': 255, 'green': 255, 'blue': 255}
+    sctForecast3Val =  {'red': 255, 'green': 255, 'blue': 255}
+    sctForecast4Val =  {'red': 255, 'green': 255, 'blue': 255}
+    scbar =            {'red': 255, 'green': 255, 'blue': 255}
+    sctMainIconAlt =   {'red': 255, 'green': 255, 'blue': 255}
+    sctMainTextAlt =   {'red': 255, 'green': 255, 'blue': 255}
+    sctTimeAdd =       {'red': 255, 'green': 255, 'blue': 255}
+
+    #Auto-Weather-Colors
+    swClearNight =     {'red': 150, 'green': 150, 'blue': 100}
+    swCloudy =         {'red':  75, 'green':  75, 'blue':  75}
+    swExceptional =    {'red': 255, 'green':  50, 'blue':  50}
+    swFog =            {'red': 150, 'green': 150, 'blue': 150}
+    swHail =           {'red': 200, 'green': 200, 'blue': 200}
+    swLightning =      {'red': 200, 'green': 200, 'blue':   0}
+    swLightningRainy = {'red': 200, 'green': 200, 'blue': 150}
+    swPartlycloudy =   {'red': 150, 'green': 150, 'blue': 150}
+    swPouring =        {'red':  50, 'green':  50, 'blue': 255}
+    swRainy =          {'red': 100, 'green': 100, 'blue': 255}
+    swSnowy =          {'red': 150, 'green': 150, 'blue': 150}
+    swSnowyRainy =     {'red': 150, 'green': 150, 'blue': 255}
+    swSunny =          {'red': 255, 'green': 255, 'blue':   0}
+    swWindy =          {'red': 150, 'green': 150, 'blue': 150}

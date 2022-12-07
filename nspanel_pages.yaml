@@ -4,12 +4,18 @@ config:
   brightness_active: 99         # 0-100%
   temperatureUnit: °C
   locale: de-DE
+  timeFormat: '%H:%M'           # currently not used
+  dateFormat: '%A, %d. %B %Y'   # currently not used
   sleep_brightness:
     - time: "7:00:00"
       value: 10
     - time: "23:00:00"
       value: 0
   update_mode: auto-notify
+  defaultOffColor: Off
+  defaultOnColor: On
+  defaultColor: Off
+  defaultBackgroundColor: Black
 
 cards:
   - pageType: cardEntities
@@ -102,10 +108,10 @@ cards:
     items:
         item_temp_current:  # an item for the actual temperature
         item_temp_set:      # an item for the set temperature
-        item_mode:          # an item for comfort / standby (3x bit or 1x byte, optional)
+        item_mode:          # an item for comfort / standby (3x bit or 1x byte, optional) RTR Betriebsmodus (1-4) -> raumtemp.eg.wohnen.rtr.betriebsmodus
         item_night:         # an item for night (3x bit or 1x byte, optional)
         item_frost:         # an item for frost (3x bit or 1x byte, optional)
-        item_state:         # an item for the current state of the actuator (optional)
+        item_state:         # an item for the current state of the actuator (optional) RTR Betriebszustand -> raumtemp.eg.wohnen.rtr.reglerstatus.allgemein
         item_text:          # an item for additional text, (optional)
         minSetValue: 50     # min Value which can be set (decimal degrees)
         maxSetValue: 300    # max Value which can be set (decimal degrees)
