@@ -148,15 +148,8 @@ class NSPanel(MqttPlugin):
         # link items from config to method 'update_item'
         self._get_items_of_panel_config_to_update_item()
 
-        # add scheduler for cyclic time and date update
-        dt = self.shtime.now() + timedelta(seconds=20)
-        self.scheduler_add('update_nspanel_time', self.send_current_time, next=dt, cycle=60)
-        self.scheduler_add('update_nspanel_date', self.send_current_date, cron='1 0 0 * * *', next=dt)
-
         # set plugin alive
         self.alive = True
-
-        # self.send_mqtt_from_nspanel(1)
 
     def stop(self):
         """
@@ -167,6 +160,9 @@ class NSPanel(MqttPlugin):
 
         # stop subscription to all topics
         self.stop_subscriptions()
+
+        # remove scheduler for cyclic updates of time and date
+        self._remove_scheduler_time_date()
 
     def parse_item(self, item):
         """
@@ -385,6 +381,9 @@ class NSPanel(MqttPlugin):
                     self.logger.debug(f"New online device based on LWT Message discovered.")
                     self._handle_new_discovered_device(tasmota_topic)
                 self.tasmota_devices[tasmota_topic]['online_timeout'] = datetime.now() + timedelta(seconds=self.telemetry_period + 5)
+                self._add_scheduler_time_date()
+            else:
+                self._remove_scheduler_time_date()
 
             if tasmota_topic in self.tasmota_devices:
                 self.tasmota_devices[tasmota_topic]['online'] = payload
@@ -758,6 +757,8 @@ class NSPanel(MqttPlugin):
         self.tasmota_devices[tasmota_topic]['relais'] = {}
         self.tasmota_devices[tasmota_topic]['zigbee'] = {}
 
+        self._remove_scheduler_time_date()
+
     def _check_online_status(self):
         """
         checks all tasmota topics, if last message is with telemetry period. If not set tasmota_topic offline
@@ -929,6 +930,27 @@ class NSPanel(MqttPlugin):
     ################################
     #  NSPage Stuff
     ################################
+
+    def _add_scheduler_time_date(self):
+        """
+        add scheduler for cyclic time and date update
+        """
+
+        self.logger.debug('Add scheduler for cyclic updates of time and date')
+
+        dt = self.shtime.now() + timedelta(seconds=20)
+        self.scheduler_add('update_nspanel_time', self.send_current_time, next=dt, cycle=60)
+        self.scheduler_add('update_nspanel_date', self.send_current_date, cron='1 0 0 * * *', next=dt)
+
+    def _remove_scheduler_time_date(self):
+        """
+        remove scheduler for cyclic time and date update
+        """
+
+        self.logger.debug('Remove scheduler for cyclic updates of time and date')
+
+        self.scheduler_remove('update_nspanel_time')
+        self.scheduler_remove('update_nspanel_date')
 
     def _parse_config_file(self):
         """
