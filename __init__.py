@@ -569,7 +569,7 @@ class NSPanel(MqttPlugin):
 
                 elif 'Module' in payload:
                     self.logger.info(f"Received Message decoded as Module message.")
-                    self._handle_module(tasmota_topic, payload['Module'])
+                    #self._handle_module(tasmota_topic, payload['Module']) # ToDo
 
                 # Handling of Light messages
                 elif 'CustomRecv' in payload:
@@ -1154,7 +1154,7 @@ class NSPanel(MqttPlugin):
 
             elif method == 'buttonPress2':
                 self.screensaverEnabled = False
-                self.logger.debug(f"{words[0]} - {words[1]} - {words[2]} - {words[3]} - {words[4]}")
+                self.logger.debug(f"{words[0]} - {words[1]} - {words[2]} - {words[3]}")
                 self.HandleButtonEvent(words)
 
             elif method == 'button1':
@@ -1193,7 +1193,7 @@ class NSPanel(MqttPlugin):
         pageName = words[2]
         buttonAction = words[3]
 
-        self.logger.debug(f"HandleButtonEvent: {words[0]} - {words[1]} - {words[2]} - {words[3]} - {words[4]} - current_page={self.current_page}")
+        self.logger.debug(f"HandleButtonEvent: {words[0]} - {words[1]} - {words[2]} - {words[3]} - current_page={self.current_page}")
 
         if 'navigate' in pageName:
             self.GeneratePage(pageName[8:len(pageName)])
@@ -1443,7 +1443,13 @@ class NSPanel(MqttPlugin):
                 break
 
             item = self._get_item(entity['internalNameEntity'])
-            value = item() if item else entity.get('optionalValue', 0)
+            if item:
+                if entity['type'] == 'switch' or entity['type'] == 'light' :
+                    value = int(item())
+                else:
+                    value = item()
+            else:
+                value = entity.get('optionalValue', 0)
 
             pageData = (
                        f"{pageData}~"
