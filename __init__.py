@@ -1450,12 +1450,16 @@ class NSPanel(MqttPlugin):
                     value = item()
             else:
                 value = entity.get('optionalValue', 0)
+                
+            iconid = Icons.GetIcon(entity['iconId'])
+            if iconid == '':
+                iconid = entity['iconId']
 
             pageData = (
                        f"{pageData}~"
                        f"{entity['type']}~"
                        f"{entity['internalNameEntity']}~"
-                       f"{entity['iconId']}~"
+                       f"{iconid}~"
                        f"{entity['iconColor']}~"
                        f"{entity['displayNameEntity']}~"
                        f"{value}"
