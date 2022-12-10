@@ -865,6 +865,19 @@ class NSPanel(MqttPlugin):
             item_relay = f'item_relay{relay_index}'
             self._set_item_value(device, item_relay, power_dict[power], function)
 
+    def _handle_module(self, device: str, payload: dict) -> None:
+        """
+        Extracts Module information out of payload and updates plugin dict
+
+        :param device:          Device, the Module information shall be handled
+        :param payload:         MQTT message payload
+
+        """
+        template = next(iter(payload))
+        module = payload[template]
+        self.tasmota_devices[device]['module'] = module
+        self.tasmota_devices[device]['tasmota_template'] = template
+
     def _handle_sensor(self, device: str, function: str, payload: dict) -> None:
         """
 
@@ -1036,7 +1049,7 @@ class NSPanel(MqttPlugin):
             self.logger.debug(f"No corresponding item for item_path={item_path} identified")
         return item
 
-    def _get_item_value(self, item, default = None):
+    def _get_item_value(self, item, default=None):
         """
         get item value from item path or item
         """
@@ -1154,7 +1167,7 @@ class NSPanel(MqttPlugin):
 
             elif method == 'buttonPress2':
                 self.screensaverEnabled = False
-                self.logger.debug(f"{words[0]} - {words[1]} - {words[2]} - {words[3]} - {words[4]}")
+                self.logger.debug(f"{words[0]} - {words[1]} - {words[2]} - {words[3]}")
                 self.HandleButtonEvent(words)
 
             elif method == 'button1':
@@ -1193,7 +1206,7 @@ class NSPanel(MqttPlugin):
         pageName = words[2]
         buttonAction = words[3]
 
-        self.logger.debug(f"HandleButtonEvent: {words[0]} - {words[1]} - {words[2]} - {words[3]} - {words[4]} - current_page={self.current_page}")
+        self.logger.debug(f"HandleButtonEvent: {words[0]} - {words[1]} - {words[2]} - {words[3]} - current_page={self.current_page}")
 
         if 'navigate' in pageName:
             self.GeneratePage(pageName[8:len(pageName)])
@@ -1444,12 +1457,18 @@ class NSPanel(MqttPlugin):
 
             item = self._get_item(entity['internalNameEntity'])
             value = item() if item else entity.get('optionalValue', 0)
+            if entity['type'] in ['switch', 'light']:
+                value = int(value)
+
+            iconid = Icons.GetIcon(entity['iconId'])
+            if iconid == '':
+                iconid = entity['iconId']
 
             pageData = (
                        f"{pageData}~"
                        f"{entity['type']}~"
                        f"{entity['internalNameEntity']}~"
-                       f"{entity['iconId']}~"
+                       f"{iconid}~"
                        f"{entity['iconColor']}~"
                        f"{entity['displayNameEntity']}~"
                        f"{value}"
