@@ -865,6 +865,19 @@ class NSPanel(MqttPlugin):
             item_relay = f'item_relay{relay_index}'
             self._set_item_value(device, item_relay, power_dict[power], function)
 
+    def _handle_module(self, device: str, payload: dict) -> None:
+        """
+        Extracts Module information out of payload and updates plugin dict
+
+        :param device:          Device, the Module information shall be handled
+        :param payload:         MQTT message payload
+
+        """
+        template = next(iter(payload))
+        module = payload[template]
+        self.tasmota_devices[device]['module'] = module
+        self.tasmota_devices[device]['tasmota_template'] = template
+
     def _handle_sensor(self, device: str, function: str, payload: dict) -> None:
         """
 
@@ -1036,7 +1049,7 @@ class NSPanel(MqttPlugin):
             self.logger.debug(f"No corresponding item for item_path={item_path} identified")
         return item
 
-    def _get_item_value(self, item, default = None):
+    def _get_item_value(self, item, default=None):
         """
         get item value from item path or item
         """
@@ -1443,14 +1456,10 @@ class NSPanel(MqttPlugin):
                 break
 
             item = self._get_item(entity['internalNameEntity'])
-            if item:
-                if entity['type'] == 'switch' or entity['type'] == 'light' :
-                    value = int(item())
-                else:
-                    value = item()
-            else:
-                value = entity.get('optionalValue', 0)
-                
+            value = item() if item else entity.get('optionalValue', 0)
+            if entity['type'] in ['switch', 'light']:
+                value = int(value)
+
             iconid = Icons.GetIcon(entity['iconId'])
             if iconid == '':
                 iconid = entity['iconId']
