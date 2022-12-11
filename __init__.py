@@ -1228,6 +1228,18 @@ class NSPanel(MqttPlugin):
                 item(value)
             self.GeneratePage(self.current_page)
 
+        elif buttonAction == 'button':
+            item = self._get_item(words[2])
+            if item is not None:
+                value = item()
+                if item.property.type == "bool":
+                    value = int(not(value))
+                elif item.property.type == "num":
+                    value = 100-value # TODO: how to handle other max values
+                self.logger.debug(f"item={item.id()} will be set to new value={value}")
+                item(value)
+            self.GeneratePage(self.current_page)
+
     def findPageItem(self, searching: str):
         activePage = self.panel_config['cards'][self.current_page]
         pageItem = next((item for item in activePage if item["entity"] == searching), None)
@@ -1272,6 +1284,13 @@ class NSPanel(MqttPlugin):
         self.logger.debug(f"GenerateEntitiesPage called with page={page}")
         out_msgs = list()
         out_msgs.append('pageType~cardEntities')
+        out_msgs.append(self.GeneratePageElements(page))
+        return out_msgs
+
+    def GenerateGridPage(self, page) -> list:
+        self.logger.debug(f"GenerateGridPage called with page={page}")
+        out_msgs = list()
+        out_msgs.append('pageType~cardGrid')
         out_msgs.append(self.GeneratePageElements(page))
         return out_msgs
 
@@ -1350,9 +1369,6 @@ class NSPanel(MqttPlugin):
         self.logger.debug(f"GenerateThermoPage called with out_msgs={out_msgs}")
 
         return out_msgs
-
-    def GenerateGridPage(self, page) -> list:
-        self.logger.debug(f"GenerateGridPage to be implemented")
 
     def GenerateMediaPage(self, page) -> list:
         self.logger.debug(f"GenerateMediaPage to be implemented")
@@ -1446,8 +1462,7 @@ class NSPanel(MqttPlugin):
         pageData = (
                     f"entityUpd~"
                     f"{page_content['heading']}~"
-                    f"{page_content['navigationLeft']}|"
-                    f"{page_content['navigationRight']}"
+                    f"{self.GetNavigationString(page)}"
                     )
 
         for idx, entity in enumerate(page_content['entities']):
@@ -1464,13 +1479,29 @@ class NSPanel(MqttPlugin):
             if iconid == '':
                 iconid = entity['iconId']
 
+            if page_content['pageType'] == 'cardGrid':
+                if value:
+                    # TODO Get defaultcolor if oncolor not defined
+                    iconColor = entity['onColor']
+                else:
+                    # TODO Get defaultcolor if offcolor not defined
+                    iconColor = entity['offColor']
+            else:
+                iconColor = entity['iconColor']
+
+            displayNameEntity = entity['displayNameEntity']
+            if page_content['pageType'] == 'cardGrid':
+                if entity['type'] == 'text':
+                    iconColor = entity['offColor']
+                    iconid = value
+
             pageData = (
                        f"{pageData}~"
                        f"{entity['type']}~"
                        f"{entity['internalNameEntity']}~"
                        f"{iconid}~"
-                       f"{entity['iconColor']}~"
-                       f"{entity['displayNameEntity']}~"
+                       f"{iconColor}~"
+                       f"{displayNameEntity}~"
                        f"{value}"
                        )
 
@@ -1504,9 +1535,9 @@ class NSPanel(MqttPlugin):
         #     return '2|2'
 
         if page == 0:
-            return '1|1'
+            return '0|1'
         elif page == self.no_of_cards - 1:
-            return '1|1'
+            return '1|0'
         elif page == -1:
             return '2|0'
         elif page == -2:
