@@ -1235,7 +1235,7 @@ class NSPanel(MqttPlugin):
                 if item.property.type == "bool":
                     value = int(not(value))
                 elif item.property.type == "num":
-                    value = 100-value # TODO: how to handle other max values
+                    value = 100-value  # TODO: how to handle other max values
                 self.logger.debug(f"item={item.id()} will be set to new value={value}")
                 item(value)
             self.GeneratePage(self.current_page)
@@ -1481,11 +1481,15 @@ class NSPanel(MqttPlugin):
 
             if page_content['pageType'] == 'cardGrid':
                 if value:
+                    iconColor = entity.get('onColor')
                     # TODO Get defaultcolor if oncolor not defined
-                    iconColor = entity['onColor']
+                    if not iconColor:
+                        iconColor = getattr(Colors, self.panel_config['config']['defaultOnColor'])
                 else:
+                    iconColor = entity.get('offColor')
                     # TODO Get defaultcolor if offcolor not defined
-                    iconColor = entity['offColor']
+                    if not iconColor:
+                        iconColor = getattr(Colors, self.panel_config['config']['defaultOffColor'])
             else:
                 iconColor = entity['iconColor']
 
