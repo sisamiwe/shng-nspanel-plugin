@@ -569,7 +569,7 @@ class NSPanel(MqttPlugin):
 
                 elif 'Module' in payload:
                     self.logger.info(f"Received Message decoded as Module message.")
-                    #self._handle_module(tasmota_topic, payload['Module']) # ToDo
+                    self._handle_module(tasmota_topic, payload['Module'])
 
                 # Handling of Light messages
                 elif 'CustomRecv' in payload:
