@@ -1469,34 +1469,36 @@ class NSPanel(MqttPlugin):
 
         for idx, entity in enumerate(page_content['entities']):
             self.logger.debug(f"entity={entity}")
+
             if idx > maxItems:
                 break
 
+            # get item and item value
             item = self._get_item(entity['internalNameEntity'])
             value = item() if item else entity.get('optionalValue', 0)
             if entity['type'] in ['switch', 'light']:
                 value = int(value)
 
+            # define icon id
             iconid = Icons.GetIcon(entity['iconId'])
-            if iconid == '':
-                iconid = entity['iconId']
 
+            # define icon color
             if page_content['pageType'] == 'cardGrid':
                 if value:
-                    iconColor = entity.get('onColor')
-                    if not iconColor:
-                        iconColor = getattr(Colors, self.panel_config['config']['defaultOnColor'])
+                    iconColor = entity.get('onColor', getattr(Colors, self.panel_config['config']['defaultOnColor']))
                 else:
-                    iconColor = entity.get('offColor')
-                    if not iconColor:
-                        iconColor = getattr(Colors, self.panel_config['config']['defaultOffColor'])
-            else:
-                iconColor = entity['iconColor']
+                    iconColor = entity.get('offColor', getattr(Colors, self.panel_config['config']['defaultOffColor']))
 
-            displayNameEntity = entity['displayNameEntity']
+            else:
+                iconColor = entity.get('iconColor')
+
+            # define displayNameEntity
+            displayNameEntity = entity.get('displayNameEntity')
+
+            # handle cardGrid with text
             if page_content['pageType'] == 'cardGrid':
                 if entity['type'] == 'text':
-                    iconColor = entity['offColor']
+                    iconColor = entity.get('offColor', getattr(Colors, self.panel_config['config']['defaultOffColor']))
                     iconid = value
 
             pageData = (
