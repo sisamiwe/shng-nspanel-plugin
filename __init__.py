@@ -35,12 +35,12 @@ import sys
 from lib.model.mqttplugin import MqttPlugin
 from .webif import WebInterface
 
-from lib.item import Items
-items = Items.get_instance()
-
 from . import nspanel_icons_colors
 Icons = nspanel_icons_colors.IconsSelector()
 Colors = nspanel_icons_colors.ColorThemes()
+
+from lib.item import Items
+items = Items.get_instance()
 
 
 class NSPanel(MqttPlugin):
@@ -92,6 +92,8 @@ class NSPanel(MqttPlugin):
         self.nspanel_init = False
         self.panel_version = 45
         self.panel_model = 'eu'
+        self.useMediaEvents = False
+        self.screensaverEnabled = False
         self.alive = None
 
         # read panel config file
@@ -111,9 +113,9 @@ class NSPanel(MqttPlugin):
             return
 
         # Add subscription to get device discovery
-        self.add_subscription(        'tasmota/discovery/+/config',          'dict',                                    callback=self.on_mqtt_discovery_message)
-        self.add_subscription(        'tasmota/discovery/+/sensors',         'dict',                                    callback=self.on_mqtt_discovery_message)
-            # self.add_tasmota_subscription('tasmota', 'discovery', '#',           'dict',                                    callback=self.on_mqtt_discovery_message)
+        self.add_subscription('tasmota/discovery/+/config',          'dict',                                    callback=self.on_mqtt_discovery_message)
+        self.add_subscription('tasmota/discovery/+/sensors',         'dict',                                    callback=self.on_mqtt_discovery_message)
+        # self.add_tasmota_subscription('tasmota', 'discovery', '#',           'dict',                                    callback=self.on_mqtt_discovery_message)
         # Add subscription to get device LWT
         self.add_tasmota_subscription('tele', self.tasmota_topic, 'LWT',     'bool', bool_values=['Offline', 'Online'], callback=self.on_mqtt_lwt_message)
         # Add subscription to get device status
@@ -1233,7 +1235,7 @@ class NSPanel(MqttPlugin):
             if item is not None:
                 value = item()
                 if item.property.type == "bool":
-                    value = int(not(value))
+                    value = int(not value)
                 elif item.property.type == "num":
                     value = 100-value  # TODO: how to handle other max values
                 self.logger.debug(f"item={item.id()} will be set to new value={value}")
@@ -1415,22 +1417,22 @@ class NSPanel(MqttPlugin):
 
         # Generata PageDate according to: entityUpd, heading, navigation, textQR[, type, internalName, iconId, displayName, optionalValue]x2
         pageData = (
-                   f'entityUpd~'                        # entityUpd
-                   f'{heading}~'                        # heading
-                   f'{self.GetNavigationString(page)}~' # navigation
-                   f'{textQR}~'                         # textQR
-                   f'{type1}~'                          # type
-                   f'{internalName1}~'                  # internalName
-                   f'{iconId1}~'                        # iconId
-                   f'65535~'                            # iconColor
-                   f'{displayName1}~'                   # displayName
-                   f'{optionalValue1}~'                 # optionalValue
-                   f'{type2}~'                          # type
-                   f'{internalName2}~'                  # internalName
-                   f'{iconId2}~'                        # iconId
-                   f'65535~'                            # iconColor
-                   f'{displayName2}~'                   # displayName
-                   f'{optionalValue2}'                 # optionalValue
+                   f'entityUpd~'                         # entityUpd
+                   f'{heading}~'                         # heading
+                   f'{self.GetNavigationString(page)}~'  # navigation
+                   f'{textQR}~'                          # textQR
+                   f'{type1}~'                           # type
+                   f'{internalName1}~'                   # internalName
+                   f'{iconId1}~'                         # iconId
+                   f'65535~'                             # iconColor
+                   f'{displayName1}~'                    # displayName
+                   f'{optionalValue1}~'                  # optionalValue
+                   f'{type2}~'                           # type
+                   f'{internalName2}~'                   # internalName
+                   f'{iconId2}~'                         # iconId
+                   f'65535~'                             # iconColor
+                   f'{displayName2}~'                    # displayName
+                   f'{optionalValue2}'                   # optionalValue
                    )
         out_msgs.append(pageData)
 
@@ -1626,4 +1628,4 @@ class NSPanel(MqttPlugin):
 
 
 def rgb_dec565(rgb):
-    return ((rgb['red'] >> 3) << 11) | ((rgb['green'] >> 2)) << 5 | ((rgb['blue']) >> 3)
+    return ((rgb['red'] >> 3) << 11) | (rgb['green'] >> 2) << 5 | ((rgb['blue']) >> 3)
