@@ -57,7 +57,13 @@ cards:
     navigationLeft: 0
     navigationRight: 0
     entities:
-      - entity: Licht
+      - entity: B1
+        type: light
+        internalNameEntity: OG.Arbeit.Licht1
+        iconId: lightbulb
+        onColor: 65222
+        offColor: 17299
+        displayNameEntity: OG.Arbeit.Licht1
       - entity: Schalter
       - entity: delete
       - entity: Button
