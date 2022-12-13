@@ -26,7 +26,7 @@ cards:
       - entity: Arbeitszimmer Licht
         type: light
         internalNameEntity: EG.Arbeiten.Licht
-        iconId: 1
+        iconId: lightbulb
         iconColor: 17299
         displayNameEntity: Arbeitszimmer Licht
         optionalValue: 0
@@ -40,7 +40,7 @@ cards:
       - entity: Temperatur
         type: text
         internalNameEntity: EG.Arbeiten.Heizung.ist
-        iconId: 3
+        iconId: heating-coil
         iconColor: 17299
         displayNameEntity: Temperature
         optionalValue: 22
@@ -52,23 +52,46 @@ cards:
         displayNameEntity: Switch1
         optionalValue: 0
 
-  - pageType: cardGrid
-    heading: Example Grid
-    navigationLeft: 0
-    navigationRight: 0
+ - pageType: cardGrid
+    heading: Arbeitszimmer
     entities:
       - entity: B1
         type: light
-        internalNameEntity: OG.Arbeit.Licht1
+        internalNameEntity: EG.Arbeiten.Licht
         iconId: lightbulb
         onColor: 65222
         offColor: 17299
-        displayNameEntity: OG.Arbeit.Licht1
-      - entity: Schalter
-      - entity: delete
-      - entity: Button
-      - entity: Abdeckung
-      - entity: Navi
+        displayNameEntity: Licht
+        optionalValue: 0
+      - entity: B2
+        type: fuse
+        internalNameEntity: EG.Arbeiten.EDV
+        iconId: socket
+        onColor: 65222
+        offColor: 17299
+        displayNameEntity: Stern
+        optionalValue: 0
+      - entity: B3
+        type: text
+        internalNameEntity: EG.Arbeiten.Heizung.ist
+        iconId: heating-coil
+        onColor: 65222
+        offColor: 15299
+        displayNameEntity: Temperatur
+      # - entity: B4
+      #   type: switch
+      #   internalNameEntity: OG.Arbeit.Steckdose1
+      #   iconId: power-socket-de
+      #   onColor: 65222
+      #   offColor: 17299
+      #   displayNameEntity: Steckdose
+      # - entity: B5
+      #   type: switch
+      #   internalNameEntity: OG.Arbeit.Steckdose2
+      #   iconId: power-socket-de
+      #   onColor: 65222
+      #   offColor: 17299
+      #   displayNameEntity: Steckdose
 
   - pageType: cardThermo
     entity: Klima
