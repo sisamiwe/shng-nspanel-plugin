@@ -18,78 +18,78 @@ config:
   defaultBackgroundColor: Black
 
 cards:
-  # - pageType: cardEntities
-    # heading: Arbeitszimmer
-    # entities:
-      # - entity: ABC
-        # type: light
-        # internalNameEntity: OG.Arbeit.Licht1
-        # iconId: lightbulb
-        # iconColor: 17299
-        # displayNameEntity: OG.Arbeit.Licht1
-        # optionalValue: 0
-      # - entity: DEF
-        # type: light
-        # internalNameEntity: KG.Technik.Steckdose2
-        # iconId: star-outline
-        # iconColor: 17299
-        # displayNameEntity: Stern
-        # optionalValue: 0
-      # - entity: GHJ
-        # type: text
-        # internalNameEntity: OG.Arbeit.Temperatur
-        # iconId: temperature-celsius
-        # iconColor: 17299
-        # displayNameEntity: Temperatur
-        # optionalValue: 22
-      # - entity: KLM
-        # type: switch
-        # internalNameEntity: OG.Arbeit.Steckdose2
-        # iconId: power-socket-de
-        # iconColor: 17299
-        # displayNameEntity: Steckdose
-        # optionalValue: 1
-
-  - pageType: cardGrid
+  - pageType: cardEntities
     heading: Arbeitszimmer
     entities:
-      - entity: B1
+      - entity: ABC
         type: light
-        internalNameEntity: OG.Arbeit.Licht1
+        internalNameEntity: EG.Arbeiten.Licht
         iconId: lightbulb
-        onColor: 65222
-        offColor: 17299
-        displayNameEntity: Licht
+        iconColor: 17299
+        displayNameEntity: OG.Arbeit.Licht1
         optionalValue: 0
-      - entity: B2
-        type: light
-        internalNameEntity: KG.Technik.Steckdose2
-        iconId: star-outline
-        onColor: 65222
-        offColor: 17299
-        displayNameEntity: Stern
+      - entity: DEF
+        type: switch
+        internalNameEntity: EG.Arbeiten.EDV
+        iconId: power-socket-de
+        iconColor: 17299
+        displayNameEntity: Steckdose EDV
         optionalValue: 0
-      - entity: B3
+      - entity: GHJ
         type: text
-        internalNameEntity: OG.Arbeit.Temperatur
-        iconId: 20
-        onColor: 65222
-        offColor: 15299
+        internalNameEntity: EG.Arbeiten.Heizung.ist
+        iconId: temperature-celsius
+        iconColor: 17299
         displayNameEntity: Temperatur
-      - entity: B4
-        type: switch
-        internalNameEntity: OG.Arbeit.Steckdose1
-        iconId: power-socket-de
-        onColor: 65222
-        offColor: 17299
-        displayNameEntity: Steckdose
-      - entity: B5
-        type: switch
-        internalNameEntity: OG.Arbeit.Steckdose2
-        iconId: power-socket-de
-        onColor: 65222
-        offColor: 17299
-        displayNameEntity: Steckdose
+        optionalValue: 22
+      - entity: KLM
+        type: shutter
+        internalNameEntity: EG.Arbeiten.Rollladen.pos
+        iconId: window-shutter
+        iconColor: 17299
+        displayNameEntity: Rolladen
+        optionalValue: 1
+
+  # - pageType: cardGrid
+  #   heading: Arbeitszimmer
+  #   entities:
+  #     - entity: B1
+  #       type: light
+  #       internalNameEntity: OG.Arbeit.Licht1
+  #       iconId: lightbulb
+  #       onColor: 65222
+  #       offColor: 17299
+  #       displayNameEntity: Licht
+  #       optionalValue: 0
+  #     - entity: B2
+  #       type: light
+  #       internalNameEntity: KG.Technik.Steckdose2
+  #       iconId: star-outline
+  #       onColor: 65222
+  #       offColor: 17299
+  #       displayNameEntity: Stern
+  #       optionalValue: 0
+  #     - entity: B3
+  #       type: text
+  #       internalNameEntity: OG.Arbeit.Temperatur
+  #       iconId: 20
+  #       onColor: 65222
+  #       offColor: 15299
+  #       displayNameEntity: Temperatur
+  #     - entity: B4
+  #       type: switch
+  #       internalNameEntity: OG.Arbeit.Steckdose1
+  #       iconId: power-socket-de
+  #       onColor: 65222
+  #       offColor: 17299
+  #       displayNameEntity: Steckdose
+  #     - entity: B5
+  #       type: switch
+  #       internalNameEntity: OG.Arbeit.Steckdose2
+  #       iconId: power-socket-de
+  #       onColor: 65222
+  #       offColor: 17299
+  #       displayNameEntity: Steckdose
 
   # - pageType: cardThermo
     # entity: Klima
@@ -126,24 +126,24 @@ cards:
         # setThermoAlias: ['MODE1','MODE2','MODE3']
         # setThermoDestTemp2: 'ACTUAL2'
 
-  - pageType: cardThermo
-    entity: Klima2
-    heading: Büro Thermostat
+  # - pageType: cardThermo
+  #   entity: Klima2
+  #   heading: Büro Thermostat
     #useColor: true
     #subPage: false
     #parent: undefined
-    items:
-        item_temp_current: OG.Arbeit.Temperatur # an item for the actual temperature
-        item_temp_set:     OG.Arbeit.Sollwert # an item for the set temperature
-        item_mode:         OG.Arbeit.Betriebsart # an item for comfort / standby (3x bit or 1x byte, optional) RTR Betriebsmodus (1-4)
-        item_night:         # an item for night (3x bit or 1x byte, optional)
-        item_frost:         # an item for frost (3x bit or 1x byte, optional)
-        item_state:         # an item for the current state of the actuator (optional) RTR Betriebszustand -> raumtemp.eg.wohnen.rtr.reglerstatus.allgemein
-        item_text:          # an item for additional text, (optional)
-        minSetValue: 50     # min Value which can be set (decimal degrees)
-        maxSetValue: 300    # max Value which can be set (decimal degrees)
-        stepSetValue: 50    # step for Value which can be set (decimal degrees)
-        popupThermoMode1: false
+    # items:
+    #     item_temp_current: OG.Arbeit.Temperatur # an item for the actual temperature
+    #     item_temp_set:     OG.Arbeit.Sollwert # an item for the set temperature
+    #     item_mode:         OG.Arbeit.Betriebsart # an item for comfort / standby (3x bit or 1x byte, optional) RTR Betriebsmodus (1-4)
+    #     item_night:         # an item for night (3x bit or 1x byte, optional)
+    #     item_frost:         # an item for frost (3x bit or 1x byte, optional)
+    #     item_state:         # an item for the current state of the actuator (optional) RTR Betriebszustand -> raumtemp.eg.wohnen.rtr.reglerstatus.allgemein
+    #     item_text:          # an item for additional text, (optional)
+    #     minSetValue: 50     # min Value which can be set (decimal degrees)
+    #     maxSetValue: 300    # max Value which can be set (decimal degrees)
+    #     stepSetValue: 50    # step for Value which can be set (decimal degrees)
+    #     popupThermoMode1: false
 
 screensaver:
     heading: Hallo
