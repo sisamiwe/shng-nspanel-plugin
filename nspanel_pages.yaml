@@ -25,28 +25,28 @@ cards:
     entities:
       - entity: Arbeitszimmer Licht
         type: light
-        internalNameEntity: licht.eg.tv_wand_nische
+        internalNameEntity: EG.Arbeiten.Licht
         iconId: 1
         iconColor: 17299
         displayNameEntity: Arbeitszimmer Licht
         optionalValue: 0
       - entity: Arbeitszimmer Rollladen
         type: shutter
-        internalNameEntity: Arbeitszimmer Rollladen
+        internalNameEntity: EG.Arbeiten.Rollladen.pos
         iconId: 0
         iconColor: 17299
         displayNameEntity: Arbeitszimmer Rollladen
         optionalValue: iconUp|iconStop|iconDown
       - entity: Temperatur
         type: text
-        internalNameEntity: tasmota.snzb02_01.temp
+        internalNameEntity: EG.Arbeiten.Heizung.ist
         iconId: 3
         iconColor: 17299
         displayNameEntity: Temperature
         optionalValue: 22
       - entity: Schalter
         type: switch
-        internalNameEntity: switch.entityName
+        internalNameEntity: EG.Arbeiten.EDV
         iconId: 4
         iconColor: 17299
         displayNameEntity: Switch1
