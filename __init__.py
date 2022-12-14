@@ -1243,6 +1243,39 @@ class NSPanel(MqttPlugin):
                 item(value)
             self.GeneratePage(self.current_page)
 
+        # Moving shutter for Up and Down moves
+        elif buttonAction == 'up':
+            # shutter moving until upper position
+            value = 0
+            item = self._get_item(words[2])
+
+            if item is not None:
+                self.logger.debug(f"item={item.id()} will be set to new value={value}")
+                item(value)
+            self.GeneratePage(self.current_page)
+
+        elif buttonAction == 'down':
+            # shutter moving down until down position
+            value = 254      
+            item = self._get_item(words[2])
+            self.logger.debug(item)
+
+
+            if item is not None:
+                self.logger.debug(f"item={item.id()} will be set to new value={value}")
+                item(value)
+            self.GeneratePage(self.current_page)
+
+        elif buttonAction == 'stop':
+           #shutter stops
+           value = 1
+           item = self._get_item("EG.Arbeiten.Rollladen.stop")
+
+           if item is not None:
+               self.logger.debug(f"item={item.id()} will be set to new value={value}")
+               item(value)
+           self.GeneratePage(self.current_page)
+
     def findPageItem(self, searching: str):
         activePage = self.panel_config['cards'][self.current_page]
         pageItem = next((item for item in activePage if item["entity"] == searching), None)
