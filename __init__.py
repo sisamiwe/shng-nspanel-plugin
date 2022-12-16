@@ -1174,11 +1174,11 @@ class NSPanel(MqttPlugin):
 
             elif method == 'button1':
                 self.screensaverEnabled = False
-                # HandleHardwareButton(method)
+                self.HandleHardwareButton(method)
 
             elif method == 'button2':
                 self.screensaverEnabled = False
-                # HandleHardwareButton(method)
+                self.HandleHardwareButton(method)
 
     def HandleStartupProcess(self):
         self.logger.debug("HandleStartupProcess called")
@@ -1200,6 +1200,12 @@ class NSPanel(MqttPlugin):
 
     def HandleScreensaverColors(self):
         self.logger.info('Function HandleScreensaverColors to be done')
+
+    def HandleHardwareButton(self, method):
+        self.logger.info(f"hw {method} pressed")
+        # TODO switch to hidden page
+        # TODO direct toggle item
+        self.GeneratePage(self.current_page)
 
     def HandleButtonEvent(self, words):
 
@@ -1311,16 +1317,17 @@ class NSPanel(MqttPlugin):
         # [[]] are not part of the command~ this part repeats 8 times for the buttons
 
         heading = page_content.get('heading', 'undefined')
-        internalNameEntity = page_content('items', {}).get('item_temp_set', 'undefined')
-        currentTemp = self._get_item_value(page_content('items', {}).get('item_temp_current'), 'undefined')
-        destTemp = self._get_item_value(page_content('items', {}).get('item_temp_set'), 'undefined')
-        statusStr = 'MANU'
-        minTemp = page_content.get('items', {}).get('minSetValue', 50)
-        maxTemp = page_content('items', {}).get('maxSetValue', 300)
-        stepTemp = page_content('items', {}).get('stepSetValue', 5)
+        items = page_content.get('items', 'undefined')
+        currentTemp = self._get_item(items.get('item_temp_current', 'undefined'))()
+        destTemp    = self._get_item(items.get('item_temp_set', 'undefined'))()
+        internalNameEntity = destTemp
+        statusStr   = 'MANU'
+        minTemp = items.get('minSetValue', 50)
+        maxTemp = items.get('maxSetValue', 300)
+        stepTemp = items.get('stepSetValue', 5)
         icon_res = ''
 
-        mode = self._get_item_value(page_content('items', {}).get('item_state'))
+        mode = self._get_item(items.get('item_mode', None))()
         if mode is not None:
 
             modes = {1: ('COMFORT', 'COMF',  Icons.GetIcon('alpha-a-circle'), (rgb_dec565(Colors.On), 33840, 33840, 33840), (1, 0, 0, 0)),
@@ -1336,7 +1343,7 @@ class NSPanel(MqttPlugin):
             bt0 = f"{modes[mode][2]}~{activeColor_comfort}~{state_comfort}~{modes[mode][1]}~"
             bt1 = f"{modes[mode][2]}~{activeColor_standby}~{state_standby}~{modes[mode][1]}~"
             bt2 = f"{modes[mode][2]}~{activeColor_night}~{state_night}~{modes[mode][1]}~"
-            bt3 = f"{modes[mode][2]}~{activeColor_frost}~{state_frost}~{modes[mode][1]}~"
+            bt3 = f"{modes[mode][2]}~{activeColor_frost}~{state_frost}~{modes[mode][1]}"
             bt4 = ''
             bt5 = ''
             bt6 = ''
@@ -1345,7 +1352,7 @@ class NSPanel(MqttPlugin):
             icon_res = bt0 + bt1 + bt2 + bt3 + bt4 + bt5 + bt6 + bt7
 
         destTemp2 = ''
-        thermoPopup = 0 if page_content('items', {}).get('popupThermoMode1') is None else 1
+        thermoPopup = 0 if items.get('popupThermoMode1', False) else 1
 
         PageData = (
             'entityUpd~'
@@ -1359,16 +1366,14 @@ class NSPanel(MqttPlugin):
             f'{maxTemp}~'                                       # Thermostat Max-Temperatur (numerisch ohne Komma in Zehntelgrad)
             f'{stepTemp}~'                                      # Schritte für Soll (0.5°C) (numerisch ohne Komma in Zehntelgrad)
             f'{icon_res}~'                                      # Icons Status
-            f'{self._get_locale("thermostat", "Currently")}~'   # Bezeichner vor aktueller Raumtemperatur
-            f'{self._get_locale("thermostat", "State")}~'       # Bezeichner vor State
+            f'Currently~'   # Todo #f'{self._get_locale("thermostat", "Currently")}~'   # Bezeichner vor aktueller Raumtemperatur
+            f'State~'       # Todo #f'{self._get_locale("thermostat", "State")}~'       # Bezeichner vor State
             f'{temperatureUnit}~'                               # iconTemperature dstTempTwoTempMode
             f'{destTemp2}~'                                     # dstTempTwoTempMode --> Wenn Wert, dann 2 Temp
             f'{thermoPopup}'                                    # PopUp
         )
 
         out_msgs.append(PageData)
-
-        self.logger.debug(f"GenerateThermoPage called with out_msgs={out_msgs}")
 
         return out_msgs
 
@@ -1481,6 +1486,8 @@ class NSPanel(MqttPlugin):
 
             # define icon id
             iconid = Icons.GetIcon(entity['iconId'])
+            if iconid == '':
+                iconid = entity['iconId']
 
             # define icon color
             if page_content['pageType'] == 'cardGrid':
@@ -1499,7 +1506,7 @@ class NSPanel(MqttPlugin):
             if page_content['pageType'] == 'cardGrid':
                 if entity['type'] == 'text':
                     iconColor = entity.get('offColor', getattr(Colors, self.panel_config['config']['defaultOffColor']))
-                    iconid = value
+                    iconid = str(value)[:4] # max 4 characters
 
             pageData = (
                        f"{pageData}~"
