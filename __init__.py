@@ -1138,10 +1138,7 @@ class NSPanel(MqttPlugin):
 
         typ = content_list[0]
         method = content_list[1]
-        page = content_list[2]
         words = content_list
-
-        self.logger.debug(f"HandlePanelMessage called with: typ={typ}, method={method}, page={page}, words={words}")
 
         if typ == 'event':
             if method == 'startup':
@@ -1233,20 +1230,53 @@ class NSPanel(MqttPlugin):
             item = self._get_item(words[2])
             if item is not None:
                 self.logger.debug(f"item={item.id()} will be set to new value={value}")
-                item(value, self.get_shortname())
+                item(value)
             self.GeneratePage(self.current_page)
 
         elif buttonAction == 'button':
-            item = self._get_item(words[2])
-            if item is not None:
+            item_name = words[2]
+            item = self._get_item(item_name)
+            
+            # Check if type of item is text
+            text = False
+            page_content = self.panel_config['cards'][self.current_page]
+            for entity in page_content['entities']:
+                if item_name == entity['internalNameEntity']:
+                    self.logger.warning(f"1")
+                    if entity['type'] == 'text':
+                        text = True
+                        self.logger.debug(f"item={item.id()} will get no update because it's text")
+                    break
+
+            if item is not None and not text:
                 value = item()
                 if item.property.type == "bool":
                     value = int(not value)
                 elif item.property.type == "num":
                     value = 100-value  # TODO: how to handle other max values
                 self.logger.debug(f"item={item.id()} will be set to new value={value}")
-                item(value, self.get_shortname())
+                item(value)
+                self.GeneratePage(self.current_page)
+
+        elif buttonAction == 'tempUpd':
+            value = int(words[4])/10
+            page_content = self.panel_config['cards'][self.current_page]
+            items = page_content.get('items', 'undefined')
+            self._get_item(items.get('item_temp_set', None))(value)
             self.GeneratePage(self.current_page)
+
+        elif buttonAction == 'hvac_action':
+            value = int(words[4])
+            if value < 99:
+                page_content = self.panel_config['cards'][self.current_page]
+                items = page_content.get('items', 'undefined')
+                self._get_item(items.get('item_mode', None))(value)
+            else:
+                self.logger.debug("no valid hvac action")
+            self.GeneratePage(self.current_page)
+            
+        else:
+            self.logger.warning(f"buttonAction {buttonAction} not implemented")
 
     def findPageItem(self, searching: str):
         activePage = self.panel_config['cards'][self.current_page]
@@ -1313,64 +1343,64 @@ class NSPanel(MqttPlugin):
         page_content = self.panel_config['cards'][page]
 
         # Compile PageData according to:
-        # entityUpd~*heading*~*navigation*~*internalNameEntiy*~*currentTemp*~*destTemp*~*status*~*minTemp*~*maxTemp*~*stepTemp*[[~*iconId*~*activeColor*~*state*~*hvac_action*]]~tCurTempLbl~tStateLbl~tALbl~iconTemperature~dstTempTwoTempMode~btDetail
+        # entityUpd~*heading*~*navigation*~*internalNameEntity*~*currentTemp*~*destTemp*~*status*~*minTemp*~*maxTemp*~*stepTemp*[[~*iconId*~*activeColor*~*state*~*hvac_action*]]~tCurTempLbl~tStateLbl~tALbl~iconTemperature~dstTempTwoTempMode~btDetail
         # [[]] are not part of the command~ this part repeats 8 times for the buttons
 
+        internalNameEntity = page_content.get('entity', 'undefined')
         heading = page_content.get('heading', 'undefined')
         items = page_content.get('items', 'undefined')
-        currentTemp = self._get_item(items.get('item_temp_current', 'undefined'))()
-        destTemp    = self._get_item(items.get('item_temp_set', 'undefined'))()
-        internalNameEntity = destTemp
+        currentTemp = str(self._get_item(items.get('item_temp_current', 'undefined'))()).replace(".", ",")
+        destTemp    = int(self._get_item(items.get('item_temp_set', 'undefined'))() * 10)
         statusStr   = 'MANU'
-        minTemp = items.get('minSetValue', 50)
-        maxTemp = items.get('maxSetValue', 300)
-        stepTemp = items.get('stepSetValue', 5)
+        minTemp = int(items.get('minSetValue', 5)*10)
+        maxTemp = int(items.get('maxSetValue', 30)*10)
+        stepTemp = int(items.get('stepSetValue', 0.5)*10)
         icon_res = ''
 
         mode = self._get_item(items.get('item_mode', None))()
         if mode is not None:
 
-            modes = {1: ('COMFORT', 'COMF',  Icons.GetIcon('alpha-a-circle'), (rgb_dec565(Colors.On), 33840, 33840, 33840), (1, 0, 0, 0)),
-                     2: ('STANDBY', 'STBY',  Icons.GetIcon('power-standby'),  (33840, rgb_dec565(Colors.On), 33840, 33840), (0, 1, 0, 1)),
-                     3: ('NIGHT',   'NIGHT', Icons.GetIcon('weather-night'),  (33840, 33840, rgb_dec565(Colors.On), 33840), (0, 0, 1, 0)),
-                     4: ('FROST',   'FROST', Icons.GetIcon('head-snowflake'), (33840, 33840, 33840, rgb_dec565(Colors.On)), (0, 0, 0, 1)),
+            modes = {1: ('Komfort', Icons.GetIcon('alpha-a-circle'), (rgb_dec565(Colors.On), 33840, 33840, 33840), (1, 0, 0, 0)),
+                     2: ('Standby', Icons.GetIcon('power-standby'),  (33840, rgb_dec565(Colors.On), 33840, 33840), (0, 1, 0, 1)),
+                     3: ('Nacht',   Icons.GetIcon('weather-night'),  (33840, 33840, rgb_dec565(Colors.On), 33840), (0, 0, 1, 0)),
+                     4: ('Frost',   Icons.GetIcon('head-snowflake'), (33840, 33840, 33840, rgb_dec565(Colors.On)), (0, 0, 0, 1)),
                      }
 
             statusStr = modes[mode][0]
-            (activeColor_comfort, activeColor_standby, activeColor_night, activeColor_frost) = modes[mode][3]
-            (state_comfort, state_standby, state_night, state_frost) = modes[mode][4]
+            (activeColor_comfort, activeColor_standby, activeColor_night, activeColor_frost) = modes[mode][2]
+            (state_comfort, state_standby, state_night, state_frost) = modes[mode][3]
 
-            bt0 = f"{modes[mode][2]}~{activeColor_comfort}~{state_comfort}~{modes[mode][1]}~"
-            bt1 = f"{modes[mode][2]}~{activeColor_standby}~{state_standby}~{modes[mode][1]}~"
-            bt2 = f"{modes[mode][2]}~{activeColor_night}~{state_night}~{modes[mode][1]}~"
-            bt3 = f"{modes[mode][2]}~{activeColor_frost}~{state_frost}~{modes[mode][1]}"
-            bt4 = ''
-            bt5 = ''
-            bt6 = ''
-            bt7 = ''
+            bt0 = " ~0~0~99~"
+            bt1 = " ~0~0~99~"
+            bt2 = f"{modes[1][1]}~{activeColor_comfort}~{state_comfort}~1~"
+            bt3 = f"{modes[2][1]}~{activeColor_standby}~{state_standby}~2~"
+            bt4 = f"{modes[3][1]}~{activeColor_night}~{state_night}~3~"
+            bt5 = f"{modes[4][1]}~{activeColor_frost}~{state_frost}~4~"
+            bt6 = " ~0~0~99~"
+            bt7 = " ~0~0~99~"
 
             icon_res = bt0 + bt1 + bt2 + bt3 + bt4 + bt5 + bt6 + bt7
 
-        destTemp2 = ''
-        thermoPopup = 0 if items.get('popupThermoMode1', False) else 1
+        thermoPopup = '' if items.get('popupThermoMode1', False) else 1
 
         PageData = (
             'entityUpd~'
             f'{heading}~'  # Heading
             f'{self.GetNavigationString(page)}~'                # Page Navigation
             f'{internalNameEntity}~'                            # internalNameEntity
-            f'{currentTemp}{temperatureUnit}~'                  # Ist-Temperatur (String)
+            f'{currentTemp} {temperatureUnit}~'                 # Ist-Temperatur (String)
             f'{destTemp}~'                                      # Soll-Temperatur (numerisch ohne Komma in Zehntelgrad)
             f'{statusStr}~'                                     # Mode
             f'{minTemp}~'                                       # Thermostat Min-Temperatur (numerisch ohne Komma in Zehntelgrad)
             f'{maxTemp}~'                                       # Thermostat Max-Temperatur (numerisch ohne Komma in Zehntelgrad)
             f'{stepTemp}~'                                      # Schritte für Soll (0.5°C) (numerisch ohne Komma in Zehntelgrad)
-            f'{icon_res}~'                                      # Icons Status
-            f'Currently~'   # Todo #f'{self._get_locale("thermostat", "Currently")}~'   # Bezeichner vor aktueller Raumtemperatur
-            f'State~'       # Todo #f'{self._get_locale("thermostat", "State")}~'       # Bezeichner vor State
+            f'{icon_res}'                                       # Icons Status
+            f'Aktuell:~'  # Todo #f'{self._get_locale("thermostat", "Currently")}~'   # Bezeichner vor aktueller Raumtemperatur
+            f'Zustand:~' # Todo #f'{self._get_locale("thermostat", "State")}~'       # Bezeichner vor State
+            f"~"                                                # tALbl ?
             f'{temperatureUnit}~'                               # iconTemperature dstTempTwoTempMode
-            f'{destTemp2}~'                                     # dstTempTwoTempMode --> Wenn Wert, dann 2 Temp
-            f'{thermoPopup}'                                    # PopUp
+            f'~'                                     # dstTempTwoTempMode --> Wenn Wert, dann 2 Temp
+            f''                                    # PopUp
         )
 
         out_msgs.append(PageData)
@@ -1474,22 +1504,18 @@ class NSPanel(MqttPlugin):
 
         for idx, entity in enumerate(page_content['entities']):
             self.logger.debug(f"entity={entity}")
-
             if idx > maxItems:
                 break
 
-            # get item and item value
             item = self._get_item(entity['internalNameEntity'])
             value = item() if item else entity.get('optionalValue', 0)
             if entity['type'] in ['switch', 'light']:
                 value = int(value)
 
-            # define icon id
             iconid = Icons.GetIcon(entity['iconId'])
             if iconid == '':
                 iconid = entity['iconId']
 
-            # define icon color
             if page_content['pageType'] == 'cardGrid':
                 if value:
                     iconColor = entity.get('onColor', getattr(Colors, self.panel_config['config']['defaultOnColor']))
