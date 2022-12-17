@@ -1242,7 +1242,6 @@ class NSPanel(MqttPlugin):
             page_content = self.panel_config['cards'][self.current_page]
             for entity in page_content['entities']:
                 if item_name == entity['internalNameEntity']:
-                    self.logger.warning(f"1")
                     if entity['type'] == 'text':
                         text = True
                         self.logger.debug(f"item={item.id()} will get no update because it's text")
@@ -1518,9 +1517,9 @@ class NSPanel(MqttPlugin):
 
             if page_content['pageType'] == 'cardGrid':
                 if value:
-                    iconColor = entity.get('onColor', getattr(Colors, self.panel_config['config']['defaultOnColor']))
+                    iconColor = rgb_dec565(getattr(Colors, entity.get('onColor', self.panel_config['config']['defaultOnColor'])))
                 else:
-                    iconColor = entity.get('offColor', getattr(Colors, self.panel_config['config']['defaultOffColor']))
+                    iconColor = rgb_dec565(getattr(Colors, entity.get('offColor', self.panel_config['config']['defaultOffColor'])))
 
             else:
                 iconColor = entity.get('iconColor')
@@ -1531,7 +1530,7 @@ class NSPanel(MqttPlugin):
             # handle cardGrid with text
             if page_content['pageType'] == 'cardGrid':
                 if entity['type'] == 'text':
-                    iconColor = entity.get('offColor', getattr(Colors, self.panel_config['config']['defaultOffColor']))
+                    iconColor = rgb_dec565(getattr(Colors, entity.get('Color', self.panel_config['config']['defaultColor'])))
                     iconid = str(value)[:4] # max 4 characters
 
             pageData = (
