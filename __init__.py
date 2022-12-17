@@ -1420,34 +1420,27 @@ class NSPanel(MqttPlugin):
 
         page_content = self.panel_config['cards'][page]
         heading = page_content.get('heading', 'Default')
-        item = self._get_item(page_content.get('internalNameEntity'))
-        textQR = item() if item else 'Test'
+        items = page_content.get('items')
+        SSID = self._get_item(items.get('SSID', 'undefined'))()
+        Password = self._get_item(items.get('Password', 'undefined'))()
         hiddenPWD = page_content.get('hidePassword', False)
-
-        optionalValue1 = ''
-        optionalValue2 = ''
-
-        textQR = self._get_item_value(page_content.get('internalNameEntity'), 'WIFI:T:undefined;S:undefined;P:undefined;H:undefined')
-        textQR_list = textQR.split(';')
-        for entry in textQR_list:
-            if entry.startswith('S'):
-                optionalValue1 = entry[2:len(entry)]
-            elif entry.startswith('P'):
-                optionalValue2 = entry[2:len(entry)]
+        iconColor = rgb_dec565(getattr(Colors, page_content.get('iconColor', 'White')))
 
         type1 = 'text'
-        internalName1 = 'SSID'
+        internalName1 = 'S' # wird nicht angezeigt
         iconId1 = Icons.GetIcon('wifi')
-        displayName1 = 'SSID'
+        displayName1 = 'SSID:'
         type2 = 'text'
-        internalName2 = 'Passwort'
+        internalName2 = 'P' # wird nicht angezeigt
         iconId2 = Icons.GetIcon('key')
-        displayName2 = 'Passwort'
+        displayName2 = 'Passwort:'
 
         if hiddenPWD:
             type2 = 'disable'
             iconId2 = ''
             displayName2 = ''
+
+        textQR = f"WIFI:S:{SSID};T:WPA;P:{Password};;"
 
         # Generata PageDate according to: entityUpd, heading, navigation, textQR[, type, internalName, iconId, displayName, optionalValue]x2
         pageData = (
@@ -1458,15 +1451,15 @@ class NSPanel(MqttPlugin):
                    f'{type1}~'                           # type
                    f'{internalName1}~'                   # internalName
                    f'{iconId1}~'                         # iconId
-                   f'65535~'                             # iconColor
+                   f'{iconColor}~'                       # iconColor
                    f'{displayName1}~'                    # displayName
-                   f'{optionalValue1}~'                  # optionalValue
+                   f'{SSID}~'                            # SSID
                    f'{type2}~'                           # type
                    f'{internalName2}~'                   # internalName
                    f'{iconId2}~'                         # iconId
-                   f'65535~'                             # iconColor
+                   f'{iconColor}~'                       # iconColor
                    f'{displayName2}~'                    # displayName
-                   f'{optionalValue2}'                   # optionalValue
+                   f'{Password}'                         # Password
                    )
         out_msgs.append(pageData)
 

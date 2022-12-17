@@ -81,11 +81,11 @@ cards:
 
   - pageType: cardQR
     heading: "Gäste WLAN"
-    useColor: true,
-    subPage: true,
-    parent: Subpages_1,
-    internalNameEntity: wlan.gaeste.pwd
-    hidePassword: true
+    iconColor: "Red"
+    hidePassword: false
+    items:
+        SSID: wlan.SSID
+        Password: wlan.PW
 
   - pageType: cardThermo
     entity: Klima1
