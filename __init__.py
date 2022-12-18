@@ -1398,8 +1398,8 @@ class NSPanel(MqttPlugin):
             f'Zustand:~' # Todo #f'{self._get_locale("thermostat", "State")}~'       # Bezeichner vor State
             f"~"                                                # tALbl ?
             f'{temperatureUnit}~'                               # iconTemperature dstTempTwoTempMode
-            f'~'                                     # dstTempTwoTempMode --> Wenn Wert, dann 2 Temp
-            f''                                    # PopUp
+            f'~'                                                # dstTempTwoTempMode --> Wenn Wert, dann 2 Temp
+            f''                                                 # PopUp
         )
 
         out_msgs.append(PageData)
@@ -1466,7 +1466,55 @@ class NSPanel(MqttPlugin):
         return out_msgs
 
     def GeneratePowerPage(self, page) -> list:
-        self.logger.debug(f"GeneratePowerPage to be implemented")
+        self.logger.debug(f"GeneratePowerPage called with page={page}")
+        page_content = self.panel_config['cards'][page]
+
+        maxItems = 6
+
+        if len(page_content['entities']) > maxItems:
+            self.logger.warning(f"Page definition contains too many Entities. Max allowed entities for page={page_content['pageType']} is {maxItems}")
+
+        out_msgs = list()
+        out_msgs.append('pageType~cardPower')
+
+        textHome = self._get_item(page_content['itemHome'])()
+        iconHome = Icons.GetIcon(page_content.get('iconHome', 'home'))
+        colorHome = rgb_dec565(getattr(Colors, page_content.get('colorHome', 'home')))
+
+        # Generata PageDate according to: entityUpd~heading~navigation~colorHome~iconHome~textHome[~iconColor~icon~  speed~valueDown]x6
+        pageData = (
+                    f"entityUpd~"
+                    f"{page_content['heading']}~"
+                    f"{self.GetNavigationString(page)}~"
+                    f"{colorHome}~"
+                    f"{iconHome}~"
+                    f"{textHome}~"
+                    )
+
+        for idx, entity in enumerate(page_content['entities']):
+            self.logger.debug(f"entity={entity}")
+            if idx > maxItems:
+                break
+
+            item = entity.get('item', '')
+            value = ''
+            if item != '':
+                value = self._get_item(item)()
+
+            icon = Icons.GetIcon(entity.get('icon', ''))
+            iconColor = rgb_dec565(getattr(Colors, entity.get('color', self.panel_config['config']['defaultColor'])))
+            speed = entity.get('speed', '')
+            pageData = (
+                       f"{pageData}"
+                       f"{iconColor}~"
+                       f"{icon}~"
+                       f"{speed}~"
+                       f"{value}~"
+                       )
+
+        out_msgs.append(pageData)
+
+        return out_msgs
 
     def GenerateChartPage(self, page) -> list:
         self.logger.debug(f"GenerateChartPage to be implemented")
@@ -1476,7 +1524,7 @@ class NSPanel(MqttPlugin):
 
         page_content = self.panel_config['cards'][page]
 
-        if page_content['pageType'] in ['cardThermo', 'cardAlarm', 'cardMedia', 'cardQR', 'cardPower', 'cardChart']:
+        if page_content['pageType'] in ['cardThermo', 'cardAlarm', 'cardMedia', 'cardChart']:
             maxItems = 1
         elif page_content['pageType'] == 'cardEntities':
             maxItems = 4 if self.panel_model == 'eu' else 5

@@ -123,6 +123,25 @@ cards:
         maxSetValue: 300    # max Value which can be set (decimal degrees)
         stepSetValue: 5     # step for Value which can be set (decimal degrees)
 
+  - pageType: cardPower
+    heading: Batteriespeicher
+    itemHome: Batterie # item
+    iconHome: 'battery-charging-60'
+    colorHome: 'Red' # otherwise default is used
+    entities:
+        - entity: LeftTop # an empty element is not displayed
+        - entity: LeftMiddle
+          item: Solarertrag # item
+          icon: 'solar-power-variant'
+          color: 'Green'
+          speed: 1 # TODO: use item to change speed?
+        - entity: LeftBottom
+        - entity: RightTop
+        - entity: RightMiddle
+          item: Auto
+          icon: 'car'
+          speed: 1 # use -1 for other direction
+
 screensaver:
     heading: Hello World!
     text: Hier könnte Ihre Werbung stehen
