@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # vim: set encoding=utf-8 tabstop=4 softtabstop=4 shiftwidth=4 expandtab
 #########################################################################
-#  Copyright 2020-      <AUTHOR>                                  <EMAIL>
+#  Copyright 2022-      Michael Wenzel            wenzel_michael(a)web.de
+#                       Stefan Hauf               stefan.hauf(a)gmail.com
 #########################################################################
 #  This file is part of SmartHomeNG.
 #  https://www.smarthomeNG.de
@@ -89,7 +90,8 @@ class NSPanel(MqttPlugin):
         self.tasmota_devices = {}
         self.custom_msg_queue = queue.Queue(maxsize=50)  # Queue containing last 50 messages containing "CustomRecv"
         self.nspanel_items = []
-        self.nspanel_init = False
+        self.nspanel_config_items = []
+        self.nspanel_config_items_page = {}
         self.panel_version = 45
         self.panel_model = 'eu'
         self.useMediaEvents = False
@@ -103,6 +105,9 @@ class NSPanel(MqttPlugin):
             self.logger.warning(f"Exception during parsing of page config yaml file occurred: {e}")
             self._init_complete = False
             return
+            
+        # link items from config to method 'update_item'
+        self._get_items_of_panel_config_to_update_item()
 
         # read locale file
         try:
@@ -146,9 +151,6 @@ class NSPanel(MqttPlugin):
 
         # start subscription to all topics
         self.start_subscriptions()
-
-        # link items from config to method 'update_item'
-        self._get_items_of_panel_config_to_update_item()
 
         # set plugin alive
         self.alive = True
@@ -203,7 +205,10 @@ class NSPanel(MqttPlugin):
             if item not in self.nspanel_items:
                 self.nspanel_items.append(item)
 
-            # return self.update_item
+        if item.property.path in self.nspanel_config_items:
+            return self.update_item
+
+        return None
 
     def parse_logic(self, logic):
         """
@@ -228,12 +233,15 @@ class NSPanel(MqttPlugin):
         """
         if self.alive and caller != self.get_shortname():
             # code to execute if the plugin is not stopped
-            # and only, if the item has not been changed by this this plugin:
-            self.logger.info(f"Update item: {item.property.path}, item has been changed outside this plugin")
-
-            if self.has_iattr(item.conf, 'foo_itemtag'):
-                self.logger.debug(
-                    f"update_item was called with item {item.property.path} from caller {caller}, source {source} and dest {dest}")
+            # and only, if the item has not been changed by this plugin:
+            self.logger.debug(f"update_item was called with item {item.property.path} from caller {caller}, source {source} and dest {dest}")
+            if self.screensaverEnabled == False:
+                if item.property.path in self.nspanel_config_items_page[self.current_page]:
+                    self.GeneratePage(self.current_page)
+                else:
+                    self.logger.debug(f"item not on current_page = {self.current_page}")
+            else:
+                self.logger.debug(f"screensaver active")
             pass
 
     ################################
@@ -1004,17 +1012,23 @@ class NSPanel(MqttPlugin):
 
     def _get_items_of_panel_config_to_update_item(self):
         """
-        Put all item out ouf config file to update_item
+        Put all item out of config file to update_item
         """
 
-        for card in self.panel_config['cards']:
+        for idx, card in enumerate(self.panel_config['cards']):
+            self.nspanel_config_items_page[idx] = []
+            temp = []
             entities = card.get('entities')
             if entities is not None:
                 for entity in entities:
-                    item = self._get_item(entity.get('internalNameEntity'))
-                    if item is not None:
-                        self.logger.debug(f"Item={item} will be watched for updates")
-                        return self.update_item
+                    item = entity.get('internalNameEntity')
+                    # Add all possible items without check, parse_item is only called for valid items
+                    if item is not None and item not in temp:
+                        temp.append(item)
+                        if item not in self.nspanel_config_items:
+                            self.nspanel_config_items.append(item)
+
+            self.nspanel_config_items_page[idx] = temp
 
     def _next_page(self):
         """
@@ -1142,13 +1156,12 @@ class NSPanel(MqttPlugin):
 
         if typ == 'event':
             if method == 'startup':
-                if not self.nspanel_init:
-                    self.screensaverEnabled = False
-                    self.panel_version = words[2]
-                    self.panel_model = words[3]
-                    self.HandleStartupProcess()
-                    self.current_page = 0
-                    self.HandleScreensaver()
+                self.screensaverEnabled = True
+                self.panel_version = words[2]
+                self.panel_model = words[3]
+                self.HandleStartupProcess()
+                self.current_page = 0
+                self.HandleScreensaver()
 
             elif method == 'sleepReached':
                 # event,sleepReached,cardEntities
@@ -1230,7 +1243,7 @@ class NSPanel(MqttPlugin):
             item = self._get_item(words[2])
             if item is not None:
                 self.logger.debug(f"item={item.id()} will be set to new value={value}")
-                item(value)
+                item(value, self.get_shortname())
             self.GeneratePage(self.current_page)
 
         elif buttonAction == 'button':
@@ -1254,7 +1267,7 @@ class NSPanel(MqttPlugin):
                 elif item.property.type == "num":
                     value = 100-value  # TODO: how to handle other max values
                 self.logger.debug(f"item={item.id()} will be set to new value={value}")
-                item(value)
+                item(value, self.get_shortname())
                 self.GeneratePage(self.current_page)
 
         elif buttonAction == 'tempUpd':
