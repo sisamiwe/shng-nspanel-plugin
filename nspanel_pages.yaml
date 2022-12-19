@@ -18,41 +18,37 @@ config:
   defaultBackgroundColor: Black
 
 cards:
-  - pageType: cardEntities
-    heading: Arbeitszimmer
-    entities:
-      - entity: ABC
-        type: light
-        internalNameEntity: EG.Arbeiten.Licht
-        iconId: lightbulb
-        iconColor: 17299
-        displayNameEntity: Licht
-        optionalValue: 0
-      - entity: DEF
-        type: switch
-        internalNameEntity: EG.Arbeiten.EDV
-        iconId: power-socket-de
-        iconColor: 17299
-        displayNameEntity: Steckdose EDV
-        optionalValue: 0
-      - entity: GHJ
-        type: text
-        internalNameEntity: EG.Arbeiten.Heizung.ist
-        iconId: temperature-celsius
-        iconColor: 17299
-        displayNameEntity: Temperatur
-        optionalValue: 22
-      - entity: KLM
-        type: shutter
-        internalNameEntity: EG.Arbeiten.Rollladen.pos
-        iconId: window-shutter
-        iconColor: 17299
-        displayNameEntity: Rolladen
-        optionalValue: 1
-       #items:
-       #     value_up: 254   # Anzupassen auf Aktortyp
-       #     value_down: 0   # Anzupassen auf Aktortyp
-       #     item_stop: EG.Arbeiten.Rollladen.stop
+  # - pageType: cardEntities
+  #   heading: Arbeitszimmer
+  #   entities:
+  #     - entity: ABC
+  #       type: light
+  #       internalNameEntity: EG.Arbeiten.Licht
+  #       iconId: lightbulb
+  #       iconColor: 17299
+  #       displayNameEntity: Licht
+  #       optionalValue: 0
+  #     - entity: DEF
+  #       type: switch
+  #       internalNameEntity: EG.Arbeiten.EDV
+  #       iconId: power-socket-de
+  #       iconColor: 17299
+  #       displayNameEntity: Steckdose EDV
+  #       optionalValue: 0
+  #     - entity: GHJ
+  #       type: text
+  #       internalNameEntity: EG.Arbeiten.Heizung.ist
+  #       iconId: temperature-celsius
+  #       iconColor: 17299
+  #       displayNameEntity: Temperatur
+  #       optionalValue: 22
+  #     - entity: KLM
+  #       type: shutter
+  #       internalNameEntity: EG.Arbeiten.Rollladen.pos
+  #       iconId: window-shutter
+  #       iconColor: 17299
+  #       displayNameEntity: Rolladen
+  #       optionalValue: 1
 
 
   # - pageType: cardGrid
@@ -96,59 +92,74 @@ cards:
   #       offColor: 17299
   #       displayNameEntity: Steckdose
 
-  # - pageType: cardThermo
-    # entity: Klima
-
+ 
     # pageType: cardMedia
     # entity: MediaPlayer
 
-  # - pageType: cardAlarm
-    # entity: AlarmPanel
+  - pageType: cardAlarm
+    heading: "KeyPad" #Did not change the name, cause of inner use. There is no topic on the display.
+    items:
+        iconColor: "Red"
+        iconId: 'key'
+        arm1: "Anwesend"
+        arm2: "Abwesend"
+        arm3: "Urlaub"
+        arm4: "Gäste"
+        Password: "1234"
+        arm1ActionName: Alarm.Modus1
+        arm2ActionName: Alarm.Modus2
+        arm3ActionName: Alarm.Modus3
+        arm4ActionName: Alarm.Modus4  
+        numpadStatus: enable
+        flashing: disable  
+        
 
-  # - pageType: cardQR
-    # heading: "Gäste WLAN"
-    # useColor: true,
-    # subPage: true,
-    # parent: Subpages_1,
-    # internalNameEntity: wlan.gaeste.pwd
-    # hidePassword: true
+  #- pageType: cardQR
+  #  heading: "Gäste WLAN"
+  #  iconColor: "Red"
+  #  hidePassword: false
+  #  items:
+  #      SSID: wlan.SSID
+  #      Password: wlan.PW
 
-  # - pageType: cardThermo
-    # entity: Klima1
-    # heading: Test Klimaanlage
-    # useColor: true
-    # subPage: false
-    # parent: undefined
-    # items:
-        # internalNameEntity: alias.0.NSPanel_1.TestKlimaanlage
-        # minValue: 50
-        # maxValue: 250
-        # popupThermoMode1: ['Auto','0','1','2','3']
-        # popupThermoMode2: ['Auto','0','1','2','3','4','5']
-        # popupThermoMode3: ['Auto','Manual','Boost',]
-        # popUpThermoName: ["Schwenk-Modus", 'Speed', 'Temperatur']
-        # icon: 'fan'
-        # setThermoAlias: ['MODE1','MODE2','MODE3']
-        # setThermoDestTemp2: 'ACTUAL2'
 
   # - pageType: cardThermo
   #   entity: Klima2
   #   heading: Büro Thermostat
-    #useColor: true
-    #subPage: false
-    #parent: undefined
-    # items:
-    #     item_temp_current: OG.Arbeit.Temperatur # an item for the actual temperature
-    #     item_temp_set:     OG.Arbeit.Sollwert # an item for the set temperature
-    #     item_mode:         OG.Arbeit.Betriebsart # an item for comfort / standby (3x bit or 1x byte, optional) RTR Betriebsmodus (1-4)
-    #     item_night:         # an item for night (3x bit or 1x byte, optional)
-    #     item_frost:         # an item for frost (3x bit or 1x byte, optional)
-    #     item_state:         # an item for the current state of the actuator (optional) RTR Betriebszustand -> raumtemp.eg.wohnen.rtr.reglerstatus.allgemein
-    #     item_text:          # an item for additional text, (optional)
-    #     minSetValue: 50     # min Value which can be set (decimal degrees)
-    #     maxSetValue: 300    # max Value which can be set (decimal degrees)
-    #     stepSetValue: 50    # step for Value which can be set (decimal degrees)
-    #     popupThermoMode1: false
+  #   useColor: true
+  #   subPage: false
+  #   parent: undefined
+  #   items:
+  #       item_temp_current: EG.Arbeiten.Heizung.ist # an item for the actual temperature
+  #       item_temp_set:     EG.Arbeiten.Heizung.soll # an item for the set temperature
+  #       item_mode:         EG.Arbeiten.Heizung.mode # an item for comfort / standby (3x bit or 1x byte, optional) RTR Betriebsmodus (1-4)
+  #       item_night:         # an item for night (3x bit or 1x byte, optional)
+  #       item_frost:         # an item for frost (3x bit or 1x byte, optional)
+  #       item_state:         # an item for the current state of the actuator (optional) RTR Betriebszustand -> raumtemp.eg.wohnen.rtr.reglerstatus.allgemein
+  #       item_text:          # an item for additional text, (optional)
+  #       minSetValue: 50     # min Value which can be set (decimal degrees)
+  #       maxSetValue: 300    # max Value which can be set (decimal degrees)
+  #       stepSetValue: 50    # step for Value which can be set (decimal degrees)
+  #       popupThermoMode1: false
+
+  # - pageType: cardPower
+  #   heading: Batteriespeicher
+  #   itemHome: Batterie # item
+  #   iconHome: 'battery-charging-60'
+  #   colorHome: 'Red' # otherwise default is used
+  #   entities:
+  #       - entity: LeftTop # an empty element is not displayed
+  #       - entity: LeftMiddle
+  #         item: Solarertrag # item
+  #         icon: 'solar-power-variant'
+  #         color: 'Green'
+  #         speed: 1 # TODO: use item to change speed?
+  #       - entity: LeftBottom
+  #       - entity: RightTop
+  #       - entity: RightMiddle
+  #         item: Auto
+  #         icon: 'car'
+  #         speed: 1 # use -1 for other direction
 
 screensaver:
     heading: Hallo
