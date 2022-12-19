@@ -26,7 +26,7 @@ cards:
         internalNameEntity: EG.Arbeiten.Licht
         iconId: lightbulb
         iconColor: 17299
-        displayNameEntity: Licht
+        displayNameEntity: OG.Arbeit.Licht1
         optionalValue: 0
       - entity: DEF
         type: switch
@@ -49,11 +49,6 @@ cards:
         iconColor: 17299
         displayNameEntity: Rolladen
         optionalValue: 1
-       #items:
-       #     value_up: 254   # Anzupassen auf Aktortyp
-       #     value_down: 0   # Anzupassen auf Aktortyp
-       #     item_stop: EG.Arbeiten.Rollladen.stop
-
 
   # - pageType: cardGrid
   #   heading: Arbeitszimmer
