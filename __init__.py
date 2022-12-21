@@ -58,7 +58,6 @@ class NSPanel(MqttPlugin):
     def __init__(self, sh):
         """
         Initializes the plugin.
-
         """
 
         # Call init code of parent class (MqttPlugin)
@@ -221,11 +220,9 @@ class NSPanel(MqttPlugin):
     def update_item(self, item, caller=None, source=None, dest=None):
         """
         Item has been updated
-
         This method is called, if the value of an item has been updated by SmartHomeNG.
         It should write the changed value out to the device (hardware/interface) that
         is managed by this plugin.
-
         :param item: item to be updated towards the plugin
         :param caller: if given it represents the callers name
         :param source: if given it represents the source
@@ -251,12 +248,10 @@ class NSPanel(MqttPlugin):
     def on_mqtt_discovery_message(self, topic: str, payload: dict, qos: int = None, retain: bool = None) -> None:
         """
         Callback function to handle received discovery messages
-
         :param topic:       MQTT topic
         :param payload:     MQTT message payload
         :param qos:         qos for this message (optional)
         :param retain:      retain flag for this message (optional)
-
         """
 
         # tasmota/discovery/0CDC7E31E4CC/config {"ip":"192.168.178.67","dn":"Tasmota","fn":["Tasmota","",null,null,null,null,null,null],"hn":"NSPanel1-1228","mac":"0CDC7E31E4CC","md":"NSPanel","ty":0,"if":0,"ofln":"Offline","onln":"Online","state":["OFF","ON","TOGGLE","HOLD"],"sw":"12.2.0","t":"NSPanel1","ft":"%prefix%/%topic%/","tp":["cmnd","stat","tele"],"rl":[1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"swc":[-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],"swn":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],"btn":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"so":{"4":0,"11":0,"13":0,"17":0,"20":0,"30":0,"68":0,"73":0,"82":0,"114":0,"117":0},"lk":0,"lt_st":0,"sho":[0,0,0,0],"sht":[[0,0,0],[0,0,0],[0,0,0],[0,0,0]],"ver":1}
@@ -272,7 +267,6 @@ class NSPanel(MqttPlugin):
         if msg_type == 'config':
             """
             device_id = 2CF432CC2FC5
-
             payload =
             {
                 'ip': '192.168.2.33',                                                                                                   // IP address
@@ -336,7 +330,6 @@ class NSPanel(MqttPlugin):
         elif msg_type == 'sensors':
             """
             device_id = 2CF432CC2FC5
-
             payload = {'sn': {'Time': '2022-11-19T13:35:59',
                               'ENERGY': {'TotalStartTime': '2019-12-23T17:02:03', 'Total': 85.314, 'Yesterday': 0.0,
                                          'Today': 0.0, 'Power': 0, 'ApparentPower': 0, 'ReactivePower': 0, 'Factor': 0.0,
@@ -371,12 +364,10 @@ class NSPanel(MqttPlugin):
     def on_mqtt_lwt_message(self, topic: str, payload: bool, qos: int = None, retain: bool = None) -> None:
         """
         Callback function to handle received lwt messages
-
         :param topic:       MQTT topic
         :param payload:     MQTT message payload
         :param qos:         qos for this message (optional)
         :param retain:      retain flag for this message (optional)
-
         """
 
         try:
@@ -402,17 +393,14 @@ class NSPanel(MqttPlugin):
     def on_mqtt_status0_message(self, topic: str, payload: dict, qos: int = None, retain: bool = None) -> None:
         """
         Callback function to handle received messages
-
         :param topic:       MQTT topic
         :param payload:     MQTT message payload
         :param qos:         qos for this message
         :param retain:      retain flag for this message
-
         """
 
         """ 
         Example payload 
-
         payload = {'Status': {'Module': 75, 'DeviceName': 'ZIGBEE_Bridge01', 'FriendlyName': ['SONOFF_ZB1'],
                               'Topic': 'SONOFF_ZB1', 'ButtonTopic': '0', 'Power': 0, 'PowerOnState': 3, 'LedState': 1,
                               'LedMask': 'FFFF', 'SaveData': 1, 'SaveState': 1, 'SwitchTopic': '0',
@@ -451,7 +439,6 @@ class NSPanel(MqttPlugin):
                                  'Wifi': {'AP': 1, 'SSId': 'WLAN-Access', 'BSSId': '38:10:D5:15:87:69', 'Channel': 1,
                                           'Mode': '11n', 'RSSI': 50, 'Signal': -75, 'LinkCount': 1,
                                           'Downtime': '0T00:00:03'}}}
-
         """
 
         try:
@@ -511,12 +498,10 @@ class NSPanel(MqttPlugin):
     def on_mqtt_info_message(self, topic: str, payload: dict, qos: int = None, retain: bool = None) -> None:
         """
         Callback function to handle received messages
-
         :param topic:       MQTT topic
         :param payload:     MQTT message payload
         :param qos:         qos for this message (optional)
         :param retain:      retain flag for this message (optional)
-
         """
 
         try:
@@ -547,12 +532,10 @@ class NSPanel(MqttPlugin):
     def on_mqtt_message(self, topic: str, payload: dict, qos: int = None, retain: bool = None) -> None:
         """
         Callback function to handle received messages
-
         :param topic:       MQTT topic
         :param payload:     MQTT message payload
         :param qos:         qos for this message (optional)
         :param retain:      retain flag for this message (optional)
-
         """
 
         # tele/NSPanel1/STATE = {"Time":"2022-12-03T13:16:26","Uptime":"0T00:25:13","UptimeSec":1513,"Heap":127,"SleepMode":"Dynamic","Sleep":0,"LoadAvg":999,"MqttCount":1,"Berry":{"HeapUsed":14,"Objects":218},"POWER1":"ON","POWER2":"OFF","Wifi":{"AP":1,"SSId":"FritzBox","BSSId":"F0:B0:14:4A:08:CD","Channel":1,"Mode":"11n","RSSI":42,"Signal":-79,"LinkCount":1,"Downtime":"0T00:00:07"}}
@@ -629,12 +612,10 @@ class NSPanel(MqttPlugin):
     def on_mqtt_power_message(self, topic: str, payload: dict, qos: int = None, retain: bool = None) -> None:
         """
         Callback function to handle received messages
-
         :param topic:       MQTT topic
         :param payload:     MQTT message payload
         :param qos:         qos for this message (optional)
         :param retain:      retain flag for this message (optional)
-
         """
 
         try:
@@ -660,7 +641,6 @@ class NSPanel(MqttPlugin):
     def publish_tasmota_topic(self, prefix: str = 'cmnd', topic: str = None, detail: str = None, payload: str = None, item=None, qos: int = None, retain: bool = False, bool_values: list = None) -> None:
         """
         build the topic in Tasmota style and publish to mqtt
-
         :param prefix:          prefix of topic to publish
         :param topic:           unique part of topic to publish
         :param detail:          detail of topic to publish
@@ -669,7 +649,6 @@ class NSPanel(MqttPlugin):
         :param qos:             qos for this message (optional)
         :param retain:          retain flag for this message (optional)
         :param bool_values:     bool values (for publishing this topic, optional)
-
         """
 
         topic = topic if topic is not None else self.tasmota_topic
@@ -685,7 +664,6 @@ class NSPanel(MqttPlugin):
     def add_tasmota_subscription(self, prefix: str, topic: str, detail: str, payload_type: str, bool_values: list = None, item=None, callback=None) -> None:
         """
         build the topic in Tasmota style and add the subscription to mqtt
-
         :param prefix:          prefix of topic to subscribe to
         :param topic:           unique part of topic to subscribe to
         :param detail:          detail of topic to subscribe to
@@ -693,7 +671,6 @@ class NSPanel(MqttPlugin):
         :param bool_values:     bool values (for this subscription to the topic)
         :param item:            item that should receive the payload as value. Used by the standard handler (if no callback function is specified)
         :param callback:        a plugin can provide an own callback function, if special handling of the payload is needed
-
         """
 
         tpc = self.full_topic.replace("%prefix%", prefix)
@@ -708,7 +685,6 @@ class NSPanel(MqttPlugin):
     def _set_item_value(self, tasmota_topic: str, itemtype: str, value, info_topic: str = '') -> None:
         """
         Sets item value
-
         :param tasmota_topic:   MQTT message payload
         :param itemtype:        itemtype to be set
         :param value:           value to be set
@@ -772,7 +748,6 @@ class NSPanel(MqttPlugin):
     def _check_online_status(self):
         """
         checks all tasmota topics, if last message is with telemetry period. If not set tasmota_topic offline
-
         """
 
         self.logger.info("_check_online_status: Checking online status of connected devices")
@@ -786,7 +761,6 @@ class NSPanel(MqttPlugin):
     def _interview_device(self, topic: str) -> None:
         """
         ask for status info of each known tasmota_topic
-
         :param topic:          tasmota Topic
         """
 
@@ -804,7 +778,6 @@ class NSPanel(MqttPlugin):
     def _set_telemetry_period(self, topic: str) -> None:
         """
         sets telemetry period for given topic/device
-
         :param topic:          tasmota Topic
         """
 
@@ -814,10 +787,8 @@ class NSPanel(MqttPlugin):
     def _handle_wifi(self, device: str, payload: dict) -> None:
         """
         Extracts Wi-Fi information out of payload and updates plugin dict
-
         :param device:          Device, the Zigbee Status information shall be handled
         :param payload:         MQTT message payload
-
         """
         self.logger.debug(f"_handle_wifi: received payload={payload}")
         wifi_signal = payload.get('Signal')
@@ -860,11 +831,9 @@ class NSPanel(MqttPlugin):
     def _handle_power(self, device: str, function: str, payload: dict) -> None:
         """
         Extracts Power information out of payload and updates plugin dict
-
         :param device:          Device, the Power information shall be handled (equals tasmota_topic)
         :param function:        Function of Device (equals info_topic)
         :param payload:         MQTT message payload
-
         """
         # payload = {"Time": "2022-11-21T12:56:34", "Uptime": "0T00:00:11", "UptimeSec": 11, "Heap": 27, "SleepMode": "Dynamic", "Sleep": 50, "LoadAvg": 19, "MqttCount": 0, "POWER1": "OFF", "POWER2": "OFF", "POWER3": "OFF", "POWER4": "OFF", "Wifi": {"AP": 1, "SSId": "WLAN-Access", "BSSId": "38:10:D5:15:87:69", "Channel": 1, "Mode": "11n", "RSSI": 82, "Signal": -59, "LinkCount": 1, "Downtime": "0T00:00:03"}}
 
@@ -878,10 +847,8 @@ class NSPanel(MqttPlugin):
     def _handle_module(self, device: str, payload: dict) -> None:
         """
         Extracts Module information out of payload and updates plugin dict
-
         :param device:          Device, the Module information shall be handled
         :param payload:         MQTT message payload
-
         """
         template = next(iter(payload))
         module = payload[template]
@@ -890,7 +857,6 @@ class NSPanel(MqttPlugin):
 
     def _handle_sensor(self, device: str, function: str, payload: dict) -> None:
         """
-
         :param device:
         :param function:
         :param payload:
@@ -1286,7 +1252,171 @@ class NSPanel(MqttPlugin):
             else:
                 self.logger.debug("no valid hvac action")
             self.GeneratePage(self.current_page)
+
+        # Moving shutter for Up and Down moves
+        elif buttonAction == 'up':
+            # shutter moving until upper position
+            value = 0
+            item = self._get_item(words[2])
+
+            if item is not None:
+                self.logger.debug(f"item={item.id()} will be set to new value={value}")
+                item(value)
+            self.GeneratePage(self.current_page)
+
+        elif buttonAction == 'down':
+            # shutter moving down until down position
+            value = 254      
+            item = self._get_item(words[2])
+            self.logger.debug(item)
+
+
+            if item is not None:
+                self.logger.debug(f"item={item.id()} will be set to new value={value}")
+                item(value)
+            self.GeneratePage(self.current_page)
+
+        elif buttonAction == 'stop':
+           #shutter stops
+           value = 1
+           item = self._get_item("EG.Arbeiten.Rollladen.stop") # Das ITEM muss noch mit Config verknüpft werden
+
+           if item is not None:
+               self.logger.debug(f"item={item.id()} will be set to new value={value}")
+               item(value)
+           self.GeneratePage(self.current_page)
+
+
+        # Alarmpage Button Handle
+        elif buttonAction == 'Alarm.Modus1': #Anwesend
+            self.logger.debug(f"Button {buttonAction} pressed") 
+           
+            password = words[4]
+           
+            page_content = self.panel_config['cards'][self.current_page]
+            items = page_content.get('items', 'undefined')
+            pwd = items.get('Password', None) 
+            item1 = self._get_item(items.get('arm1ActionName'))
+            item2 = self._get_item(items.get('arm2ActionName'))
+            item3 = self._get_item(items.get('arm3ActionName'))
+            item4 = self._get_item(items.get('arm4ActionName'))
+
+
+            if item3():
+                self.logger.debug("Passwort needed to unlock") 
+                if password == pwd:
+                    self.logger.debug(f"Password {password} = {pwd} correct") 
+                    self._get_item(items.get('arm1ActionName', None))(True)
+                    self._get_item(items.get('arm2ActionName', None))(False)
+                    self._get_item(items.get('arm3ActionName', None))(False)
+                    self._get_item(items.get('arm4ActionName', None))(False)
+                else:
+                    self.logger.debug("Password incorrect")  
+            else:
+                self._get_item(items.get('arm1ActionName', None))(True)
+                self._get_item(items.get('arm2ActionName', None))(False)
+                self._get_item(items.get('arm3ActionName', None))(False)
+                self._get_item(items.get('arm4ActionName', None))(False)
+
+            self.GeneratePage(self.current_page)
+        
+        elif buttonAction == 'Alarm.Modus2': # Abwesend
+            self.logger.debug(f"Button {buttonAction} pressed") 
+            password = words[4]
+           
+            page_content = self.panel_config['cards'][self.current_page]
+            items = page_content.get('items', 'undefined')
+            pwd = items.get('Password', None) 
+            item1 = self._get_item(items.get('arm1ActionName'))
+            item2 = self._get_item(items.get('arm2ActionName'))
+            item3 = self._get_item(items.get('arm3ActionName'))
+            item4 = self._get_item(items.get('arm4ActionName'))
+
+
+            if item3():
+                self.logger.debug("Passwort needed to unlock") 
+                if password == pwd:
+                    self.logger.debug(f"Password {password} = {pwd} correct") 
+                    self._get_item(items.get('arm1ActionName', None))(False)
+                    self._get_item(items.get('arm2ActionName', None))(True)
+                    self._get_item(items.get('arm3ActionName', None))(False)
+                    self._get_item(items.get('arm4ActionName', None))(False)
+                else:
+                    self.logger.debug("Password incorrect")  
+            else:
+                self._get_item(items.get('arm1ActionName', None))(False)
+                self._get_item(items.get('arm2ActionName', None))(True)
+                self._get_item(items.get('arm3ActionName', None))(False)
+                self._get_item(items.get('arm4ActionName', None))(False)
+
+
+            self.GeneratePage(self.current_page)
+
+        elif buttonAction == 'Alarm.Modus3': #Urlaub
+            self.logger.debug(f"Button {buttonAction} pressed") 
             
+            password = words[4]
+           
+            page_content = self.panel_config['cards'][self.current_page]
+            items = page_content.get('items', 'undefined')
+            pwd = items.get('Password', None) 
+            item1 = self._get_item(items.get('arm1ActionName'))
+            item2 = self._get_item(items.get('arm2ActionName'))
+            item3 = self._get_item(items.get('arm3ActionName'))
+            item4 = self._get_item(items.get('arm4ActionName'))
+
+
+            if item3():
+                self.logger.debug("Passwort needed to unlock") 
+                if password == pwd:
+                    self.logger.debug(f"Password {password} = {pwd} correct") 
+                    self._get_item(items.get('arm1ActionName', None))(False)
+                    self._get_item(items.get('arm2ActionName', None))(False)
+                    self._get_item(items.get('arm3ActionName', None))(True)
+                    self._get_item(items.get('arm4ActionName', None))(False)
+                else:
+                    self.logger.debug("Password incorrect")  
+            else:
+                self._get_item(items.get('arm1ActionName', None))(False)
+                self._get_item(items.get('arm2ActionName', None))(False)
+                self._get_item(items.get('arm3ActionName', None))(True)
+                self._get_item(items.get('arm4ActionName', None))(False)
+
+            self.GeneratePage(self.current_page)
+        
+        elif buttonAction == 'Alarm.Modus4': #Gäste
+            password = words[4]
+           
+            page_content = self.panel_config['cards'][self.current_page]
+            items = page_content.get('items', 'undefined')
+            pwd = items.get('Password', None) 
+            item1 = self._get_item(items.get('arm1ActionName'))
+            item2 = self._get_item(items.get('arm2ActionName'))
+            item3 = self._get_item(items.get('arm3ActionName'))
+            item4 = self._get_item(items.get('arm4ActionName'))
+
+
+            if item3():
+                self.logger.debug("Passwort needed to unlock") 
+                if password == pwd:
+                    self.logger.debug(f"Password {password} = {pwd} correct") 
+                    self._get_item(items.get('arm1ActionName', None))(False)
+                    self._get_item(items.get('arm2ActionName', None))(False)
+                    self._get_item(items.get('arm3ActionName', None))(False)
+                    self._get_item(items.get('arm4ActionName', None))(True)
+                else:
+                    self.logger.debug("Password incorrect")  
+            else:
+                self._get_item(items.get('arm1ActionName', None))(False)
+                self._get_item(items.get('arm2ActionName', None))(False)
+                self._get_item(items.get('arm3ActionName', None))(False)
+                self._get_item(items.get('arm4ActionName', None))(True)
+            
+            self.GeneratePage(self.current_page)
+          
+        elif buttonAction == 'swipeLeft':
+            self.logger.debug(f"Swiped Left on Screensaver") 
+        
         else:
             self.logger.warning(f"buttonAction {buttonAction} not implemented")
 
@@ -1411,8 +1541,8 @@ class NSPanel(MqttPlugin):
             f'Zustand:~' # Todo #f'{self._get_locale("thermostat", "State")}~'       # Bezeichner vor State
             f"~"                                                # tALbl ?
             f'{temperatureUnit}~'                               # iconTemperature dstTempTwoTempMode
-            f'~'                                                # dstTempTwoTempMode --> Wenn Wert, dann 2 Temp
-            f''                                                 # PopUp
+            f'~'                                     # dstTempTwoTempMode --> Wenn Wert, dann 2 Temp
+            f''                                    # PopUp
         )
 
         out_msgs.append(PageData)
@@ -1423,7 +1553,98 @@ class NSPanel(MqttPlugin):
         self.logger.debug(f"GenerateMediaPage to be implemented")
 
     def GenerateAlarmPage(self, page) -> list:
-        self.logger.debug(f"GenerateAlarmPage to be implemented")
+        self.logger.debug(f"GenerateAlarmPage called with page={page}")
+
+        out_msgs = list()
+        out_msgs.append('pageType~cardAlarm')
+
+        page_content = self.panel_config['cards'][page]       
+
+        heading = page_content.get('heading', 'undefined') 
+        items = page_content.get('items', 'undefined')     
+        iconId = Icons.GetIcon('home') # Icons.GetIcon(items.get('iconId', 'home'))
+        iconColor = rgb_dec565(getattr(Colors, 'White'))   #rgb_dec565(getattr(Colors, items.get('iconColor', 'White')))            
+        arm1 = items.get('arm1', None)
+        arm2 = items.get('arm2', None)
+        arm3 = items.get('arm3', None)
+        arm4 = items.get('arm4', None)
+        arm1ActionName = items.get('arm1ActionName', None)
+        arm2ActionName = items.get('arm2ActionName', None)
+        arm3ActionName = items.get('arm3ActionName', None)
+        arm4ActionName = items.get('arm4ActionName', None)     
+        numpadStatus = 'disable' #items.get('numpadStatus', "disable")
+        flashing = 'disable' #items.get('flashing', "disable")
+       
+       
+        item1 = self._get_item(arm1ActionName)
+        item2 = self._get_item(arm2ActionName)
+        item3 = self._get_item(arm3ActionName)
+        item4 = self._get_item(arm4ActionName)
+
+        if item1(): # Modus Anwesend
+            iconId = Icons.GetIcon('home') 
+            iconColor = rgb_dec565(getattr(Colors, 'White'))   
+            numpadStatus = 'disable' 
+            flashing = 'disable' 
+            arm1 = ""
+            arm2 = items.get('arm2', None)
+            arm3 = items.get('arm3', None)
+            arm4 = items.get('arm4', None)
+
+
+        if item2(): # Modus Abwesend
+            iconId = Icons.GetIcon('home-lock')
+            iconColor = rgb_dec565(getattr(Colors, 'Yellow'))  
+            numpadStatus = 'disable'
+            flashing = 'disable'     
+            arm1 = items.get('arm1', None)
+            arm2 = ""
+            arm3 = items.get('arm3', None)
+            arm4 = items.get('arm4', None)        
+
+        if item3(): # Modus Urlaub
+            iconId = Icons.GetIcon('hiking') 
+            iconColor = rgb_dec565(getattr(Colors, 'Red'))   
+            numpadStatus = 'enable'
+            flashing = 'disable'
+            arm1 = items.get('arm1', None)
+            arm2 = items.get('arm2', None)
+            arm3 = ""
+            arm4 = items.get('arm4', None) 
+            
+        if item4(): # Modus Gäste
+            iconId = Icons.GetIcon('home') 
+            iconColor = rgb_dec565(getattr(Colors, 'Green')) 
+            numpadStatus = 'disable'
+            flashing = 'enable' 
+            arm1 = items.get('arm1', None)
+            arm2 = items.get('arm2', None)
+            arm3 = items.get('arm3', None)
+            arm4 = ""
+              
+
+        # entityUpd~*internalNameEntity*~*navigation*~*arm1*~*arm1ActionName*~*arm2*~*arm2ActionName*~*arm3*~*arm3ActionName*~*arm4*~*arm4ActionName*~*icon*~*iconcolor*~*numpadStatus*~*flashing*
+        pageData = (
+                   'entityUpd~'                          #entityUpd
+                   f'{heading}~'                         # heading
+                   f'{self.GetNavigationString(page)}~'  # navigation
+                   f'{arm1}~'                            # Statusname for modus 1
+                   f'{arm1ActionName}~'                  # Status item for modus 1
+                   f'{arm2}~'                            # Statusname for modus 2
+                   f'{arm2ActionName}~'                  # Status item for modus 2
+                   f'{arm3}~'                            # Statusname for modus 3
+                   f'{arm3ActionName}~'                  # Status item for modus 3
+                   f'{arm4}~'                            # Statusname for modus 4
+                   f'{arm4ActionName}~'                  # Status item for modus 4
+                   f'{iconId}~'                          # iconId for which modus acitvated
+                   f'{iconColor}~'                       # iconColor
+                   f'{numpadStatus}~'                    # Numpad on/off
+                   f'{flashing}'                         # IconFlashing
+                   )
+        out_msgs.append(pageData)
+     
+        return out_msgs
+
 
     def GenerateQRPage(self, page) -> list:
         self.logger.debug(f"GenerateQRPage called with page={page}")
@@ -1457,7 +1678,7 @@ class NSPanel(MqttPlugin):
 
         # Generata PageDate according to: entityUpd, heading, navigation, textQR[, type, internalName, iconId, displayName, optionalValue]x2
         pageData = (
-                   f'entityUpd~'                         # entityUpd
+                   'entityUpd~'                         # entityUpd
                    f'{heading}~'                         # heading
                    f'{self.GetNavigationString(page)}~'  # navigation
                    f'{textQR}~'                          # textQR
@@ -1537,7 +1758,7 @@ class NSPanel(MqttPlugin):
 
         page_content = self.panel_config['cards'][page]
 
-        if page_content['pageType'] in ['cardThermo', 'cardAlarm', 'cardMedia', 'cardChart']:
+        if page_content['pageType'] in ['cardThermo', 'cardAlarm', 'cardMedia', 'cardQR', 'cardPower', 'cardChart']:
             maxItems = 1
         elif page_content['pageType'] == 'cardEntities':
             maxItems = 4 if self.panel_model == 'eu' else 5
@@ -1714,4 +1935,4 @@ class NSPanel(MqttPlugin):
 
 
 def rgb_dec565(rgb):
-    return ((rgb['red'] >> 3) << 11) | (rgb['green'] >> 2) << 5 | ((rgb['blue']) >> 3)
+    return ((rgb['red'] >> 3) << 11) | ((rgb['green'] >> 2)) << 5 | ((rgb['blue']) >> 3)
