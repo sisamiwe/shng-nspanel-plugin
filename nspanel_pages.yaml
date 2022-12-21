@@ -99,8 +99,6 @@ cards:
   - pageType: cardAlarm
     heading: "KeyPad" #Did not change the name, cause of inner use. There is no topic on the display.
     items:
-        iconColor: "Red"
-        iconId: 'key'
         arm1: "Anwesend"
         arm2: "Abwesend"
         arm3: "Urlaub"
@@ -110,9 +108,7 @@ cards:
         arm2ActionName: Alarm.Modus2
         arm3ActionName: Alarm.Modus3
         arm4ActionName: Alarm.Modus4  
-        numpadStatus: enable
-        flashing: disable  
-        
+          
 
   #- pageType: cardQR
   #  heading: "Gäste WLAN"
