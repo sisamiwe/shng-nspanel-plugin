@@ -204,6 +204,12 @@ class NSPanel(MqttPlugin):
             if item not in self.nspanel_items:
                 self.nspanel_items.append(item)
 
+        # search for notify items
+        if self.has_iattr(item.conf, 'nspanel_popup'):
+            nspanel_popup = self.get_iattr_value(item.conf, 'nspanel_popup')
+            self.logger.info(f"parsing item: {item.id()} with nspanel_popup={nspanel_popup}")
+            return self.update_item
+
         if item.property.path in self.nspanel_config_items:
             return self.update_item
 
@@ -232,7 +238,9 @@ class NSPanel(MqttPlugin):
             # code to execute if the plugin is not stopped
             # and only, if the item has not been changed by this plugin:
             self.logger.debug(f"update_item was called with item {item.property.path} from caller {caller}, source {source} and dest {dest}")
-            if self.screensaverEnabled == False:
+            if self.has_iattr(item.conf, 'nspanel_popup'):
+                self.GeneratePopup(item)
+            elif self.screensaverEnabled == False:
                 if item.property.path in self.nspanel_config_items_page[self.current_page]:
                     self.GeneratePage(self.current_page)
                 else:
@@ -1231,7 +1239,10 @@ class NSPanel(MqttPlugin):
                 if item.property.type == "bool":
                     value = int(not value)
                 elif item.property.type == "num":
-                    value = 100-value  # TODO: how to handle other max values
+                    if value:
+                        value = 0
+                    else: 
+                        value = 100 # TODO: how to handle other max values (knx dpt?)
                 self.logger.debug(f"item={item.id()} will be set to new value={value}")
                 item(value, self.get_shortname())
                 self.GeneratePage(self.current_page)
@@ -1413,10 +1424,20 @@ class NSPanel(MqttPlugin):
                 self._get_item(items.get('arm4ActionName', None))(True)
             
             self.GeneratePage(self.current_page)
-          
+
         elif buttonAction == 'swipeLeft':
-            self.logger.debug(f"Swiped Left on Screensaver") 
-        
+            self.logger.debug(f"Swiped Left on Screensaver")
+            # TODO what action should be implemented
+        elif buttonAction == 'swipeRight':
+            self.logger.debug(f"Swiped Right on Screensaver")
+            # TODO what action should be implemented
+        elif buttonAction == 'swipeDown':
+            self.logger.debug(f"Swiped Down on Screensaver")
+            # TODO what action should be implemented
+        elif buttonAction == 'swipeUp':
+            self.logger.debug(f"Swiped Up on Screensaver")
+            # TODO what action should be implemented
+
         else:
             self.logger.warning(f"buttonAction {buttonAction} not implemented")
 
@@ -1425,6 +1446,49 @@ class NSPanel(MqttPlugin):
         pageItem = next((item for item in activePage if item["entity"] == searching), None)
 
         return pageItem if pageItem else None
+
+    def GeneratePopup(self, item):
+        popup = self.get_iattr_value(item.conf, 'nspanel_popup')
+        self.logger.debug(f"GeneratePopup called with item={item.id()} and type popup={popup}")
+        if popup == 'notify':
+            item_value = item()
+            if isinstance(item_value, dict):
+                self.SendToPanel(self.GeneratePopupNotify(item_value))
+            else:
+                self.logger.warning("Item value is not a dict")
+        else:
+            self.logger.warning("Unknown popup type")
+
+    def GeneratePopupNotify(self, item_value) -> list:
+        self.logger.debug(f"GeneratePopupNotify called with item={item_value}")
+        content = {
+            'heading': "",
+            'text': "",
+            'buttonLeft': "",
+            'buttonRight': "",
+            'timeout': 120,
+            'size': 0,
+            'icon': "",
+            'iconColor': 'White',
+            }
+        # TODO split colors for different elements?
+        color = rgb_dec565(getattr(Colors, self.panel_config.get('defaultOnColor', "White")))
+
+        for variable, value in item_value.items():
+            content[variable] = value
+
+        heading = content['heading']
+        text = content['text']
+        buttonLeft = content['buttonLeft']
+        buttonRight = content['buttonRight']
+        timeout = content['timeout']
+        size = content['size']
+        icon = content['icon']
+        iconColor = content['iconColor']
+        out_msgs = list()
+        out_msgs.append('pageType~popupNotify')
+        out_msgs.append(f"entityUpdateDetail~topic~{heading}~{color}~{buttonLeft}~{color}~{buttonRight}~{color}~{text}~{color}~{timeout}~{size}~{icon}~{iconColor}")
+        return out_msgs
 
     def GeneratePage(self, page):
 
