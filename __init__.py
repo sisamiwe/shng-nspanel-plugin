@@ -3,6 +3,7 @@
 #########################################################################
 #  Copyright 2022-      Michael Wenzel            wenzel_michael(a)web.de
 #                       Stefan Hauf               stefan.hauf(a)gmail.com
+#                       Christian Cordes          info(a)pol3cat.de  
 #########################################################################
 #  This file is part of SmartHomeNG.
 #  https://www.smarthomeNG.de
@@ -45,6 +46,8 @@ Colors = nspanel_icons_colors.ColorThemes()
 
 from lib.item import Items
 items = Items.get_instance()
+
+
 
 
 class NSPanel(MqttPlugin):
@@ -399,7 +402,6 @@ class NSPanel(MqttPlugin):
                     self._handle_new_discovered_device(tasmota_topic)
                 self.tasmota_devices[tasmota_topic]['online_timeout'] = datetime.now() + timedelta(seconds=self.telemetry_period + 5)
                 self._add_scheduler_time_date()
-                self.SendToPanel('pageType~pageStartup')
             else:
                 self._remove_scheduler_time_date()
 
@@ -1179,18 +1181,56 @@ class NSPanel(MqttPlugin):
         self.send_panel_brightness()
 
     def HandleScreensaver(self):
-        self.publish_tasmota_topic(payload="pageType~screensaver")
-        self.HandleScreensaverUpdate()
+        self.publish_tasmota_topic(payload="pageType~screensaver")           
+        self.HandleScreensaverWeatherUpdate()
+        self.HandleScreensaverUpdate()           
         self.HandleScreensaverColors()
-
+    
     def HandleScreensaverUpdate(self):
         self.logger.debug('Function HandleScreensaverUpdate to be done')
         heading = self.panel_config.get('screensaver', {}).get('heading', '')
         text = self.panel_config.get('screensaver', {}).get('text', '')
         self.publish_tasmota_topic(payload=f"notify~{heading}~{text}")
+        self.HandleScreensaverColors()
 
     def HandleScreensaverColors(self):
+        # payload: color~background~time~timeAMPM~date~tMainIcon~tMainText~tForecast1~tForecast2~tForecast3~tForecast4~tF1Icon~tF2Icon~tF3Icon~tF4Icon~tForecast1Val~tForecast2Val~tForecast3Val~tForecast4Val~bar~tMRIcon~tMR~tTimeAdd
         self.logger.info('Function HandleScreensaverColors to be done')
+        background = rgb_dec565(getattr(Colors, 'HMIDark'))
+        time = rgb_dec565(getattr(Colors, 'White'))
+        timeAPPM = rgb_dec565(getattr(Colors, 'White'))
+        date = rgb_dec565(getattr(Colors, 'White'))
+        tMainIcon = rgb_dec565(getattr(Colors, 'White'))
+        tMainText = rgb_dec565(getattr(Colors, 'White'))
+        tForecast1 = rgb_dec565(getattr(Colors, 'White'))
+        tForecast2 = rgb_dec565(getattr(Colors, 'White'))
+        tForecast3 = rgb_dec565(getattr(Colors, 'White'))
+        tForecast4 = rgb_dec565(getattr(Colors, 'White'))
+        tF1Icon = rgb_dec565(getattr(Colors, 'White'))
+        tF2Icon = rgb_dec565(getattr(Colors, 'White'))
+        tF3Icon = rgb_dec565(getattr(Colors, 'White'))
+        tF4Icon = rgb_dec565(getattr(Colors, 'White'))
+        tForecast1Val = rgb_dec565(getattr(Colors, 'White'))
+        tForecast2Val = rgb_dec565(getattr(Colors, 'White'))
+        tForecast3Val = rgb_dec565(getattr(Colors, 'White'))
+        tForecast4Val = rgb_dec565(getattr(Colors, 'White'))
+        bar = rgb_dec565(getattr(Colors, 'White'))
+        tMRIcon = rgb_dec565(getattr(Colors, 'White'))
+        tMR = rgb_dec565(getattr(Colors, 'White'))
+        tTimeAdd = rgb_dec565(getattr(Colors, 'Red'))
+
+
+        self.publish_tasmota_topic(payload=f"color~{background}~{time}~{timeAPPM}~{date}~{tMainIcon}~{tMainText}~{tForecast1}~{tForecast2}~{tForecast3}~{tForecast4}~{tF1Icon}~{tF2Icon}~{tF3Icon}~{tF4Icon}~{tForecast1Val}~{tForecast2Val}~{tForecast3Val}~{tForecast4Val}~{bar}~{tMRIcon}~{tMR}~{tTimeAdd}")
+
+    def HandleScreensaverWeatherUpdate(self):
+        self.logger.info('Function HandleScreensaverWeatherUpdate to be done')  
+
+
+        icon1 = Icons.GetIcon('wifi')
+        icon2 = Icons.GetIcon('wifi-alert')
+        icon1Color = rgb_dec565(getattr(Colors, 'White'))
+        icon2Color = rgb_dec565(getattr(Colors, 'White'))
+        self.publish_tasmota_topic(payload=f"weatherUpdate~1~2~3~4~5~6~7~8~9~10~11~12~13~14~15~16~{icon1}~{icon1Color}~{icon2}~{icon2Color}~1~1")
 
     def HandleHardwareButton(self, method):
         self.logger.info(f"hw {method} pressed")
