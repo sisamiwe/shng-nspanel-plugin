@@ -103,6 +103,7 @@ item_attributes:
             en: "Popup item of NSPanel."
         valid_list:
             - notify
+            - timer
 
 item_structs:
     nspanel:
