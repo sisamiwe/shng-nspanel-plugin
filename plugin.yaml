@@ -95,6 +95,15 @@ item_attributes:
             - power1
             - power2
 
+    nspanel_popup:
+        type: str
+        default: notify
+        description:
+            de: "Popup Item des NSPanels."
+            en: "Popup item of NSPanel."
+        valid_list:
+            - notify
+
 item_structs:
     nspanel:
         online:

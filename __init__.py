@@ -33,6 +33,9 @@ import yaml
 import queue
 import os
 import sys
+import colorsys
+import math
+
 
 from lib.model.mqttplugin import MqttPlugin
 from .webif import WebInterface
@@ -207,6 +210,12 @@ class NSPanel(MqttPlugin):
             if item not in self.nspanel_items:
                 self.nspanel_items.append(item)
 
+        # search for notify items
+        if self.has_iattr(item.conf, 'nspanel_popup'):
+            nspanel_popup = self.get_iattr_value(item.conf, 'nspanel_popup')
+            self.logger.info(f"parsing item: {item.id()} with nspanel_popup={nspanel_popup}")
+            return self.update_item
+
         if item.property.path in self.nspanel_config_items:
             return self.update_item
 
@@ -235,7 +244,14 @@ class NSPanel(MqttPlugin):
             # code to execute if the plugin is not stopped
             # and only, if the item has not been changed by this plugin:
             self.logger.debug(f"update_item was called with item {item.property.path} from caller {caller}, source {source} and dest {dest}")
-            if self.screensaverEnabled == False:
+            if self.has_iattr(item.conf, 'nspanel_popup'):
+                if self.get_iattr_value(item.conf, 'nspanel_popup') == 'notify':
+                    item_value = item()
+                    if isinstance(item_value, dict):
+                        self.SendToPanel(self.GeneratePopupNotify(item_value))
+                    else:
+                        self.logger.warning(f"{item.id} must be a dict")
+            elif self.screensaverEnabled == False:
                 if item.property.path in self.nspanel_config_items_page[self.current_page]:
                     self.GeneratePage(self.current_page)
                 else:
@@ -1054,8 +1070,7 @@ class NSPanel(MqttPlugin):
         return self.locale.get(group, {}).get('entry', {}).get(self.panel_configget('config', {}).get('locale', 'de-DE'))
 
     def send_current_time(self):
-        timeaddline = 'zweiteReihe'
-        self.publish_tasmota_topic(payload=f"time~{time.strftime('%H:%M', time.localtime())}~{timeaddline}")
+        self.publish_tasmota_topic(payload=f"time~{time.strftime('%H:%M', time.localtime())}")
 
     def send_current_date(self):
         self.publish_tasmota_topic(payload=f"date~{time.strftime('%A, %d.%B %Y', time.localtime())}")
@@ -1143,9 +1158,7 @@ class NSPanel(MqttPlugin):
             elif method == 'pageOpenDetail':
                 # event,pageOpenDetail,popupLight,internalNameEntity
                 self.screensaverEnabled = False
-                pageItem = self.findPageItem(words[3])
-                if pageItem is not None:
-                    self.SendToPanel(self.GenerateDetailPage(words[2], pageItem))
+                self.SendToPanel(self.GenerateDetailPage(words[2], words[3]))
 
             elif method == 'buttonPress2':
                 self.screensaverEnabled = False
@@ -1244,7 +1257,7 @@ class NSPanel(MqttPlugin):
             self.GeneratePage(self._previous_page())
 
         elif buttonAction == 'bExit':
-            self.GeneratePage(0)
+            self.GeneratePage(self.current_page)
 
         elif buttonAction == 'OnOff':
             value = words[4]
@@ -1252,31 +1265,76 @@ class NSPanel(MqttPlugin):
             if item is not None:
                 self.logger.debug(f"item={item.id()} will be set to new value={value}")
                 item(value, self.get_shortname())
-            self.GeneratePage(self.current_page)
+
+        elif buttonAction == 'brightnessSlider':
+            value = words[4]
+            self.logger.debug(f"brightnessSlider called with pageName={pageName}")
+            popup_config = self.panel_config['popups'][pageName]
+            item_brightness = self._get_item(popup_config.get('item_brightness', None))
+            scaled_value = scale(int(value), (0, 100), (popup_config.get('min_brightness', "0"), popup_config.get('max_brightness', "100")))
+            self.logger.debug(f"item={item_brightness.id()} will be set to new scaled_value={scaled_value}")
+            item_brightness(scaled_value)
+
+        elif buttonAction == 'colorTempSlider':
+            value = words[4]
+            self.logger.debug(f"colorTempSlider called with pageName={pageName}")
+            popup_config = self.panel_config['popups'][pageName]
+            item_temperature = self._get_item(popup_config.get('item_temperature', None))
+            scaled_value = scale(int(value), (100, 0), (popup_config.get('min_temperature', "0"), popup_config.get('max_temperature', "100")))
+            self.logger.debug(f"item={item_temperature.id()} will be set to new scaled_value={scaled_value}")
+            item_temperature(scaled_value)
+        
+        elif buttonAction == 'colorWheel':
+            value = words[4]
+            self.logger.debug(f"colorWheel called with pageName={pageName}")
+            popup_config = self.panel_config['popups'][pageName]
+            item_color = self._get_item(popup_config.get('item_color', None))
+            value = value.split('|')
+            rgb = pos_to_color(int(value[0]), int(value[1]), int(value[2]))
+            red = rgb[0]
+            blue = rgb[1]
+            green = rgb[2]
+            item_color(f"[{red}, {blue}, {green}]")
 
         elif buttonAction == 'button':
             item_name = words[2]
-            item = self._get_item(item_name)
-            
-            # Check if type of item is text
-            text = False
-            page_content = self.panel_config['cards'][self.current_page]
-            for entity in page_content['entities']:
-                if item_name == entity['internalNameEntity']:
-                    if entity['type'] == 'text':
-                        text = True
-                        self.logger.debug(f"item={item.id()} will get no update because it's text")
-                    break
+            cmd = item_name.split('?')
+            # Handle commands
+            if cmd[0] == 'popup':
+                page_content = self.panel_config['cards'][self.current_page]
+                for entity in page_content['entities']:
+                    if item_name == entity['internalNameEntity']:
+                        popup_type = entity['type'].capitalize()
+                        heading = entity['displayNameEntity']
+                        icon = Icons.GetIcon(entity['iconId'])
+                name = cmd[1]
+                self.SendToPanel(f"pageType~popup{popup_type}~{heading}~{name}~{icon}")
+            # Handle items
+            else:
+                item = self._get_item(item_name)
+                
+                # Check if type of item is text
+                text = False
+                page_content = self.panel_config['cards'][self.current_page]
+                for entity in page_content['entities']:
+                    if item_name == entity['internalNameEntity']:
+                        if entity['type'] == 'text':
+                            text = True
+                            self.logger.debug(f"item={item.id()} will get no update because it's text")
+                        break
 
-            if item is not None and not text:
-                value = item()
-                if item.property.type == "bool":
-                    value = int(not value)
-                elif item.property.type == "num":
-                    value = 100-value  # TODO: how to handle other max values
-                self.logger.debug(f"item={item.id()} will be set to new value={value}")
-                item(value, self.get_shortname())
-                self.GeneratePage(self.current_page)
+                if item is not None and not text:
+                    value = item()
+                    if item.property.type == "bool":
+                        value = int(not value)
+                    elif item.property.type == "num":
+                        if value:
+                            value = 0
+                        else: 
+                            value = 100 # TODO: how to handle other max values (knx dpt?)
+                    self.logger.debug(f"item={item.id()} will be set to new value={value}")
+                    item(value, self.get_shortname())
+                    self.GeneratePage(self.current_page)
 
         elif buttonAction == 'tempUpd':
             value = int(words[4])/10
@@ -1308,7 +1366,7 @@ class NSPanel(MqttPlugin):
 
         elif buttonAction == 'down':
             # shutter moving down until down position
-            value = 254      
+            value = 255      
             item = self._get_item(words[2])
             self.logger.debug(item)
 
@@ -1391,7 +1449,6 @@ class NSPanel(MqttPlugin):
                 self._get_item(items.get('arm3ActionName', None))(False)
                 self._get_item(items.get('arm4ActionName', None))(False)
 
-
             self.GeneratePage(self.current_page)
 
         elif buttonAction == 'Alarm.Modus3': #Urlaub
@@ -1406,7 +1463,6 @@ class NSPanel(MqttPlugin):
             item2 = self._get_item(items.get('arm2ActionName'))
             item3 = self._get_item(items.get('arm3ActionName'))
             item4 = self._get_item(items.get('arm4ActionName'))
-
 
             if item3():
                 self.logger.debug("Passwort needed to unlock") 
@@ -1455,18 +1511,53 @@ class NSPanel(MqttPlugin):
                 self._get_item(items.get('arm4ActionName', None))(True)
             
             self.GeneratePage(self.current_page)
-          
+
         elif buttonAction == 'swipeLeft':
-            self.logger.debug(f"Swiped Left on Screensaver") 
-        
+            self.logger.debug(f"Swiped Left on Screensaver")
+            # TODO what action should be implemented
+        elif buttonAction == 'swipeRight':
+            self.logger.debug(f"Swiped Right on Screensaver")
+            # TODO what action should be implemented
+        elif buttonAction == 'swipeDown':
+            self.logger.debug(f"Swiped Down on Screensaver")
+            # TODO what action should be implemented
+        elif buttonAction == 'swipeUp':
+            self.logger.debug(f"Swiped Up on Screensaver")
+            # TODO what action should be implemented
+
         else:
             self.logger.warning(f"buttonAction {buttonAction} not implemented")
 
-    def findPageItem(self, searching: str):
-        activePage = self.panel_config['cards'][self.current_page]
-        pageItem = next((item for item in activePage if item["entity"] == searching), None)
+    def GeneratePopupNotify(self, value) -> list:
+        self.logger.debug(f"GeneratePopupNotify called with item={value}")
+        content = {
+            'heading': "",
+            'text': "",
+            'buttonLeft': "",
+            'buttonRight': "",
+            'timeout': 120,
+            'size': 0,
+            'icon': "",
+            'iconColor': 'White',
+            }
+        # TODO split colors for different elements?
+        color = rgb_dec565(getattr(Colors, self.panel_config.get('defaultOnColor', "White")))
 
-        return pageItem if pageItem else None
+        for variable, value in value.items():
+            content[variable] = value
+
+        heading = content['heading']
+        text = content['text']
+        buttonLeft = content['buttonLeft']
+        buttonRight = content['buttonRight']
+        timeout = content['timeout']
+        size = content['size']
+        icon = content['icon']
+        iconColor = content['iconColor']
+        out_msgs = list()
+        out_msgs.append('pageType~popupNotify')
+        out_msgs.append(f"entityUpdateDetail~topic~{heading}~{color}~{buttonLeft}~{color}~{buttonRight}~{color}~{text}~{color}~{timeout}~{size}~{icon}~{iconColor}")
+        return out_msgs
 
     def GeneratePage(self, page):
 
@@ -1499,8 +1590,20 @@ class NSPanel(MqttPlugin):
         elif page_content['pageType'] == 'cardChart':
             self.SendToPanel(self.GenerateChartPage(page))
 
-    def GenerateDetailPage(self, type: str, pageItem: str):
-        self.logger.debug(f"GenerateDetailPage to be implemented")
+    def GenerateDetailPage(self, page, entity: str):
+        self.logger.debug(f"GenerateDetailPage called with page={page} entity={entity}")
+        if page == 'popupLight':
+            self.SendToPanel(self.GenerateDetailLight(entity))
+        elif page == 'popupShutter':
+            self.SendToPanel(self.GenerateDetailShutter(entity))
+        elif page == 'popupThermo':
+            self.SendToPanel(self.GenerateDetailThermo(entity))
+        elif page == 'popupInSel':
+            self.SendToPanel(self.GenerateDetailInSel(entity))
+        elif page == 'popupTimer':
+            self.SendToPanel(self.GenerateDetailTimer(entity))
+        else:
+            self.logger.warning(f"{page} not implemented")
 
     def GenerateEntitiesPage(self, page) -> list:
         self.logger.debug(f"GenerateEntitiesPage called with page={page}")
@@ -1862,6 +1965,55 @@ class NSPanel(MqttPlugin):
 
         return pageData
 
+    def GenerateDetailLight(self, entity) -> list:
+        self.logger.debug(f"GenerateDetailLight called with entity={entity}")
+        popup_config = self.panel_config['popups'][entity]
+        icon_color = rgb_dec565(getattr(Colors, self.panel_config.get('defaultColor', "White")))
+        # switch
+        item_onoff = self._get_item(popup_config.get('item_onoff', None))
+        switch_val = 1 if item_onoff() else 0
+        # brightness
+        item_brightness = self._get_item(popup_config.get('item_brightness', None))
+        if item_brightness is None:
+            brightness = "disable"
+        else:
+            brightness = scale(item_brightness(), (popup_config.get('min_brightness', "0"), popup_config.get('max_brightness', "100")), (0, 100))
+        # temperature
+        item_temperature = self._get_item(popup_config.get('item_temperature', None))
+        self.logger.warning(f"item = {item_temperature}")
+        if item_temperature is None:
+            temperature = "disable"
+        else:
+            temperature = scale(item_temperature(), (popup_config.get('min_temperature', "2700"), popup_config.get('max_temperature', "6500")), (100, 0))
+        # color
+        item_color = self._get_item(popup_config.get('item_color', None))
+        if item_color is None:
+            color = "disable"
+        else:
+            color = 0
+        # effect?
+        effect_supported = popup_config.get('effect_supported', "disable")
+        # labels TODO translate
+        color_translation      = "Farbe"
+        brightness_translation = "Helligkeit"
+        color_temp_translation = "Temperatur"
+
+        out_msgs = list()
+        out_msgs.append(f"entityUpdateDetail~{entity}~~{icon_color}~{switch_val}~{brightness}~{temperature}~{color}~{color_translation}~{color_temp_translation}~{brightness_translation}~{effect_supported}")
+        return out_msgs
+
+    def GenerateDetailShutter(self, entity) -> list:
+        self.logger.debug(f"GenerateDetailShutter called with entity={entity} to be implemented")
+
+    def GenerateDetailThermo(self, entity) -> list:
+        self.logger.debug(f"GenerateDetailThermo called with entity={entity} to be implemented")
+
+    def GenerateDetailInSel(self, entity) -> list:
+        self.logger.debug(f"GenerateDetailInSel called with entity={entity} to be implemented")
+
+    def GenerateDetailTimer(self, entity) -> list:
+        self.logger.debug(f"GenerateDetailTimer called with entity={entity} to be implemented")
+
     def SendToPanel(self, payload):
         self.logger.debug(f"SendToPanel called with payload={payload}")
 
@@ -1978,3 +2130,29 @@ class NSPanel(MqttPlugin):
 
 def rgb_dec565(rgb):
     return ((rgb['red'] >> 3) << 11) | ((rgb['green'] >> 2)) << 5 | ((rgb['blue']) >> 3)
+
+def scale(val, src, dst):
+    """
+    Scale the given value from the scale of src to the scale of dst.
+    """
+    return int(((val - src[0]) / (src[1]-src[0])) * (dst[1]-dst[0]) + dst[0])
+
+def hsv2rgb(h, s, v):
+    rgb = colorsys.hsv_to_rgb(h,s,v)
+    return tuple(round(i * 255) for i in rgb)
+    
+def pos_to_color(x, y, wh):
+    #r = 160/2
+    r = wh/2
+    x = round((x - r) / r * 100) / 100
+    y = round((r - y) / r * 100) / 100
+    
+    r = math.sqrt(x*x + y*y)
+    sat = 0
+    if (r > 1):
+        sat = 0
+    else:
+        sat = r
+    hsv = (math.degrees(math.atan2(y, x))%360/360, sat, 1)
+    rgb = hsv2rgb(hsv[0],hsv[1],hsv[2])
+    return rgb

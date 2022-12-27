@@ -31,3 +31,8 @@ tasmota_nspanel:
         type: num
         nspanel_topic: NSPanel1
         nspanel_attr: temp_esp32
+
+    notify:
+        type: dict
+        nspanel_popup: notify
+        initial_value: {'heading': 'Überschrift', 'text': 'Text\r\nmit Umbruch', 'size': 3}

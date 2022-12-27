@@ -17,17 +17,28 @@ config:
   defaultColor: Off
   defaultBackgroundColor: Black
 
+popups:
+    popup_licht:
+        item_onoff: EG.Arbeiten.Licht
+        item_brightness: EG.Arbeiten.Licht.Helligheit
+        min_brightness: 1
+        max_brightness: 100
+        item_temperature: EG.Arbeiten.Licht.Farbtemperatur
+        min_temperature: 2700
+        max_temperature: 6500
+        item_color: EG.Arbeiten.Licht.Farbe
+
 cards:
-  # - pageType: cardEntities
-  #   heading: Arbeitszimmer
-  #   entities:
-  #     - entity: ABC
-  #       type: light
-  #       internalNameEntity: EG.Arbeiten.Licht
-  #       iconId: lightbulb
-  #       iconColor: 17299
-  #       displayNameEntity: Licht
-  #       optionalValue: 0
+  - pageType: cardEntities
+    heading: Arbeitszimmer
+    entities:
+      - entity: ABC
+        type: light
+        internalNameEntity: popup?popup_licht
+        iconId: lightbulb
+        iconColor: 17299
+        displayNameEntity: Licht
+        optionalValue: 0
   #     - entity: DEF
   #       type: switch
   #       internalNameEntity: EG.Arbeiten.EDV
