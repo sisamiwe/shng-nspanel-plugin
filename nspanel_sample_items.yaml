@@ -36,3 +36,8 @@ tasmota_nspanel:
         type: dict
         nspanel_popup: notify
         initial_value: {'heading': 'Überschrift', 'text': 'Text\r\nmit Umbruch', 'size': 3}
+
+    MyTimer:
+        type: num
+        eval: value-1 if value > 0 and sh..timer(1, value-1) is None else value # not perfect but works
+        nspanel_popup: timer
