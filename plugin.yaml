@@ -17,7 +17,7 @@ plugin:
 #    sh_maxversion:                 # maximum shNG version to use this plugin (leave empty if latest)
 #    py_minversion: 3.6             # minimum Python version to use for this plugin
 #    py_maxversion:                 # maximum Python version to use for this plugin (leave empty if latest)
-    multi_instance: false           # plugin supports multi instance
+    multi_instance: true            # plugin supports multi instance
     restartable: unknown
     classname: NSPanel         # class containing the plugin
 
@@ -109,18 +109,18 @@ item_structs:
     nspanel:
         online:
             type: bool
-            nspanel_topic: ..:.
-            nspanel_attr: online
+            nspanel_topic@instance: ..:.
+            nspanel_attr@instance: online
 
         temperature_analog:
             type: num
-            nspanel_topic: ..:.
-            nspanel_attr: temp_analog
+            nspanel_topic@instance: ..:.
+            nspanel_attr@instance: temp_analog
 
         temperature_esp32:
             type: num
-            nspanel_topic: ..:.
-            nspanel_attr: temp_esp32
+            nspanel_topic@instance: ..:.
+            nspanel_attr@instance: temp_esp32
 
 plugin_functions: NONE
     # Definition of plugin functions defined by this plugin (enter 'plugin_functions: NONE', if section should be empty)
