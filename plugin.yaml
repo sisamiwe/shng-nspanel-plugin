@@ -112,17 +112,14 @@ item_structs:
     nspanel:
         online:
             type: bool
-            nspanel_topic@instance: ..:.
             nspanel_attr@instance: online
 
         temperature_analog:
             type: num
-            nspanel_topic@instance: ..:.
             nspanel_attr@instance: temp_analog
 
         temperature_esp32:
             type: num
-            nspanel_topic@instance: ..:.
             nspanel_attr@instance: temp_esp32
 
         notify:

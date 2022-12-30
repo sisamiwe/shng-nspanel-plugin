@@ -183,25 +183,21 @@ class NSPanel(MqttPlugin):
                         with the item, caller, source and dest as arguments and in case of the knx plugin the value
                         can be sent to the knx with a knx write function within the knx plugin.
         """
-        if self.has_iattr(item.conf, 'nspanel_topic'):
-            nspanel_topic = self.get_iattr_value(item.conf, 'nspanel_topic')
-            self.logger.info(f"parsing item: {item.id()} with nspanel_topic={nspanel_topic}")
+        if self.has_iattr(item.conf, 'nspanel_attr'):
+            nspanel_attr = None
             nspanel_attr = self.get_iattr_value(item.conf, 'nspanel_attr')
-
+            self.logger.info(f"Item={item.id()} identified for NSPanel with nspanel_attr={nspanel_attr}")
             if nspanel_attr:
-                self.logger.info(f"Item={item.id()} identified for NSPanel with nspanel_attr={nspanel_attr}")
                 nspanel_attr = nspanel_attr.lower()
             else:
                 return
 
-            # setup dict for new device
-            if not self.tasmota_devices.get(nspanel_topic):
-                self._add_new_device_to_tasmota_devices(nspanel_topic)
-                self.tasmota_devices[nspanel_topic]['status'] = 'item.conf'
+            self._add_new_device_to_tasmota_devices(self.tasmota_topic)
 
             # fill tasmota_device dict
-            self.tasmota_devices[nspanel_topic]['connected_to_item'] = True
-            self.tasmota_devices[nspanel_topic]['connected_items'][f'item_{nspanel_attr}'] = item
+            self.tasmota_devices[self.tasmota_topic]['status'] = 'item.conf'
+            self.tasmota_devices[self.tasmota_topic]['connected_items'][f'item_{nspanel_attr}'] = item
+            self.logger.info(self.tasmota_devices)
 
             # append to list used for web interface
             if item not in self.nspanel_items:

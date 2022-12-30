@@ -19,17 +19,14 @@ tasmota_nspanel:
     
     online:
         type: bool
-        nspanel_topic: NSPanel1
         nspanel_attr: online
        
     temperature:
         type: num
-        nspanel_topic: NSPanel1
         nspanel_attr: temp_analog
     
     temperature1:
         type: num
-        nspanel_topic: NSPanel1
         nspanel_attr: temp_esp32
 
     notify:
