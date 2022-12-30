@@ -6,11 +6,8 @@
 #                       Christian Cordes          info(a)pol3cat.de  
 #########################################################################
 #  This file is part of SmartHomeNG.
-#  https://www.smarthomeNG.de
-#  https://knx-user-forum.de/forum/supportforen/smarthome-py
 #
-#  Sample plugin for new plugins using MQTT to run with SmartHomeNG
-#  version 1.7 and upwards.
+#  This plugin connect NSPanel (with tasmota) to SmartHomeNG
 #
 #  SmartHomeNG is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -110,7 +107,7 @@ class NSPanel(MqttPlugin):
             self.logger.warning(f"Exception during parsing of page config yaml file occurred: {e}")
             self._init_complete = False
             return
-            
+
         # link items from config to method 'update_item'
         self._get_items_of_panel_config_to_update_item()
 
@@ -988,9 +985,6 @@ class NSPanel(MqttPlugin):
         """
         Parse the locals file and check for completeness
         """
-
-        self.logger.debug(f"get_shortname={self.get_shortname()}")
-
         with open(os.path.join(sys.path[0], "plugins", self.get_shortname(), "locale.yaml"),  "r") as stream:
             try:
                 locale = yaml.safe_load(stream)
@@ -1916,8 +1910,57 @@ class NSPanel(MqttPlugin):
         return out_msgs
 
     def GenerateChartPage(self, page) -> list:
-        self.logger.debug(f"GenerateChartPage to be implemented")
-        # entityUpd~Chart Demo~1|1~6666~Gas [kWh]~20:40:60:80:100~10~7^2:00~7~6^4:00~6~7^6:00~0~7^8:00~5~1^10:00~1~10^12:00~5~6^14:00~8
+        self.logger.debug(f"GenerateChartPage called with page={page}")
+        page_content = self.panel_config['cards'][page]
+
+        out_msgs = list()
+        out_msgs.append('pageType~cardChart')
+
+        series_list = list(self._get_item(page_content['item'])())
+
+        maxElements = 88
+        nr_of_xAxis_labels = 5
+        nr_of_elements = len(series_list)
+
+        if nr_of_elements > maxElements:
+            self.logger.warning(f"Item contains too many list elements. Max allowed number of list elements for page={page_content['pageType']} is {maxElements}")
+            del series_list[maxElements:]
+            nr_of_elements = maxElements
+
+        stepwidth_xAxis = round(nr_of_elements / (nr_of_xAxis_labels-1))
+
+        heading = page_content.get('heading', 'Chart')
+        color = rgb_dec565(getattr(Colors, page_content.get('Color', 'Green')))
+        yAxisLabel = page_content.get('yAxisLabel', '')
+        yAxisTick = '5:10'
+
+        # Generata PageDate according to: entityUpd~heading~navigation~color~yAxisLabel~yAxisTick:[yAxisTick]*[~value[:xAxisLabel]?]*
+        pageData = (
+                    f"entityUpd~"
+                    f"{heading}~"
+                    f"{self.GetNavigationString(page)}~"
+                    f"{color}~"
+                    f"{yAxisLabel}~"
+                    f"{yAxisTick}"
+                    )
+
+        max_value = max(map(lambda x: x[1], series_list))
+        for idx, element in enumerate(series_list):
+            value = element[1]
+            if value < 0:
+                self.logger.warning(f"page={page_content['pageType']} does actually not support negativ values")
+            value = round(value/max_value*10)
+
+            xAxisLabel = ""
+            if idx % stepwidth_xAxis == 0 or idx == (nr_of_elements-1):
+                timestamp = int(element[0]/1000)
+                date_time = datetime.fromtimestamp(timestamp)
+                xAxisLabel = "^" + date_time.strftime("%H:%M")
+            pageData = f"{pageData}~{value}{xAxisLabel}"
+
+        out_msgs.append(pageData)
+
+        return out_msgs
 
     def GeneratePageElements(self, page) -> str:
         self.logger.debug(f"GeneratePageElements called with page={page}")
@@ -2039,7 +2082,6 @@ class NSPanel(MqttPlugin):
         self.logger.debug(f"GenerateDetailTimer called with entity={pageName}")
         entities = self.panel_config['cards'][self.current_page]['entities']
         entity = next((entity for entity in entities if entity.get('entity', '') == pageName), None)
-        self.logger.error(entity)
         editable = entity.get('editable', 1)
         actionleft = entity.get('actionleft', '')
         actioncenter = entity.get('actioncenter', '')
