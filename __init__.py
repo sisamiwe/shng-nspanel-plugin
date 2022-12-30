@@ -1076,7 +1076,8 @@ class NSPanel(MqttPlugin):
         return self.locale.get(group, {}).get('entry', {}).get(self.panel_configget('config', {}).get('locale', 'de-DE'))
 
     def send_current_time(self):
-        self.publish_tasmota_topic(payload=f"time~{time.strftime('%H:%M', time.localtime())}")
+        NewLine = self.panel_config.get('screensaver', {}).get('2ndLine', '')
+        self.publish_tasmota_topic(payload=f"time~{time.strftime('%H:%M', time.localtime())}~{NewLine}")
 
     def send_current_date(self):
         self.publish_tasmota_topic(payload=f"date~{time.strftime('%A, %d.%B %Y', time.localtime())}")
@@ -1188,25 +1189,24 @@ class NSPanel(MqttPlugin):
 
     def HandleScreensaver(self):
         self.publish_tasmota_topic(payload="pageType~screensaver")           
-        self.HandleScreensaverWeatherUpdate()
-        self.HandleScreensaverUpdate()           
-        self.HandleScreensaverColors()
+        self.HandleScreensaverWeatherUpdate()  #Geht nur wenn NOTIFY leer wäre! Wird in Nextion so geregelt.       
+        #self.HandleScreensaverUpdate()           
+        self.HandleScreensaverColors() #Geht nur wenn NOTIFY leer wäre! Wird in Nextion so geregelt.
     
     def HandleScreensaverUpdate(self):
         self.logger.debug('Function HandleScreensaverUpdate to be done')
         heading = self.panel_config.get('screensaver', {}).get('heading', '')
         text = self.panel_config.get('screensaver', {}).get('text', '')
         self.publish_tasmota_topic(payload=f"notify~{heading}~{text}")
-        self.HandleScreensaverColors()
-
+       
     def HandleScreensaverColors(self):
         # payload: color~background~time~timeAMPM~date~tMainIcon~tMainText~tForecast1~tForecast2~tForecast3~tForecast4~tF1Icon~tF2Icon~tF3Icon~tF4Icon~tForecast1Val~tForecast2Val~tForecast3Val~tForecast4Val~bar~tMRIcon~tMR~tTimeAdd
         self.logger.info('Function HandleScreensaverColors to be done')
-        background = rgb_dec565(getattr(Colors, 'HMIDark'))
+        background = rgb_dec565(getattr(Colors, 'Gray'))
         time = rgb_dec565(getattr(Colors, 'White'))
         timeAPPM = rgb_dec565(getattr(Colors, 'White'))
-        date = rgb_dec565(getattr(Colors, 'White'))
-        tMainIcon = rgb_dec565(getattr(Colors, 'White'))
+        date = rgb_dec565(getattr(Colors, 'Blue'))
+        tMainIcon = rgb_dec565(getattr(Colors, 'Red'))
         tMainText = rgb_dec565(getattr(Colors, 'White'))
         tForecast1 = rgb_dec565(getattr(Colors, 'White'))
         tForecast2 = rgb_dec565(getattr(Colors, 'White'))
@@ -1230,9 +1230,15 @@ class NSPanel(MqttPlugin):
         self.logger.info('Function HandleScreensaverWeatherUpdate to be implemented')  
         icon1 = Icons.GetIcon('wifi')
         icon2 = Icons.GetIcon('wifi-alert')
-        icon1Color = rgb_dec565(getattr(Colors, 'White'))
-        icon2Color = rgb_dec565(getattr(Colors, 'White'))
-        self.publish_tasmota_topic(payload=f"weatherUpdate~1~2~3~4~5~6~7~8~9~10~11~12~13~14~15~16~{icon1}~{icon1Color}~{icon2}~{icon2Color}~1~1")
+        icon1Color = rgb_dec565(getattr(Colors, 'Red'))
+        icon2Color = rgb_dec565(getattr(Colors, 'Blue'))
+        icon1Size = 1
+        icon2Size = 1
+
+        #wifi_signal = self.tasmota_devices[self.tasmota_topic]['wifi_signal']
+        #self.logger.info(f'WIFI-STATUS:{wifi_signal}') 
+        
+        self.publish_tasmota_topic(payload=f"weatherUpdate~1~2~3~4~5~6~7~8~9~10~11~12~13~14~15~16~{icon1}~{icon1Color}~{icon2}~{icon2Color}~{icon1Size}~{icon2Size}")
 
     def HandleHardwareButton(self, method):
         self.logger.info(f"hw {method} pressed")

@@ -18,28 +18,28 @@ config:
   defaultBackgroundColor: Black
 
 cards:
-  - pageType: cardGrid
-    heading: Arbeitszimmer
-    entities:
-      - entity: timer_id
-        type: timer # timerPopup starts automatically without calling pageType~popupTimer
-        internalNameEntity: MyTimer # identical to entity could be removed later
-        item: MyTimer
-        iconId: timer
-        displayNameEntity: Timer
-      - entity: licht1_id
-        type: popupLight
-        internalNameEntity: licht1_id # identical to entity could be removed later
-        iconId: lightbulb-fluorescent-tube-outline
-        displayNameEntity: Stern
-        item_onoff: Licht1.Unten.OnOff
-        item_brightness: Licht1.Brightness
-        min_brightness: 1
-        max_brightness: 255
-        item_temperature: Licht1.Temperature
-        min_temperature: 0
-        max_temperature: 255
-        item_color: Licht1.Color
+#   - pageType: cardGrid
+#     heading: Arbeitszimmer
+#     entities:
+#       - entity: timer_id
+#         type: timer # timerPopup starts automatically without calling pageType~popupTimer
+#         internalNameEntity: MyTimer # identical to entity could be removed later
+#         item: MyTimer
+#         iconId: timer
+#         displayNameEntity: Timer
+#       - entity: licht1_id
+#         type: popupLight
+#         internalNameEntity: licht1_id # identical to entity could be removed later
+#         iconId: lightbulb-fluorescent-tube-outline
+#         displayNameEntity: Stern
+#         item_onoff: Licht1.Unten.OnOff
+#         item_brightness: Licht1.Brightness
+#         min_brightness: 1
+#         max_brightness: 255
+#         item_temperature: Licht1.Temperature
+#         min_temperature: 0
+#         max_temperature: 255
+#         item_color: Licht1.Color
   #     - entity: DEF
   #       type: switch
   #       internalNameEntity: EG.Arbeiten.EDV
@@ -171,8 +171,9 @@ cards:
 
 screensaver:
     heading: Hallo
-    text: Heute keine Termine
-    # entity: weather.k3ll3r
+    text: Heute keine Termin
+    2ndLine: Hier ist die zweite Reihe
+    #entity: weather.k3ll3r
     # weatherOverrideForecast4:
     #     entity: sensor.example_item
     #     name: name
