@@ -1246,13 +1246,7 @@ class NSPanel(MqttPlugin):
         if 'navigate' in pageName:
             self.GeneratePage(pageName[8:len(pageName)])
 
-        if buttonAction == 'bNext':
-            self.GeneratePage(self._next_page())
-
-        elif buttonAction == 'bPrev':
-            self.GeneratePage(self._previous_page())
-
-        elif buttonAction == 'bExit':
+        if buttonAction == 'bExit':
             self.GeneratePage(self.current_page)
 
         elif buttonAction == 'OnOff':
@@ -1313,28 +1307,35 @@ class NSPanel(MqttPlugin):
         elif buttonAction == 'button':
             self.logger.debug(f"button called with pageName={pageName}")
             searching = words[2]
-            entities = self.panel_config['cards'][self.current_page]['entities']
-            entity = next((entity for entity in entities if entity["entity"] == searching), None)
-            # Handle different types
-            # popupLight - popupShutter - popupThermo
-            if entity['type'][:5] == 'popup':
-                popup_type = entity['type']
-                heading = entity['displayNameEntity']
-                iconId = Icons.GetIcon(entity['iconId'])
-                self.SendToPanel(f"pageType~{popup_type}~{heading}~{entity['entity']}~{iconId}")
-                # popupTimer appears without interaction
-            # button / light / switch / text / etc.
+            if searching == 'bNext':
+                self.GeneratePage(self._next_page())
+
+            elif searching == 'bPrev':
+                self.GeneratePage(self._previous_page())
+
             else:
-                item_name = entity['internalNameEntity']
-                item = self._get_item(item_name)
-                if item is not None:
-                    if entity['type'] == 'text':
-                        self.logger.debug(f"item={item.id()} will get no update because it's text")
-                    else:
-                        value = item()
-                        value = entity.get('offValue', 0) if value else entity.get('onValue', 1)
-                        self.logger.debug(f"item={item.id()} will be set to new value={value}")
-                        item(value, self.get_shortname())
+                entities = self.panel_config['cards'][self.current_page]['entities']
+                entity = next((entity for entity in entities if entity["entity"] == searching), None)
+                # Handle different types
+                # popupLight - popupShutter - popupThermo
+                if entity['type'][:5] == 'popup':
+                    popup_type = entity['type']
+                    heading = entity['displayNameEntity']
+                    iconId = Icons.GetIcon(entity['iconId'])
+                    self.SendToPanel(f"pageType~{popup_type}~{heading}~{entity['entity']}~{iconId}")
+                    # popupTimer appears without interaction
+                # button / light / switch / text / etc.
+                else:
+                    item_name = entity['internalNameEntity']
+                    item = self._get_item(item_name)
+                    if item is not None:
+                        if entity['type'] == 'text':
+                            self.logger.debug(f"item={item.id()} will get no update because it's text")
+                        else:
+                            value = item()
+                            value = entity.get('offValue', 0) if value else entity.get('onValue', 1)
+                            self.logger.debug(f"item={item.id()} will be set to new value={value}")
+                            item(value, self.get_shortname())
 
         elif buttonAction == 'tempUpd':
             value = int(words[4])/10
@@ -2127,15 +2128,22 @@ class NSPanel(MqttPlugin):
         #     return '2|2'
 
         if page == 0:
-            return '0|1'
+            left = "~"
+            right = "bNext~>"
         elif page == self.no_of_cards - 1:
-            return '1|0'
+            left = "bPrev~<"
+            right = "~"
         elif page == -1:
-            return '2|0'
+            left = "bUp~^"
+            right = ""
         elif page == -2:
-            return '2|0'
+            left = "bUp~^"
+            right = "~"
         else:
-            return '1|1'
+            left = "bPrev~<"
+            right = "bNext~>"
+            
+        return f"button~{left}~65535~~~button~{right}~65535~~"
 
     ################################################################
     #  Properties
