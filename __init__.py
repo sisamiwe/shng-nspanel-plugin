@@ -2126,22 +2126,23 @@ class NSPanel(MqttPlugin):
         # ToDo: Handling of SubPages
         # if (activePage.subPage):
         #     return '2|2'
+        
+        iconleft = Icons.GetIcon('arrow-left-bold')
+        iconright = Icons.GetIcon('arrow-right-bold')
+        iconup = Icons.GetIcon('arrow-up-bold')
 
         if page == 0:
-            left = "~"
-            right = "bNext~>"
+            left = f"~"
+            right = f"bNext~{iconright}"
         elif page == self.no_of_cards - 1:
-            left = "bPrev~<"
-            right = "~"
-        elif page == -1:
-            left = "bUp~^"
-            right = ""
-        elif page == -2:
-            left = "bUp~^"
-            right = "~"
+            left = f"bPrev~{iconleft}"
+            right = f"~"
+        elif page == -1 or page == -2:
+            left = f"bUp~{iconup}"
+            right = f"~"
         else:
-            left = "bPrev~<"
-            right = "bNext~>"
+            left = f"bPrev~{iconleft}"
+            right = f"bNext~{iconright}"
             
         return f"button~{left}~65535~~~button~{right}~65535~~"
 
