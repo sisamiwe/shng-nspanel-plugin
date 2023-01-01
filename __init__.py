@@ -33,16 +33,14 @@ import sys
 import colorsys
 import math
 
-
 from lib.model.mqttplugin import MqttPlugin
 from .webif import WebInterface
 
 from . import nspanel_icons_colors
+from lib.item import Items
+
 Icons = nspanel_icons_colors.IconsSelector()
 Colors = nspanel_icons_colors.ColorThemes()
-
-from lib.item import Items
-items = Items.get_instance()
 
 
 class NSPanel(MqttPlugin):
@@ -66,6 +64,8 @@ class NSPanel(MqttPlugin):
         if not self._init_complete:
             return
 
+        self.items = Items.get_instance()
+
         # get the parameters for the plugin (as defined in metadata plugin.yaml):
         try:
             self.webif_pagelength = self.get_parameter_value('webif_pagelength')
@@ -75,7 +75,9 @@ class NSPanel(MqttPlugin):
             self.full_topic = self.get_parameter_value('full_topic').lower()
             pass
         except KeyError as e:
-            self.logger.critical("Plugin '{}': Inconsistent plugin (invalid metadata definition: {} not defined)".format(self.get_shortname(), e))
+            self.logger.critical(
+                "Plugin '{}': Inconsistent plugin (invalid metadata definition: {} not defined)".format(
+                    self.get_shortname(), e))
             self._init_complete = False
             return
 
@@ -87,15 +89,8 @@ class NSPanel(MqttPlugin):
 
         # define properties
         self.current_page = 0
-        self.tasmota_devices = {}
-        self.tasmota_devices['connected_to_item'] = False
-        self.tasmota_devices['online'] = False
-        self.tasmota_devices['status'] = 'None'
-        self.tasmota_devices['connected_items'] = {}
-        self.tasmota_devices['uptime'] = '-'
-        self.tasmota_devices['sensors'] = {}
-        self.tasmota_devices['relais'] = {}
-        
+        self.tasmota_devices = {'connected_to_item': False, 'online': False, 'status': 'None', 'connected_items': {},
+                                'uptime': '-', 'sensors': {}, 'relay': {}}
         self.custom_msg_queue = queue.Queue(maxsize=50)  # Queue containing last 50 messages containing "CustomRecv"
         self.nspanel_items = []
         self.nspanel_config_items = []
@@ -126,14 +121,15 @@ class NSPanel(MqttPlugin):
             return
 
         # Add subscription to get device LWT
-        self.add_tasmota_subscription('tele', self.tasmota_topic, 'LWT',     'bool', bool_values=['Offline', 'Online'], callback=self.on_mqtt_lwt_message)
+        self.add_tasmota_subscription('tele', self.tasmota_topic, 'LWT', 'bool', bool_values=['Offline', 'Online'],
+                                      callback=self.on_mqtt_lwt_message)
         # Add subscription to get device actions results
-        self.add_tasmota_subscription('stat', self.tasmota_topic, 'RESULT',  'dict',                                    callback=self.on_mqtt_message)
-        self.add_tasmota_subscription('stat', self.tasmota_topic, 'POWER1',  'num',                                     callback=self.on_mqtt_power_message)
-        self.add_tasmota_subscription('stat', self.tasmota_topic, 'POWER2',  'num',                                     callback=self.on_mqtt_power_message)
-        self.add_tasmota_subscription('tele', self.tasmota_topic, 'STATE',   'dict',                                    callback=self.on_mqtt_message)
-        self.add_tasmota_subscription('tele', self.tasmota_topic, 'SENSOR',  'dict',                                    callback=self.on_mqtt_message)
-        self.add_tasmota_subscription('tele', self.tasmota_topic, 'RESULT',  'dict',                                    callback=self.on_mqtt_message)
+        self.add_tasmota_subscription('tele', self.tasmota_topic, 'STATE', 'dict', callback=self.on_mqtt_message)
+        self.add_tasmota_subscription('tele', self.tasmota_topic, 'SENSOR', 'dict', callback=self.on_mqtt_message)
+        self.add_tasmota_subscription('tele', self.tasmota_topic, 'RESULT', 'dict', callback=self.on_mqtt_message)
+        self.add_tasmota_subscription('stat', self.tasmota_topic, 'RESULT', 'dict', callback=self.on_mqtt_message)
+        self.add_tasmota_subscription('stat', self.tasmota_topic, 'POWER1', 'num', callback=self.on_mqtt_power_message)
+        self.add_tasmota_subscription('stat', self.tasmota_topic, 'POWER2', 'num', callback=self.on_mqtt_power_message)
 
         # init WebIF
         self.init_webinterface(WebInterface)
@@ -162,14 +158,14 @@ class NSPanel(MqttPlugin):
         # stop subscription to all topics
         self.stop_subscriptions()
 
-        # remove scheduler for cyclic updates of time and date
+        # remove scheduler
         self._remove_scheduler_time_date()
 
     def parse_item(self, item):
         """
         Default plugin parse_item method. Is called when the plugin is initialized.
         The plugin can, corresponding to its attribute keywords, decide what to do with
-        the item in future, like adding it to an internal array for future reference
+        the item in the future, like adding it to an internal array for future reference
         :param item:    The item to process.
         :return:        If the plugin needs to be informed of an items change you should return a call back function
                         like the function update_item down below. An example when this is needed is the knx plugin
@@ -179,7 +175,6 @@ class NSPanel(MqttPlugin):
                         can be sent to the knx with a knx write function within the knx plugin.
         """
         if self.has_iattr(item.conf, 'nspanel_attr'):
-            nspanel_attr = None
             nspanel_attr = self.get_iattr_value(item.conf, 'nspanel_attr')
             self.logger.info(f"Item={item.id()} identified for NSPanel with nspanel_attr={nspanel_attr}")
             if nspanel_attr:
@@ -220,7 +215,7 @@ class NSPanel(MqttPlugin):
         Item has been updated
         This method is called, if the value of an item has been updated by SmartHomeNG.
         It should write the changed value out to the device (hardware/interface) that
-        is managed by this plugin.
+        is managed by this plugin
         :param item: item to be updated towards the plugin
         :param caller: if given it represents the callers name
         :param source: if given it represents the source
@@ -229,7 +224,8 @@ class NSPanel(MqttPlugin):
         if self.alive and caller != self.get_shortname():
             # code to execute if the plugin is not stopped
             # and only, if the item has not been changed by this plugin:
-            self.logger.debug(f"update_item was called with item {item.property.path} from caller {caller}, source {source} and dest {dest}")
+            self.logger.debug(
+                f"update_item was called with item {item.property.path} from caller {caller}, source {source} and dest {dest}")
             if self.has_iattr(item.conf, 'nspanel_popup'):
                 if self.get_iattr_value(item.conf, 'nspanel_popup') == 'notify':
                     item_value = item()
@@ -237,12 +233,13 @@ class NSPanel(MqttPlugin):
                         self.SendToPanel(self.GeneratePopupNotify(item_value))
                     else:
                         self.logger.warning(f"{item.id} must be a dict")
-                elif self.get_iattr_value(item.conf, 'nspanel_popup') == 'timer':   
+                elif self.get_iattr_value(item.conf, 'nspanel_popup') == 'timer':
                     entities = self.panel_config['cards'][self.current_page]['entities']
-                    entity_name = next((entity['entity'] for entity in entities if entity.get('item', '') == item.property.path), None)
+                    entity_name = next(
+                        (entity['entity'] for entity in entities if entity.get('item', '') == item.property.path), None)
                     if entity_name is not None:
                         self.SendToPanel(self.GenerateDetailTimer(entity_name))
-            elif self.screensaverEnabled == False:
+            elif not self.screensaverEnabled:
                 if item.property.path in self.nspanel_config_items_page[self.current_page]:
                     self.GeneratePage(self.current_page)
                 else:
@@ -266,10 +263,11 @@ class NSPanel(MqttPlugin):
 
         try:
             (topic_type, tasmota_topic, info_topic) = topic.split('/')
+            self.logger.info(
+                f"Received LWT Message for {tasmota_topic} with payload={payload}, qos={qos} and retain={retain}")
         except Exception as e:
             self.logger.error(f"received topic {topic} is not in correct format. Error was: {e}")
         else:
-            self.logger.info(f"Received LWT Message for {tasmota_topic} with value={payload} and retain={retain}")
 
             if payload:
                 self.tasmota_devices['online_timeout'] = datetime.now() + timedelta(seconds=self.telemetry_period + 5)
@@ -295,7 +293,8 @@ class NSPanel(MqttPlugin):
         #: topic_type = tele, tasmota_topic = NSPanel1, info_topic = RESULT, payload = {'CustomRecv': 'event,startup,45,eu'}
         try:
             (topic_type, tasmota_topic, info_topic) = topic.split('/')
-            self.logger.info(f"on_mqtt_message: topic_type={topic_type}, tasmota_topic={tasmota_topic}, info_topic={info_topic}, payload={payload}")
+            self.logger.debug(
+                f"on_mqtt_message: topic_type={topic_type}, tasmota_topic={tasmota_topic}, info_topic={info_topic}, payload={payload}, qos={qos} and retain={retain}")
         except Exception as e:
             self.logger.error(f"received topic {topic} is not in correct format. Error was: {e}")
         else:
@@ -314,9 +313,10 @@ class NSPanel(MqttPlugin):
 
                 # Handling of Light messages
                 elif 'CustomRecv' in payload:
-                    self.logger.info(f"Received Message decoded as NSPanel Message, will be put to queue for logging reasons. {self.custom_msg_queue.qsize() + 1} messages logged.")
+                    self.logger.info(
+                        f"Received Message decoded as NSPanel Message, will be put to queue for logging reasons. {self.custom_msg_queue.qsize() + 1} messages logged.")
                     self.custom_msg_queue.put(payload['CustomRecv'])
-                    self.HandlePanelMessage(info_topic, payload['CustomRecv'])
+                    self.HandlePanelMessage(payload['CustomRecv'])
 
                 # Handling of Power messages
                 elif any(item.startswith("POWER") for item in payload.keys()):
@@ -348,9 +348,6 @@ class NSPanel(MqttPlugin):
             # setting new online-timeout
             self.tasmota_devices['online_timeout'] = datetime.now() + timedelta(seconds=self.telemetry_period + 5)
 
-            # setting online_item to True
-            self._set_item_value('item_online', True, info_topic)
-
     def on_mqtt_power_message(self, topic: str, payload: dict, qos: int = None, retain: bool = None) -> None:
         """
         Callback function to handle received messages
@@ -363,7 +360,7 @@ class NSPanel(MqttPlugin):
         try:
             (topic_type, tasmota_topic, info_topic) = topic.split('/')
             self.logger.info(
-                f"on_mqtt_power_message: topic_type={topic_type}, tasmota_topic={tasmota_topic}, info_topic={info_topic}, payload={payload}")
+                f"on_mqtt_power_message: topic_type={topic_type}, tasmota_topic={tasmota_topic}, info_topic={info_topic}, payload={payload}, qos={qos} and retain={retain}")
         except Exception as e:
             self.logger.error(f"received topic {topic} is not in correct format. Error was: {e}")
         else:
@@ -372,13 +369,14 @@ class NSPanel(MqttPlugin):
                 tasmota_relay = '1' if not tasmota_relay else None
                 item_relay = f'item_relay{tasmota_relay}'
                 self._set_item_value(item_relay, payload == 'ON', info_topic)
-                self.tasmota_devices['relais'][info_topic] = payload
+                self.tasmota_devices['relay'][info_topic] = payload
 
     ################################
     # MQTT Stuff
     ################################
 
-    def publish_tasmota_topic(self, prefix: str = 'cmnd', topic: str = None, detail: str = None, payload: str = None, item=None, qos: int = None, retain: bool = False, bool_values: list = None) -> None:
+    def publish_tasmota_topic(self, prefix: str = 'cmnd', topic: str = None, detail: str = None, payload: str = None,
+                              item=None, qos: int = None, retain: bool = False, bool_values: list = None) -> None:
         """
         build the topic in Tasmota style and publish to mqtt
         :param prefix:          prefix of topic to publish
@@ -401,7 +399,8 @@ class NSPanel(MqttPlugin):
         # self.logger.debug(f"publish_topic with tpc={tpc}, payload={payload}")
         self.publish_topic(tpc, payload, item, qos, retain, bool_values)
 
-    def add_tasmota_subscription(self, prefix: str, topic: str, detail: str, payload_type: str, bool_values: list = None, item=None, callback=None) -> None:
+    def add_tasmota_subscription(self, prefix: str, topic: str, detail: str, payload_type: str,
+                                 bool_values: list = None, callback=None) -> None:
         """
         build the topic in Tasmota style and add the subscription to mqtt
         :param prefix:          prefix of topic to subscribe to
@@ -409,7 +408,6 @@ class NSPanel(MqttPlugin):
         :param detail:          detail of topic to subscribe to
         :param payload_type:    payload type of the topic (for this subscription to the topic)
         :param bool_values:     bool values (for this subscription to the topic)
-        :param item:            item that should receive the payload as value. Used by the standard handler (if no callback function is specified)
         :param callback:        a plugin can provide an own callback function, if special handling of the payload is needed
         """
 
@@ -438,21 +436,24 @@ class NSPanel(MqttPlugin):
             item = self.tasmota_devices['connected_items'][itemtype]
 
             # set item value
-            self.logger.info(f"{self.tasmota_topic}: Item '{item.id()}' via itemtype '{itemtype}' set to value '{value}' provided by '{src}'.")
+            self.logger.info(
+                f"{self.tasmota_topic}: Item '{item.id()}' via itemtype '{itemtype}' set to value '{value}' provided by '{src}'.")
             item(value, self.get_shortname(), src)
 
         else:
-            self.logger.debug(f"{self.tasmota_topic}: No item for itemtype '{itemtype}' defined to set to '{value}' provided by '{src}'.")
+            self.logger.debug(
+                f"{self.tasmota_topic}: No item for itemtype '{itemtype}' defined to set to '{value}' provided by '{src}'.")
 
     def _set_device_offline(self):
 
         self.tasmota_devices['online'] = False
-        self._set_item_value(self.tasmota_topic, 'item_online', False, 'check_online_status')
-        self.logger.info(f"{self.tasmota_topic} is not online any more - online_timeout={self.tasmota_devices['online_timeout']}, now={datetime.now()}")
+        self._set_item_value(self.tasmota_topic, 'item_online', 'check_online_status')
+        self.logger.info(
+            f"{self.tasmota_topic} is not online any more - online_timeout={self.tasmota_devices['online_timeout']}, now={datetime.now()}")
 
         # clean data from dict to show correct status
-        self.tasmota_devices['sensors'] = {}
-        self.tasmota_devices['relais'] = {}
+        self.tasmota_devices['sensors'].clear()
+        self.tasmota_devices['relay'].clear()
 
         self._remove_scheduler_time_date()
 
@@ -464,7 +465,7 @@ class NSPanel(MqttPlugin):
         self.logger.info("_check_online_status: Checking online status of connected devices")
         if self.tasmota_devices.get('online') is True and self.tasmota_devices.get('online_timeout'):
             if self.tasmota_devices['online_timeout'] < datetime.now():
-                self._set_device_offline(self.tasmota_topic)
+                self._set_device_offline()
             else:
                 self.logger.debug(f'_check_online_status: Checking online status of {self.tasmota_topic} successful')
 
@@ -511,7 +512,7 @@ class NSPanel(MqttPlugin):
         # payload = {"Time": "2022-11-21T12:56:34", "Uptime": "0T00:00:11", "UptimeSec": 11, "Heap": 27, "SleepMode": "Dynamic", "Sleep": 50, "LoadAvg": 19, "MqttCount": 0, "POWER1": "OFF", "POWER2": "OFF", "POWER3": "OFF", "POWER4": "OFF", "Wifi": {"AP": 1, "SSId": "WLAN-Access", "BSSId": "38:10:D5:15:87:69", "Channel": 1, "Mode": "11n", "RSSI": 82, "Signal": -59, "LinkCount": 1, "Downtime": "0T00:00:03"}}
 
         power_dict = {key: val for key, val in payload.items() if key.startswith('POWER')}
-        self.tasmota_devices['relais'].update(power_dict)
+        self.tasmota_devices['relay'].update(power_dict)
         for power in power_dict:
             relay_index = 1 if len(power) == 5 else str(power[5:])
             item_relay = f'item_relay{relay_index}'
@@ -563,6 +564,10 @@ class NSPanel(MqttPlugin):
         dt = self.shtime.now() + timedelta(seconds=20)
         self.scheduler_add('update_nspanel_time', self.send_current_time, next=dt, cycle=60)
         self.scheduler_add('update_nspanel_date', self.send_current_date, cron='1 0 0 * * *', next=dt)
+        
+        self.logger.debug(f"Add scheduler for online_status")
+        dt = self.shtime.now() + timedelta(seconds=(self.telemetry_period - 3))
+        self.scheduler_add('check_online_status', self._check_online_status, cycle=self.telemetry_period, next=dt)
 
     def _remove_scheduler_time_date(self):
         """
@@ -573,6 +578,9 @@ class NSPanel(MqttPlugin):
 
         self.scheduler_remove('update_nspanel_time')
         self.scheduler_remove('update_nspanel_date')
+
+        self.logger.debug('Remove scheduler for online status')
+        self.scheduler_remove('check_online_status')
 
     def _parse_config_file(self):
         """
@@ -596,7 +604,7 @@ class NSPanel(MqttPlugin):
         """
         Parse the locals file and check for completeness
         """
-        with open(os.path.join(sys.path[0], "plugins", self.get_shortname(), "locale.yaml"),  "r") as stream:
+        with open(os.path.join(sys.path[0], "plugins", self.get_shortname(), "locale.yaml"), "r") as stream:
             try:
                 locale = yaml.safe_load(stream)
             except yaml.YAMLError as exc:
@@ -635,7 +643,6 @@ class NSPanel(MqttPlugin):
         if self.current_page >= len(self.panel_config['cards']):
             self.current_page -= len(self.panel_config['cards'])
         self.logger.debug(f"next_page={self.current_page}")
-        return self.current_page
 
     def _previous_page(self):
         """
@@ -646,39 +653,10 @@ class NSPanel(MqttPlugin):
         if self.current_page < 0:
             self.current_page += len(self.panel_config['cards'])
         self.logger.debug(f"previous_page={self.current_page}")
-        return self.current_page
-
-    def _get_item(self, item_path):
-        """
-        get item from item path
-        """
-
-        self.logger.debug(f"_get_item: look for item for item_path={item_path}")
-        item = items.return_item(item_path)
-        if item is not None:
-            self.logger.debug(f"item={item} for item_path={item_path} identified")
-        else:
-            self.logger.debug(f"No corresponding item for item_path={item_path} identified")
-        return item
-
-    def _get_item_value(self, item, default=None):
-        """
-        get item value from item path or item
-        """
-
-        self.logger.debug(f"_get_item_value: look for item value for item={item}")
-        if isinstance(item, str):
-            item = self._get_item(item)
-
-        if item is not None and isinstance(item, Item):
-            self.logger.debug(f"item value={item()} for item={item} identified")
-            return item()
-        else:
-            self.logger.debug(f"No corresponding item value for item={item} identified")
-            return default
 
     def _get_locale(self, group, entry):
-        return self.locale.get(group, {}).get('entry', {}).get(self.panel_configget('config', {}).get('locale', 'de-DE'))
+        return self.locale.get(group, {}).get(entry, {}).get(
+            self.panel_config.get('config', {}).get('locale', 'de-DE'))
 
     def send_current_time(self):
         self.publish_tasmota_topic(payload=f"time~{time.strftime('%H:%M', time.localtime())}")
@@ -695,7 +673,7 @@ class NSPanel(MqttPlugin):
         brightness_active = self.panel_config.get('config', {}).get('brightness_active', 100)
         self.publish_tasmota_topic(payload=f"dimmode~{brightness_screensaver}~{brightness_active}~6371")
 
-    def HandlePanelMessage(self, function: str, payload: str) -> None:
+    def HandlePanelMessage(self, payload: str) -> None:
         """
         # general
         event,buttonPress2,pageName,bNext
@@ -744,7 +722,8 @@ class NSPanel(MqttPlugin):
             self.logger.warning(f"During handling of payload exception occurred: {e}")
             return None
 
-        self.logger.debug(f"HandlePanelMessage: content_list={content_list}, length of content_list={len(content_list)}")
+        self.logger.debug(
+            f"HandlePanelMessage: content_list={content_list}, length of content_list={len(content_list)}")
 
         typ = content_list[0]
         method = content_list[1]
@@ -769,7 +748,7 @@ class NSPanel(MqttPlugin):
             elif method == 'pageOpenDetail':
                 # event,pageOpenDetail,popupLight,internalNameEntity
                 self.screensaverEnabled = False
-                self.SendToPanel(self.GenerateDetailPage(words[2], words[3]))
+                self.GenerateDetailPage(words[2], words[3])
 
             elif method == 'buttonPress2':
                 self.screensaverEnabled = False
@@ -792,11 +771,11 @@ class NSPanel(MqttPlugin):
         self.send_panel_brightness()
 
     def HandleScreensaver(self):
-        self.publish_tasmota_topic(payload="pageType~screensaver")           
+        self.publish_tasmota_topic(payload="pageType~screensaver")
         self.HandleScreensaverWeatherUpdate()
-        self.HandleScreensaverUpdate()           
+        self.HandleScreensaverUpdate()
         self.HandleScreensaverColors()
-    
+
     def HandleScreensaverUpdate(self):
         self.logger.debug('Function HandleScreensaverUpdate to be done')
         heading = self.panel_config.get('screensaver', {}).get('heading', '')
@@ -808,7 +787,7 @@ class NSPanel(MqttPlugin):
         # payload: color~background~time~timeAMPM~date~tMainIcon~tMainText~tForecast1~tForecast2~tForecast3~tForecast4~tF1Icon~tF2Icon~tF3Icon~tF4Icon~tForecast1Val~tForecast2Val~tForecast3Val~tForecast4Val~bar~tMRIcon~tMR~tTimeAdd
         self.logger.info('Function HandleScreensaverColors to be done')
         background = rgb_dec565(getattr(Colors, 'HMIDark'))
-        time = rgb_dec565(getattr(Colors, 'White'))
+        timestr = rgb_dec565(getattr(Colors, 'White'))
         timeAPPM = rgb_dec565(getattr(Colors, 'White'))
         date = rgb_dec565(getattr(Colors, 'White'))
         tMainIcon = rgb_dec565(getattr(Colors, 'White'))
@@ -829,15 +808,17 @@ class NSPanel(MqttPlugin):
         tMRIcon = rgb_dec565(getattr(Colors, 'White'))
         tMR = rgb_dec565(getattr(Colors, 'White'))
         tTimeAdd = rgb_dec565(getattr(Colors, 'Red'))
-        self.publish_tasmota_topic(payload=f"color~{background}~{time}~{timeAPPM}~{date}~{tMainIcon}~{tMainText}~{tForecast1}~{tForecast2}~{tForecast3}~{tForecast4}~{tF1Icon}~{tF2Icon}~{tF3Icon}~{tF4Icon}~{tForecast1Val}~{tForecast2Val}~{tForecast3Val}~{tForecast4Val}~{bar}~{tMRIcon}~{tMR}~{tTimeAdd}")
+        self.publish_tasmota_topic(
+            payload=f"color~{background}~{timestr}~{timeAPPM}~{date}~{tMainIcon}~{tMainText}~{tForecast1}~{tForecast2}~{tForecast3}~{tForecast4}~{tF1Icon}~{tF2Icon}~{tF3Icon}~{tF4Icon}~{tForecast1Val}~{tForecast2Val}~{tForecast3Val}~{tForecast4Val}~{bar}~{tMRIcon}~{tMR}~{tTimeAdd}")
 
     def HandleScreensaverWeatherUpdate(self):
-        self.logger.info('Function HandleScreensaverWeatherUpdate to be implemented')  
+        self.logger.info('Function HandleScreensaverWeatherUpdate to be implemented')
         icon1 = Icons.GetIcon('wifi')
         icon2 = Icons.GetIcon('wifi-alert')
         icon1Color = rgb_dec565(getattr(Colors, 'White'))
         icon2Color = rgb_dec565(getattr(Colors, 'White'))
-        self.publish_tasmota_topic(payload=f"weatherUpdate~1~2~3~4~5~6~7~8~9~10~11~12~13~14~15~16~{icon1}~{icon1Color}~{icon2}~{icon2Color}~1~1")
+        self.publish_tasmota_topic(
+            payload=f"weatherUpdate~1~2~3~4~5~6~7~8~9~10~11~12~13~14~15~16~{icon1}~{icon1Color}~{icon2}~{icon2Color}~1~1")
 
     def HandleHardwareButton(self, method):
         self.logger.info(f"hw {method} pressed")
@@ -852,7 +833,8 @@ class NSPanel(MqttPlugin):
         pageName = words[2]
         buttonAction = words[3]
 
-        self.logger.debug(f"HandleButtonEvent: {words[0]} - {words[1]} - {words[2]} - {words[3]} - current_page={self.current_page}")
+        self.logger.debug(
+            f"HandleButtonEvent: {words[0]} - {words[1]} - {words[2]} - {words[3]} - current_page={self.current_page}")
 
         if 'navigate' in pageName:
             self.GeneratePage(pageName[8:len(pageName)])
@@ -863,7 +845,7 @@ class NSPanel(MqttPlugin):
         elif buttonAction == 'OnOff':
             # TODO don't use direct items
             value = int(words[4])
-            item = self._get_item(pageName)
+            item = self.items.return_item(pageName)
             if item is not None:
                 self.logger.debug(f"item={item.id()} will be set to new value={value}")
                 item(value, self.get_shortname())
@@ -872,7 +854,7 @@ class NSPanel(MqttPlugin):
                 entities = self.panel_config['cards'][self.current_page]['entities']
                 entity = next((entity for entity in entities if entity["entity"] == pageName), None)
                 item_name = entity.get('item_onoff', '')
-                item = self._get_item(item_name)
+                item = self.items.return_item(item_name)
                 if item is not None:
                     value = entity.get('onValue', 1) if value else entity.get('offValue', 0)
                     self.logger.debug(f"item={item.id()} will be set to new value={value}")
@@ -883,8 +865,9 @@ class NSPanel(MqttPlugin):
             self.logger.debug(f"brightnessSlider called with pageName={pageName}")
             entities = self.panel_config['cards'][self.current_page]['entities']
             entity = next((entity for entity in entities if entity["entity"] == pageName), None)
-            item = self._get_item(entity.get('item_brightness', None))
-            scaled_value = scale(value, (0, 100), (entity.get('min_brightness', "0"), entity.get('max_brightness', "100")))
+            item = self.items.return_item(entity.get('item_brightness', None))
+            scaled_value = scale(value, (0, 100),
+                                 (entity.get('min_brightness', "0"), entity.get('max_brightness', "100")))
             if item is not None:
                 self.logger.debug(f"item={item.id()} will be set to new scaled_value={scaled_value}")
                 item(scaled_value, self.get_shortname())
@@ -894,18 +877,19 @@ class NSPanel(MqttPlugin):
             self.logger.debug(f"colorTempSlider called with pageName={pageName}")
             entities = self.panel_config['cards'][self.current_page]['entities']
             entity = next((entity for entity in entities if entity["entity"] == pageName), None)
-            item = self._get_item(entity.get('item_temperature', None))
-            scaled_value = scale(value, (100, 0), (entity.get('min_temperature', "0"), entity.get('max_temperature', "100")))
+            item = self.items.return_item(entity.get('item_temperature', None))
+            scaled_value = scale(value, (100, 0),
+                                 (entity.get('min_temperature', "0"), entity.get('max_temperature', "100")))
             if item is not None:
                 self.logger.debug(f"item={item.id()} will be set to new scaled_value={scaled_value}")
                 item(scaled_value, self.get_shortname())
-        
+
         elif buttonAction == 'colorWheel':
             value = words[4]
             self.logger.debug(f"colorWheel called with pageName={pageName}")
             entities = self.panel_config['cards'][self.current_page]['entities']
             entity = next((entity for entity in entities if entity["entity"] == pageName), None)
-            item = self._get_item(entity.get('item_color', None))
+            item = self.items.return_item(entity.get('item_color', None))
             value = value.split('|')
             rgb = pos_to_color(int(value[0]), int(value[1]), int(value[2]))
             red = rgb[0]
@@ -918,11 +902,17 @@ class NSPanel(MqttPlugin):
         elif buttonAction == 'button':
             self.logger.debug(f"button called with pageName={pageName}")
             searching = words[2]
-            if searching == 'bNext':
-                self.GeneratePage(self._next_page())
+            if searching == 'bHome':
+                self.current_page = 0
+                self.GeneratePage(self.current_page)
+
+            elif searching == 'bNext':
+                self._next_page()
+                self.GeneratePage(self.current_page)
 
             elif searching == 'bPrev':
-                self.GeneratePage(self._previous_page())
+                self._previous_page()
+                self.GeneratePage(self.current_page)
 
             else:
                 entities = self.panel_config['cards'][self.current_page]['entities']
@@ -938,7 +928,7 @@ class NSPanel(MqttPlugin):
                 # button / light / switch / text / etc.
                 else:
                     item_name = entity['internalNameEntity']
-                    item = self._get_item(item_name)
+                    item = self.items.return_item(item_name)
                     if item is not None:
                         if entity['type'] == 'text':
                             self.logger.debug(f"item={item.id()} will get no update because it's text")
@@ -949,18 +939,18 @@ class NSPanel(MqttPlugin):
                             item(value, self.get_shortname())
 
         elif buttonAction == 'tempUpd':
-            value = int(words[4])/10
+            value = int(words[4]) / 10
             page_content = self.panel_config['cards'][self.current_page]
-            items = page_content.get('items', 'undefined')
-            self._get_item(items.get('item_temp_set', None))(value)
+            tempitem = page_content.get('items', 'undefined')
+            self.items.return_item(tempitem.get('item_temp_set', None))(value)
             self.GeneratePage(self.current_page)
 
         elif buttonAction == 'hvac_action':
             value = int(words[4])
             if value < 99:
                 page_content = self.panel_config['cards'][self.current_page]
-                items = page_content.get('items', 'undefined')
-                self._get_item(items.get('item_mode', None))(value)
+                hvacitem = page_content.get('items', 'undefined')
+                self.items.return_item(hvacitem.get('item_mode', None))(value)
             else:
                 self.logger.debug("no valid hvac action")
             self.GeneratePage(self.current_page)
@@ -969,7 +959,7 @@ class NSPanel(MqttPlugin):
         elif buttonAction == 'up':
             # shutter moving until upper position
             value = 0
-            item = self._get_item(words[2])
+            item = self.items.return_item(words[2])
 
             if item is not None:
                 self.logger.debug(f"item={item.id()} will be set to new value={value}")
@@ -978,10 +968,9 @@ class NSPanel(MqttPlugin):
 
         elif buttonAction == 'down':
             # shutter moving down until down position
-            value = 255      
-            item = self._get_item(words[2])
+            value = 255
+            item = self.items.return_item(words[2])
             self.logger.debug(item)
-
 
             if item is not None:
                 self.logger.debug(f"item={item.id()} will be set to new value={value}")
@@ -989,151 +978,148 @@ class NSPanel(MqttPlugin):
             self.GeneratePage(self.current_page)
 
         elif buttonAction == 'stop':
-           #shutter stops
-           value = 1
-           item = self._get_item("EG.Arbeiten.Rollladen.stop") # Das ITEM muss noch mit Config verknüpft werden
+            # shutter stops
+            value = 1
+            item = self.items.return_item(
+                "EG.Arbeiten.Rollladen.stop")  # Das ITEM muss noch mit Config verknüpft werden
 
-           if item is not None:
-               self.logger.debug(f"item={item.id()} will be set to new value={value}")
-               item(value, self.get_shortname())
-           self.GeneratePage(self.current_page)
-
+            if item is not None:
+                self.logger.debug(f"item={item.id()} will be set to new value={value}")
+                item(value, self.get_shortname())
+            self.GeneratePage(self.current_page)
 
         # Alarmpage Button Handle
-        elif buttonAction == 'Alarm.Modus1': #Anwesend
-            self.logger.debug(f"Button {buttonAction} pressed") 
-           
+        elif buttonAction == 'Alarm.Modus1':  # Anwesend
+            self.logger.debug(f"Button {buttonAction} pressed")
+
             password = words[4]
-           
+
             page_content = self.panel_config['cards'][self.current_page]
             items = page_content.get('items', 'undefined')
-            pwd = items.get('Password', None) 
-            item1 = self._get_item(items.get('arm1ActionName'))
-            item2 = self._get_item(items.get('arm2ActionName'))
-            item3 = self._get_item(items.get('arm3ActionName'))
-            item4 = self._get_item(items.get('arm4ActionName'))
-
-
-            if item3():
-                self.logger.debug("Passwort needed to unlock") 
-                if password == pwd:
-                    self.logger.debug(f"Password {password} = {pwd} correct") 
-                    self._get_item(items.get('arm1ActionName', None))(True)
-                    self._get_item(items.get('arm2ActionName', None))(False)
-                    self._get_item(items.get('arm3ActionName', None))(False)
-                    self._get_item(items.get('arm4ActionName', None))(False)
-                else:
-                    self.logger.debug("Password incorrect")  
-            else:
-                self._get_item(items.get('arm1ActionName', None))(True)
-                self._get_item(items.get('arm2ActionName', None))(False)
-                self._get_item(items.get('arm3ActionName', None))(False)
-                self._get_item(items.get('arm4ActionName', None))(False)
-
-            self.GeneratePage(self.current_page)
-        
-        elif buttonAction == 'Alarm.Modus2': # Abwesend
-            self.logger.debug(f"Button {buttonAction} pressed") 
-            password = words[4]
-           
-            page_content = self.panel_config['cards'][self.current_page]
-            items = page_content.get('items', 'undefined')
-            pwd = items.get('Password', None) 
-            item1 = self._get_item(items.get('arm1ActionName'))
-            item2 = self._get_item(items.get('arm2ActionName'))
-            item3 = self._get_item(items.get('arm3ActionName'))
-            item4 = self._get_item(items.get('arm4ActionName'))
-
+            pwd = items.get('Password', None)
+            item1 = self.items.return_item(items.get('arm1ActionName'))
+            item2 = self.items.return_item(items.get('arm2ActionName'))
+            item3 = self.items.return_item(items.get('arm3ActionName'))
+            item4 = self.items.return_item(items.get('arm4ActionName'))
 
             if item3():
-                self.logger.debug("Passwort needed to unlock") 
+                self.logger.debug("Passwort needed to unlock")
                 if password == pwd:
-                    self.logger.debug(f"Password {password} = {pwd} correct") 
-                    self._get_item(items.get('arm1ActionName', None))(False)
-                    self._get_item(items.get('arm2ActionName', None))(True)
-                    self._get_item(items.get('arm3ActionName', None))(False)
-                    self._get_item(items.get('arm4ActionName', None))(False)
+                    self.logger.debug(f"Password {password} = {pwd} correct")
+                    self.items.return_item(items.get('arm1ActionName', None))(True)
+                    self.items.return_item(items.get('arm2ActionName', None))(False)
+                    self.items.return_item(items.get('arm3ActionName', None))(False)
+                    self.items.return_item(items.get('arm4ActionName', None))(False)
                 else:
-                    self.logger.debug("Password incorrect")  
+                    self.logger.debug("Password incorrect")
             else:
-                self._get_item(items.get('arm1ActionName', None))(False)
-                self._get_item(items.get('arm2ActionName', None))(True)
-                self._get_item(items.get('arm3ActionName', None))(False)
-                self._get_item(items.get('arm4ActionName', None))(False)
+                self.items.return_item(items.get('arm1ActionName', None))(True)
+                self.items.return_item(items.get('arm2ActionName', None))(False)
+                self.items.return_item(items.get('arm3ActionName', None))(False)
+                self.items.return_item(items.get('arm4ActionName', None))(False)
 
             self.GeneratePage(self.current_page)
 
-        elif buttonAction == 'Alarm.Modus3': #Urlaub
-            self.logger.debug(f"Button {buttonAction} pressed") 
-            
+        elif buttonAction == 'Alarm.Modus2':  # Abwesend
+            self.logger.debug(f"Button {buttonAction} pressed")
             password = words[4]
-           
+
             page_content = self.panel_config['cards'][self.current_page]
             items = page_content.get('items', 'undefined')
-            pwd = items.get('Password', None) 
-            item1 = self._get_item(items.get('arm1ActionName'))
-            item2 = self._get_item(items.get('arm2ActionName'))
-            item3 = self._get_item(items.get('arm3ActionName'))
-            item4 = self._get_item(items.get('arm4ActionName'))
+            pwd = items.get('Password', None)
+            item1 = self.items.return_item(items.get('arm1ActionName'))
+            item2 = self.items.return_item(items.get('arm2ActionName'))
+            item3 = self.items.return_item(items.get('arm3ActionName'))
+            item4 = self.items.return_item(items.get('arm4ActionName'))
 
             if item3():
-                self.logger.debug("Passwort needed to unlock") 
+                self.logger.debug("Passwort needed to unlock")
                 if password == pwd:
-                    self.logger.debug(f"Password {password} = {pwd} correct") 
-                    self._get_item(items.get('arm1ActionName', None))(False)
-                    self._get_item(items.get('arm2ActionName', None))(False)
-                    self._get_item(items.get('arm3ActionName', None))(True)
-                    self._get_item(items.get('arm4ActionName', None))(False)
+                    self.logger.debug(f"Password {password} = {pwd} correct")
+                    self.items.return_item(items.get('arm1ActionName', None))(False)
+                    self.items.return_item(items.get('arm2ActionName', None))(True)
+                    self.items.return_item(items.get('arm3ActionName', None))(False)
+                    self.items.return_item(items.get('arm4ActionName', None))(False)
                 else:
-                    self.logger.debug("Password incorrect")  
+                    self.logger.debug("Password incorrect")
             else:
-                self._get_item(items.get('arm1ActionName', None))(False)
-                self._get_item(items.get('arm2ActionName', None))(False)
-                self._get_item(items.get('arm3ActionName', None))(True)
-                self._get_item(items.get('arm4ActionName', None))(False)
+                self.items.return_item(items.get('arm1ActionName', None))(False)
+                self.items.return_item(items.get('arm2ActionName', None))(True)
+                self.items.return_item(items.get('arm3ActionName', None))(False)
+                self.items.return_item(items.get('arm4ActionName', None))(False)
 
             self.GeneratePage(self.current_page)
-        
-        elif buttonAction == 'Alarm.Modus4': #Gäste
+
+        elif buttonAction == 'Alarm.Modus3':  # Urlaub
+            self.logger.debug(f"Button {buttonAction} pressed")
+
             password = words[4]
-           
+
             page_content = self.panel_config['cards'][self.current_page]
             items = page_content.get('items', 'undefined')
-            pwd = items.get('Password', None) 
-            item1 = self._get_item(items.get('arm1ActionName'))
-            item2 = self._get_item(items.get('arm2ActionName'))
-            item3 = self._get_item(items.get('arm3ActionName'))
-            item4 = self._get_item(items.get('arm4ActionName'))
-
+            pwd = items.get('Password', None)
+            item1 = self.items.return_item(items.get('arm1ActionName'))
+            item2 = self.items.return_item(items.get('arm2ActionName'))
+            item3 = self.items.return_item(items.get('arm3ActionName'))
+            item4 = self.items.return_item(items.get('arm4ActionName'))
 
             if item3():
-                self.logger.debug("Passwort needed to unlock") 
+                self.logger.debug("Passwort needed to unlock")
                 if password == pwd:
-                    self.logger.debug(f"Password {password} = {pwd} correct") 
-                    self._get_item(items.get('arm1ActionName', None))(False)
-                    self._get_item(items.get('arm2ActionName', None))(False)
-                    self._get_item(items.get('arm3ActionName', None))(False)
-                    self._get_item(items.get('arm4ActionName', None))(True)
+                    self.logger.debug(f"Password {password} = {pwd} correct")
+                    self.items.return_item(items.get('arm1ActionName', None))(False)
+                    self.items.return_item(items.get('arm2ActionName', None))(False)
+                    self.items.return_item(items.get('arm3ActionName', None))(True)
+                    self.items.return_item(items.get('arm4ActionName', None))(False)
                 else:
-                    self.logger.debug("Password incorrect")  
+                    self.logger.debug("Password incorrect")
             else:
-                self._get_item(items.get('arm1ActionName', None))(False)
-                self._get_item(items.get('arm2ActionName', None))(False)
-                self._get_item(items.get('arm3ActionName', None))(False)
-                self._get_item(items.get('arm4ActionName', None))(True)
-            
+                self.items.return_item(items.get('arm1ActionName', None))(False)
+                self.items.return_item(items.get('arm2ActionName', None))(False)
+                self.items.return_item(items.get('arm3ActionName', None))(True)
+                self.items.return_item(items.get('arm4ActionName', None))(False)
+
+            self.GeneratePage(self.current_page)
+
+        elif buttonAction == 'Alarm.Modus4':  # Gäste
+            password = words[4]
+
+            page_content = self.panel_config['cards'][self.current_page]
+            items = page_content.get('items', 'undefined')
+            pwd = items.get('Password', None)
+            item1 = self.items.return_item(items.get('arm1ActionName'))
+            item2 = self.items.return_item(items.get('arm2ActionName'))
+            item3 = self.items.return_item(items.get('arm3ActionName'))
+            item4 = self.items.return_item(items.get('arm4ActionName'))
+
+            if item3():
+                self.logger.debug("Passwort needed to unlock")
+                if password == pwd:
+                    self.logger.debug(f"Password {password} = {pwd} correct")
+                    self.items.return_item(items.get('arm1ActionName', None))(False)
+                    self.items.return_item(items.get('arm2ActionName', None))(False)
+                    self.items.return_item(items.get('arm3ActionName', None))(False)
+                    self.items.return_item(items.get('arm4ActionName', None))(True)
+                else:
+                    self.logger.debug("Password incorrect")
+            else:
+                self.items.return_item(items.get('arm1ActionName', None))(False)
+                self.items.return_item(items.get('arm2ActionName', None))(False)
+                self.items.return_item(items.get('arm3ActionName', None))(False)
+                self.items.return_item(items.get('arm4ActionName', None))(True)
+
             self.GeneratePage(self.current_page)
 
         elif buttonAction == 'timer-start':
             parameter = words[4]
             self.logger.debug(f"timer-start called with pageName={pageName} and parameter={parameter}")
-            time = parameter.split(':')
-            seconds = (int(time[0])*60 + int(time[1])) * 60 + int(time[2]) + 1
+            timer = parameter.split(':')
+            seconds = (int(timer[0]) * 60 + int(timer[1])) * 60 + int(timer[2]) + 1
             entities = self.panel_config['cards'][self.current_page]['entities']
             entity = next((entity for entity in entities if entity["entity"] == pageName), None)
-            item = self._get_item(entity.get('item', None))
+            item = self.items.return_item(entity.get('item', None))
             if item is not None:
-                self.logger.debug(f"item={item.id()} will be set to value={seconds-1}")
+                self.logger.debug(f"item={item.id()} will be set to value={seconds - 1}")
                 item(seconds, self.get_shortname())
 
         elif buttonAction[:6] == 'timer-':
@@ -1165,7 +1151,7 @@ class NSPanel(MqttPlugin):
             'size': 0,
             'icon': "",
             'iconColor': 'White',
-            }
+        }
         # TODO split colors for different elements?
         color = rgb_dec565(getattr(Colors, self.panel_config.get('defaultOnColor', "White")))
 
@@ -1182,7 +1168,8 @@ class NSPanel(MqttPlugin):
         iconColor = content['iconColor']
         out_msgs = list()
         out_msgs.append('pageType~popupNotify')
-        out_msgs.append(f"entityUpdateDetail~topic~{heading}~{color}~{buttonLeft}~{color}~{buttonRight}~{color}~{text}~{color}~{timeout}~{size}~{icon}~{iconColor}")
+        out_msgs.append(
+            f"entityUpdateDetail~topic~{heading}~{color}~{buttonLeft}~{color}~{buttonRight}~{color}~{text}~{color}~{timeout}~{size}~{icon}~{iconColor}")
         return out_msgs
 
     def GeneratePage(self, page):
@@ -1196,14 +1183,14 @@ class NSPanel(MqttPlugin):
 
         elif page_content['pageType'] == 'cardThermo':
             self.SendToPanel(self.GenerateThermoPage(page))
-    
+
         elif page_content['pageType'] == 'cardGrid':
             self.SendToPanel(self.GenerateGridPage(page))
-    
+
         elif page_content['pageType'] == 'cardMedia':
             self.useMediaEvents = True
             self.SendToPanel(self.GenerateMediaPage(page))
-    
+
         elif page_content['pageType'] == 'cardAlarm':
             self.SendToPanel(self.GenerateAlarmPage(page))
 
@@ -1212,7 +1199,7 @@ class NSPanel(MqttPlugin):
 
         elif page_content['pageType'] == 'cardPower':
             self.SendToPanel(self.GeneratePowerPage(page))
-    
+
         elif page_content['pageType'] == 'cardChart':
             self.SendToPanel(self.GenerateChartPage(page))
 
@@ -1262,21 +1249,24 @@ class NSPanel(MqttPlugin):
         internalNameEntity = page_content.get('entity', 'undefined')
         heading = page_content.get('heading', 'undefined')
         items = page_content.get('items', 'undefined')
-        currentTemp = str(self._get_item(items.get('item_temp_current', 'undefined'))()).replace(".", ",")
-        destTemp    = int(self._get_item(items.get('item_temp_set', 'undefined'))() * 10)
-        statusStr   = 'MANU'
-        minTemp = int(items.get('minSetValue', 5)*10)
-        maxTemp = int(items.get('maxSetValue', 30)*10)
-        stepTemp = int(items.get('stepSetValue', 0.5)*10)
+        currentTemp = str(self.items.return_item(items.get('item_temp_current', 'undefined'))()).replace(".", ",")
+        destTemp = int(self.items.return_item(items.get('item_temp_set', 'undefined'))() * 10)
+        statusStr = 'MANU'
+        minTemp = int(items.get('minSetValue', 5) * 10)
+        maxTemp = int(items.get('maxSetValue', 30) * 10)
+        stepTemp = int(items.get('stepSetValue', 0.5) * 10)
         icon_res = ''
 
-        mode = self._get_item(items.get('item_mode', None))()
+        mode = self.items.return_item(items.get('item_mode', None))()
         if mode is not None:
-
-            modes = {1: ('Komfort', Icons.GetIcon('alpha-a-circle'), (rgb_dec565(Colors.On), 33840, 33840, 33840), (1, 0, 0, 0)),
-                     2: ('Standby', Icons.GetIcon('power-standby'),  (33840, rgb_dec565(Colors.On), 33840, 33840), (0, 1, 0, 1)),
-                     3: ('Nacht',   Icons.GetIcon('weather-night'),  (33840, 33840, rgb_dec565(Colors.On), 33840), (0, 0, 1, 0)),
-                     4: ('Frost',   Icons.GetIcon('head-snowflake'), (33840, 33840, 33840, rgb_dec565(Colors.On)), (0, 0, 0, 1)),
+            modes = {1: ('Komfort', Icons.GetIcon('alpha-a-circle'), (rgb_dec565(Colors.On), 33840, 33840, 33840),
+                         (1, 0, 0, 0)),
+                     2: ('Standby', Icons.GetIcon('power-standby'), (33840, rgb_dec565(Colors.On), 33840, 33840),
+                         (0, 1, 0, 1)),
+                     3: ('Nacht', Icons.GetIcon('weather-night'), (33840, 33840, rgb_dec565(Colors.On), 33840),
+                         (0, 0, 1, 0)),
+                     4: ('Frost', Icons.GetIcon('head-snowflake'), (33840, 33840, 33840, rgb_dec565(Colors.On)),
+                         (0, 0, 0, 1)),
                      }
 
             statusStr = modes[mode][0]
@@ -1299,21 +1289,21 @@ class NSPanel(MqttPlugin):
         PageData = (
             'entityUpd~'
             f'{heading}~'  # Heading
-            f'{self.GetNavigationString(page)}~'                # Page Navigation
-            f'{internalNameEntity}~'                            # internalNameEntity
-            f'{currentTemp} {temperatureUnit}~'                 # Ist-Temperatur (String)
-            f'{destTemp}~'                                      # Soll-Temperatur (numerisch ohne Komma in Zehntelgrad)
-            f'{statusStr}~'                                     # Mode
-            f'{minTemp}~'                                       # Thermostat Min-Temperatur (numerisch ohne Komma in Zehntelgrad)
-            f'{maxTemp}~'                                       # Thermostat Max-Temperatur (numerisch ohne Komma in Zehntelgrad)
-            f'{stepTemp}~'                                      # Schritte für Soll (0.5°C) (numerisch ohne Komma in Zehntelgrad)
-            f'{icon_res}'                                       # Icons Status
+            f'{self.GetNavigationString(page)}~'  # Page Navigation
+            f'{internalNameEntity}~'  # internalNameEntity
+            f'{currentTemp} {temperatureUnit}~'  # Ist-Temperatur (String)
+            f'{destTemp}~'  # Soll-Temperatur (numerisch ohne Komma in Zehntelgrad)
+            f'{statusStr}~'  # Mode
+            f'{minTemp}~'  # Thermostat Min-Temperatur (numerisch ohne Komma in Zehntelgrad)
+            f'{maxTemp}~'  # Thermostat Max-Temperatur (numerisch ohne Komma in Zehntelgrad)
+            f'{stepTemp}~'  # Schritte für Soll (0.5°C) (numerisch ohne Komma in Zehntelgrad)
+            f'{icon_res}'  # Icons Status
             f'Aktuell:~'  # Todo #f'{self._get_locale("thermostat", "Currently")}~'   # Bezeichner vor aktueller Raumtemperatur
-            f'Zustand:~' # Todo #f'{self._get_locale("thermostat", "State")}~'       # Bezeichner vor State
-            f"~"                                                # tALbl ?
-            f'{temperatureUnit}~'                               # iconTemperature dstTempTwoTempMode
-            f'~'                                     # dstTempTwoTempMode --> Wenn Wert, dann 2 Temp
-            f''                                    # PopUp
+            f'Zustand:~'  # Todo #f'{self._get_locale("thermostat", "State")}~'       # Bezeichner vor State
+            f"~"  # tALbl ?
+            f'{temperatureUnit}~'  # iconTemperature dstTempTwoTempMode
+            f'~'  # dstTempTwoTempMode --> Wenn Wert, dann 2 Temperaturen
+            f'{thermoPopup}'  # PopUp
         )
 
         out_msgs.append(PageData)
@@ -1321,7 +1311,11 @@ class NSPanel(MqttPlugin):
         return out_msgs
 
     def GenerateMediaPage(self, page) -> list:
-        self.logger.debug(f"GenerateMediaPage to be implemented")
+        self.logger.debug(f"GenerateMediaPage called with page={page} to be implemented")
+
+        out_msgs = list()
+        out_msgs.append('pageType~cardMedia')
+        return out_msgs
 
     def GenerateAlarmPage(self, page) -> list:
         self.logger.debug(f"GenerateAlarmPage called with page={page}")
@@ -1329,12 +1323,13 @@ class NSPanel(MqttPlugin):
         out_msgs = list()
         out_msgs.append('pageType~cardAlarm')
 
-        page_content = self.panel_config['cards'][page]       
+        page_content = self.panel_config['cards'][page]
 
-        heading = page_content.get('heading', 'undefined') 
-        items = page_content.get('items', 'undefined')     
-        iconId = Icons.GetIcon('home') # Icons.GetIcon(items.get('iconId', 'home'))
-        iconColor = rgb_dec565(getattr(Colors, 'White'))   #rgb_dec565(getattr(Colors, items.get('iconColor', 'White')))            
+        heading = page_content.get('heading', 'undefined')
+        items = page_content.get('items', 'undefined')
+        iconId = Icons.GetIcon('home')  # Icons.GetIcon(items.get('iconId', 'home'))
+        iconColor = rgb_dec565(
+            getattr(Colors, 'White'))  # rgb_dec565(getattr(Colors, items.get('iconColor', 'White')))
         arm1 = items.get('arm1', None)
         arm2 = items.get('arm2', None)
         arm3 = items.get('arm3', None)
@@ -1342,80 +1337,76 @@ class NSPanel(MqttPlugin):
         arm1ActionName = items.get('arm1ActionName', None)
         arm2ActionName = items.get('arm2ActionName', None)
         arm3ActionName = items.get('arm3ActionName', None)
-        arm4ActionName = items.get('arm4ActionName', None)     
-        numpadStatus = 'disable' #items.get('numpadStatus', "disable")
-        flashing = 'disable' #items.get('flashing', "disable")
-       
-       
-        item1 = self._get_item(arm1ActionName)
-        item2 = self._get_item(arm2ActionName)
-        item3 = self._get_item(arm3ActionName)
-        item4 = self._get_item(arm4ActionName)
+        arm4ActionName = items.get('arm4ActionName', None)
+        numpadStatus = 'disable'  # items.get('numpadStatus', "disable")
+        flashing = 'disable'  # items.get('flashing', "disable")
 
-        if item1(): # Modus Anwesend
-            iconId = Icons.GetIcon('home') 
-            iconColor = rgb_dec565(getattr(Colors, 'White'))   
-            numpadStatus = 'disable' 
-            flashing = 'disable' 
+        item1 = self.items.return_item(arm1ActionName)
+        item2 = self.items.return_item(arm2ActionName)
+        item3 = self.items.return_item(arm3ActionName)
+        item4 = self.items.return_item(arm4ActionName)
+
+        if item1():  # Modus Anwesend
+            iconId = Icons.GetIcon('home')
+            iconColor = rgb_dec565(getattr(Colors, 'White'))
+            numpadStatus = 'disable'
+            flashing = 'disable'
             arm1 = ""
             arm2 = items.get('arm2', None)
             arm3 = items.get('arm3', None)
             arm4 = items.get('arm4', None)
 
-
-        if item2(): # Modus Abwesend
+        if item2():  # Modus Abwesend
             iconId = Icons.GetIcon('home-lock')
-            iconColor = rgb_dec565(getattr(Colors, 'Yellow'))  
+            iconColor = rgb_dec565(getattr(Colors, 'Yellow'))
             numpadStatus = 'disable'
-            flashing = 'disable'     
+            flashing = 'disable'
             arm1 = items.get('arm1', None)
             arm2 = ""
             arm3 = items.get('arm3', None)
-            arm4 = items.get('arm4', None)        
+            arm4 = items.get('arm4', None)
 
-        if item3(): # Modus Urlaub
-            iconId = Icons.GetIcon('hiking') 
-            iconColor = rgb_dec565(getattr(Colors, 'Red'))   
+        if item3():  # Modus Urlaub
+            iconId = Icons.GetIcon('hiking')
+            iconColor = rgb_dec565(getattr(Colors, 'Red'))
             numpadStatus = 'enable'
             flashing = 'disable'
             arm1 = items.get('arm1', None)
             arm2 = items.get('arm2', None)
             arm3 = ""
-            arm4 = items.get('arm4', None) 
-            
-        if item4(): # Modus Gäste
-            iconId = Icons.GetIcon('home') 
-            iconColor = rgb_dec565(getattr(Colors, 'Green')) 
+            arm4 = items.get('arm4', None)
+
+        if item4():  # Modus Gäste
+            iconId = Icons.GetIcon('home')
+            iconColor = rgb_dec565(getattr(Colors, 'Green'))
             numpadStatus = 'disable'
-            flashing = 'enable' 
+            flashing = 'enable'
             arm1 = items.get('arm1', None)
             arm2 = items.get('arm2', None)
             arm3 = items.get('arm3', None)
             arm4 = ""
-              
 
-        # entityUpd~*internalNameEntity*~*navigation*~*arm1*~*arm1ActionName*~*arm2*~*arm2ActionName*~*arm3*~*arm3ActionName*~*arm4*~*arm4ActionName*~*icon*~*iconcolor*~*numpadStatus*~*flashing*
+        # entityUpd~*internalNameEntity*~*navigation*~*arm1*~*arm1ActionName*~*arm2*~*arm2ActionName*~*arm3*~*arm3ActionName*~*arm4*~*arm4ActionName*~*icon*~*iconColor*~*numpadStatus*~*flashing*
         pageData = (
-                   'entityUpd~'                          #entityUpd
-                   f'{heading}~'                         # heading
-                   f'{self.GetNavigationString(page)}~'  # navigation
-                   f'{arm1}~'                            # Statusname for modus 1
-                   f'{arm1ActionName}~'                  # Status item for modus 1
-                   f'{arm2}~'                            # Statusname for modus 2
-                   f'{arm2ActionName}~'                  # Status item for modus 2
-                   f'{arm3}~'                            # Statusname for modus 3
-                   f'{arm3ActionName}~'                  # Status item for modus 3
-                   f'{arm4}~'                            # Statusname for modus 4
-                   f'{arm4ActionName}~'                  # Status item for modus 4
-                   f'{iconId}~'                          # iconId for which modus acitvated
-                   f'{iconColor}~'                       # iconColor
-                   f'{numpadStatus}~'                    # Numpad on/off
-                   f'{flashing}'                         # IconFlashing
-                   )
+            'entityUpd~'  # entityUpd
+            f'{heading}~'  # heading
+            f'{self.GetNavigationString(page)}~'  # navigation
+            f'{arm1}~'  # Statusname for modus 1
+            f'{arm1ActionName}~'  # Status item for modus 1
+            f'{arm2}~'  # Statusname for modus 2
+            f'{arm2ActionName}~'  # Status item for modus 2
+            f'{arm3}~'  # Statusname for modus 3
+            f'{arm3ActionName}~'  # Status item for modus 3
+            f'{arm4}~'  # Statusname for modus 4
+            f'{arm4ActionName}~'  # Status item for modus 4
+            f'{iconId}~'  # iconId for which modus activated
+            f'{iconColor}~'  # iconColor
+            f'{numpadStatus}~'  # Numpad on/off
+            f'{flashing}'  # IconFlashing
+        )
         out_msgs.append(pageData)
-     
-        return out_msgs
 
+        return out_msgs
 
     def GenerateQRPage(self, page) -> list:
         self.logger.debug(f"GenerateQRPage called with page={page}")
@@ -1426,17 +1417,17 @@ class NSPanel(MqttPlugin):
         page_content = self.panel_config['cards'][page]
         heading = page_content.get('heading', 'Default')
         items = page_content.get('items')
-        SSID = self._get_item(items.get('SSID', 'undefined'))()
-        Password = self._get_item(items.get('Password', 'undefined'))()
+        SSID = self.items.return_item(items.get('SSID', 'undefined'))()
+        Password = self.items.return_item(items.get('Password', 'undefined'))()
         hiddenPWD = page_content.get('hidePassword', False)
         iconColor = rgb_dec565(getattr(Colors, page_content.get('iconColor', 'White')))
 
         type1 = 'text'
-        internalName1 = 'S' # wird nicht angezeigt
+        internalName1 = 'S'  # wird nicht angezeigt
         iconId1 = Icons.GetIcon('wifi')
         displayName1 = 'SSID:'
         type2 = 'text'
-        internalName2 = 'P' # wird nicht angezeigt
+        internalName2 = 'P'  # wird nicht angezeigt
         iconId2 = Icons.GetIcon('key')
         displayName2 = 'Passwort:'
 
@@ -1449,23 +1440,23 @@ class NSPanel(MqttPlugin):
 
         # Generata PageDate according to: entityUpd, heading, navigation, textQR[, type, internalName, iconId, displayName, optionalValue]x2
         pageData = (
-                   'entityUpd~'                         # entityUpd
-                   f'{heading}~'                         # heading
-                   f'{self.GetNavigationString(page)}~'  # navigation
-                   f'{textQR}~'                          # textQR
-                   f'{type1}~'                           # type
-                   f'{internalName1}~'                   # internalName
-                   f'{iconId1}~'                         # iconId
-                   f'{iconColor}~'                       # iconColor
-                   f'{displayName1}~'                    # displayName
-                   f'{SSID}~'                            # SSID
-                   f'{type2}~'                           # type
-                   f'{internalName2}~'                   # internalName
-                   f'{iconId2}~'                         # iconId
-                   f'{iconColor}~'                       # iconColor
-                   f'{displayName2}~'                    # displayName
-                   f'{Password}'                         # Password
-                   )
+            'entityUpd~'  # entityUpd
+            f'{heading}~'  # heading
+            f'{self.GetNavigationString(page)}~'  # navigation
+            f'{textQR}~'  # textQR
+            f'{type1}~'  # type
+            f'{internalName1}~'  # internalName
+            f'{iconId1}~'  # iconId
+            f'{iconColor}~'  # iconColor
+            f'{displayName1}~'  # displayName
+            f'{SSID}~'  # SSID
+            f'{type2}~'  # type
+            f'{internalName2}~'  # internalName
+            f'{iconId2}~'  # iconId
+            f'{iconColor}~'  # iconColor
+            f'{displayName2}~'  # displayName
+            f'{Password}'  # Password
+        )
         out_msgs.append(pageData)
 
         return out_msgs
@@ -1477,24 +1468,25 @@ class NSPanel(MqttPlugin):
         maxItems = 6
 
         if len(page_content['entities']) > maxItems:
-            self.logger.warning(f"Page definition contains too many Entities. Max allowed entities for page={page_content['pageType']} is {maxItems}")
+            self.logger.warning(
+                f"Page definition contains too many Entities. Max allowed entities for page={page_content['pageType']} is {maxItems}")
 
         out_msgs = list()
         out_msgs.append('pageType~cardPower')
 
-        textHome = self._get_item(page_content['itemHome'])()
+        textHome = self.items.return_item(page_content['itemHome'])()
         iconHome = Icons.GetIcon(page_content.get('iconHome', 'home'))
         colorHome = rgb_dec565(getattr(Colors, page_content.get('colorHome', 'home')))
 
         # Generata PageDate according to: entityUpd~heading~navigation~colorHome~iconHome~textHome[~iconColor~icon~  speed~valueDown]x6
         pageData = (
-                    f"entityUpd~"
-                    f"{page_content['heading']}~"
-                    f"{self.GetNavigationString(page)}~"
-                    f"{colorHome}~"
-                    f"{iconHome}~"
-                    f"{textHome}~"
-                    )
+            f"entityUpd~"
+            f"{page_content['heading']}~"
+            f"{self.GetNavigationString(page)}~"
+            f"{colorHome}~"
+            f"{iconHome}~"
+            f"{textHome}~"
+        )
 
         for idx, entity in enumerate(page_content['entities']):
             self.logger.debug(f"entity={entity}")
@@ -1504,18 +1496,18 @@ class NSPanel(MqttPlugin):
             item = entity.get('item', '')
             value = ''
             if item != '':
-                value = self._get_item(item)()
+                value = self.items.return_item(item)()
 
             icon = Icons.GetIcon(entity.get('icon', ''))
             iconColor = rgb_dec565(getattr(Colors, entity.get('color', self.panel_config['config']['defaultColor'])))
             speed = entity.get('speed', '')
             pageData = (
-                       f"{pageData}"
-                       f"{iconColor}~"
-                       f"{icon}~"
-                       f"{speed}~"
-                       f"{value}~"
-                       )
+                f"{pageData}"
+                f"{iconColor}~"
+                f"{icon}~"
+                f"{speed}~"
+                f"{value}~"
+            )
 
         out_msgs.append(pageData)
 
@@ -1528,18 +1520,19 @@ class NSPanel(MqttPlugin):
         out_msgs = list()
         out_msgs.append('pageType~cardChart')
 
-        series_list = list(self._get_item(page_content['item'])())
+        series_list = list(self.items.return_item(page_content['item'])())
 
         maxElements = 88
-        nr_of_xAxis_labels = 5
+        nr_of_xAxis_labels = 6
         nr_of_elements = len(series_list)
 
         if nr_of_elements > maxElements:
-            self.logger.warning(f"Item contains too many list elements. Max allowed number of list elements for page={page_content['pageType']} is {maxElements}")
+            self.logger.warning(
+                f"Item contains too many list elements. Max allowed number of list elements for page={page_content['pageType']} is {maxElements}")
             del series_list[maxElements:]
             nr_of_elements = maxElements
 
-        stepwidth_xAxis = round(nr_of_elements / (nr_of_xAxis_labels-1))
+        stepwidth_xAxis = round(nr_of_elements / (nr_of_xAxis_labels - 1))
 
         heading = page_content.get('heading', 'Chart')
         color = rgb_dec565(getattr(Colors, page_content.get('Color', 'Green')))
@@ -1548,24 +1541,24 @@ class NSPanel(MqttPlugin):
 
         # Generata PageDate according to: entityUpd~heading~navigation~color~yAxisLabel~yAxisTick:[yAxisTick]*[~value[:xAxisLabel]?]*
         pageData = (
-                    f"entityUpd~"
-                    f"{heading}~"
-                    f"{self.GetNavigationString(page)}~"
-                    f"{color}~"
-                    f"{yAxisLabel}~"
-                    f"{yAxisTick}"
-                    )
+            f"entityUpd~"
+            f"{heading}~"
+            f"{self.GetNavigationString(page)}~"
+            f"{color}~"
+            f"{yAxisLabel}~"
+            f"{yAxisTick}"
+        )
 
         max_value = max(map(lambda x: x[1], series_list))
         for idx, element in enumerate(series_list):
             value = element[1]
             if value < 0:
                 self.logger.warning(f"page={page_content['pageType']} does actually not support negativ values")
-            value = round(value/max_value*10)
+            value = round(value / max_value * 10)
 
             xAxisLabel = ""
-            if idx % stepwidth_xAxis == 0 or idx == (nr_of_elements-1):
-                timestamp = int(element[0]/1000)
+            if idx % stepwidth_xAxis == 0 or idx == (nr_of_elements - 1):
+                timestamp = int(element[0] / 1000)
                 date_time = datetime.fromtimestamp(timestamp)
                 xAxisLabel = "^" + date_time.strftime("%H:%M")
             pageData = f"{pageData}~{value}{xAxisLabel}"
@@ -1589,20 +1582,21 @@ class NSPanel(MqttPlugin):
             maxItems = 1
 
         if len(page_content['entities']) > maxItems:
-            self.logger.warning(f"Page definition contains too many Entities. Max allowed entities for page={page_content['pageType']} is {maxItems}")
+            self.logger.warning(
+                f"Page definition contains too many Entities. Max allowed entities for page={page_content['pageType']} is {maxItems}")
 
         pageData = (
-                    f"entityUpd~"
-                    f"{page_content['heading']}~"
-                    f"{self.GetNavigationString(page)}"
-                    )
+            f"entityUpd~"
+            f"{page_content['heading']}~"
+            f"{self.GetNavigationString(page)}"
+        )
 
         for idx, entity in enumerate(page_content['entities']):
             self.logger.debug(f"entity={entity}")
             if idx > maxItems:
                 break
 
-            item = self._get_item(entity['internalNameEntity'])
+            item = self.items.return_item(entity['internalNameEntity'])
             value = item() if item else entity.get('optionalValue', 0)
             if entity['type'] in ['switch', 'light']:
                 value = int(value)
@@ -1613,9 +1607,11 @@ class NSPanel(MqttPlugin):
 
             if page_content['pageType'] == 'cardGrid':
                 if value:
-                    iconColor = rgb_dec565(getattr(Colors, entity.get('onColor', self.panel_config['config']['defaultOnColor'])))
+                    iconColor = rgb_dec565(
+                        getattr(Colors, entity.get('onColor', self.panel_config['config']['defaultOnColor'])))
                 else:
-                    iconColor = rgb_dec565(getattr(Colors, entity.get('offColor', self.panel_config['config']['defaultOffColor'])))
+                    iconColor = rgb_dec565(
+                        getattr(Colors, entity.get('offColor', self.panel_config['config']['defaultOffColor'])))
 
             else:
                 iconColor = entity.get('iconColor')
@@ -1626,46 +1622,49 @@ class NSPanel(MqttPlugin):
             # handle cardGrid with text
             if page_content['pageType'] == 'cardGrid':
                 if entity['type'] == 'text':
-                    iconColor = rgb_dec565(getattr(Colors, entity.get('Color', self.panel_config['config']['defaultColor'])))
-                    iconid = str(value)[:4] # max 4 characters
+                    iconColor = rgb_dec565(
+                        getattr(Colors, entity.get('Color', self.panel_config['config']['defaultColor'])))
+                    iconid = str(value)[:4]  # max 4 characters
 
             pageData = (
-                       f"{pageData}~"
-                       f"{entity['type']}~"
-                       f"{entity['entity']}~"
-                       f"{iconid}~"
-                       f"{iconColor}~"
-                       f"{displayNameEntity}~"
-                       f"{value}"
-                       )
+                f"{pageData}~"
+                f"{entity['type']}~"
+                f"{entity['entity']}~"
+                f"{iconid}~"
+                f"{iconColor}~"
+                f"{displayNameEntity}~"
+                f"{value}"
+            )
 
         return pageData
 
-    def GenerateDetailLight(self, pageName) -> list:
-        self.logger.debug(f"GenerateDetailLight called with entity={pageName}")
+    def GenerateDetailLight(self, pagename) -> list:
+        self.logger.debug(f"GenerateDetailLight called with entity={pagename}")
         entities = self.panel_config['cards'][self.current_page]['entities']
-        entity = next((entity for entity in entities if entity["entity"] == pageName), None)
+        entity = next((entity for entity in entities if entity["entity"] == pagename), None)
         icon_color = rgb_dec565(getattr(Colors, self.panel_config.get('defaultColor', "White")))
         # switch
-        item_onoff = self._get_item(entity.get('item_onoff', None))
+        item_onoff = self.items.return_item(entity.get('item_onoff', None))
         if item_onoff is None:
             switch_val = 0
         else:
             switch_val = 1 if item_onoff() else 0
         # brightness
-        item_brightness = self._get_item(entity.get('item_brightness', None))
+        item_brightness = self.items.return_item(entity.get('item_brightness', None))
         if item_brightness is None:
             brightness = "disable"
         else:
-            brightness = scale(item_brightness(), (entity.get('min_brightness', "0"), entity.get('max_brightness', "100")), (0, 100))
+            brightness = scale(item_brightness(),
+                               (entity.get('min_brightness', "0"), entity.get('max_brightness', "100")), (0, 100))
         # temperature
-        item_temperature = self._get_item(entity.get('item_temperature', None))
+        item_temperature = self.items.return_item(entity.get('item_temperature', None))
         if item_temperature is None:
             temperature = "disable"
         else:
-            temperature = scale(item_temperature(), (entity.get('min_temperature', "0"), entity.get('max_temperature', "100")), (100, 0))
+            temperature = scale(item_temperature(),
+                                (entity.get('min_temperature', "0"), entity.get('max_temperature', "100")), (100, 0))
         # color
-        item_color = self._get_item(entity.get('item_color', None))
+        item_color = self.items.return_item(entity.get('item_color', None))
         if item_color is None:
             color = "disable"
         else:
@@ -1673,42 +1672,82 @@ class NSPanel(MqttPlugin):
         # effect?
         effect_supported = entity.get('effect_supported', "disable")
         # labels TODO translate
-        color_translation      = "Farbe"
+        color_translation = "Farbe"
         brightness_translation = "Helligkeit"
         color_temp_translation = "Farbtemperatur"
 
         out_msgs = list()
-        out_msgs.append(f"entityUpdateDetail~{entity['entity']}~~{icon_color}~{switch_val}~{brightness}~{temperature}~{color}~{color_translation}~{color_temp_translation}~{brightness_translation}~{effect_supported}")
+        out_msgs.append(
+            f"entityUpdateDetail~{entity['entity']}~~{icon_color}~{switch_val}~{brightness}~{temperature}~{color}~{color_translation}~{color_temp_translation}~{brightness_translation}~{effect_supported}")
         return out_msgs
 
     def GenerateDetailShutter(self, entity) -> list:
         self.logger.debug(f"GenerateDetailShutter called with entity={entity} to be implemented")
+        sliderPos = 50
+        secondrow = 'Zweite Reihe'
+        textPosition = 'Position'
+        icon1 = 1
+        iconUp = 2
+        iconStop = 3
+        iconDown = 4
+        iconUpStatus = 5
+        iconStopStatus = 6
+        iconDownStatus = 7
+        textTilt = 'Lamellen'
+        iconTiltLeft = 8
+        iconTiltStop = 9
+        iconTiltRight = 10
+        iconTiltLeftStatus = 11
+        iconTiltStopStatus = 12
+        iconTiltRightStatus = 13
+        tiltPos = 50
+        out_msgs = list()
+        out_msgs.append(
+            f"entityUpdateDetail~{entity}~{sliderPos}~{secondrow}~{textPosition}~{icon1}~{iconUp}~{iconStop}~{iconDown}~{iconUpStatus}~{iconStopStatus}~{iconDownStatus}~{textTilt}~{iconTiltLeft}~{iconTiltStop}~{iconTiltRight}~{iconTiltLeftStatus}~{iconTiltStopStatus}~{iconTiltRightStatus}~{tiltPos}")
+        return out_msgs
 
     def GenerateDetailThermo(self, entity) -> list:
         self.logger.debug(f"GenerateDetailThermo called with entity={entity} to be implemented")
+        icon_id = 1
+        icon_color = 65535
+        heading = "Detail Thermo"
+        mode = 'Mode'
+        out_msgs = list()
+        out_msgs.append(
+            f"entityUpdateDetail~{entity}~{icon_id}~{icon_color}~{heading}~{mode}~mode1~mode1?mode2?mode3~{heading}~{mode}~mode1~mode1?mode2?mode3~{heading}~{mode}~mode1~mode1?mode2?mode3~")
+        return out_msgs
 
     def GenerateDetailInSel(self, entity) -> list:
         self.logger.debug(f"GenerateDetailInSel called with entity={entity} to be implemented")
+        icon_id = 1
+        icon_color = 65535
+        input_sel = 'Input Select'
+        state = 'State'
+        options = 'option1?option2?option3'
+        out_msgs = list()
+        out_msgs.append(f"entityUpdateDetail2~{entity}~{icon_id}~{icon_color}~{input_sel}~{state}~{options}")
+        return out_msgs
 
-    def GenerateDetailTimer(self, pageName) -> list:
-        self.logger.debug(f"GenerateDetailTimer called with entity={pageName}")
+    def GenerateDetailTimer(self, pagename) -> list:
+        self.logger.debug(f"GenerateDetailTimer called with entity={pagename}")
         entities = self.panel_config['cards'][self.current_page]['entities']
-        entity = next((entity for entity in entities if entity.get('entity', '') == pageName), None)
+        entity = next((entity for entity in entities if entity.get('entity', '') == pagename), None)
         editable = entity.get('editable', 1)
         actionleft = entity.get('actionleft', '')
         actioncenter = entity.get('actioncenter', '')
         actionright = entity.get('actionright', '')
-        buttonleft = entity.get('buttonleft', '')     # pause
-        buttoncenter = entity.get('buttoncenter', '') # cancel
-        buttonright = entity.get('buttonright', '')   # finish
-        item = self._get_item(entity.get('item', None))
+        buttonleft = entity.get('buttonleft', '')  # pause
+        buttoncenter = entity.get('buttoncenter', '')  # cancel
+        buttonright = entity.get('buttonright', '')  # finish
+        item = self.items.return_item(entity.get('item', None))
         if item is not None:
             value = item()
             seconds = item() % 60
-            minutes = int((value - seconds)/60)
+            minutes = int((value - seconds) / 60)
             out_msgs = list()
             # first entity is used to identify the correct page, the second is used for the button event
-            out_msgs.append(f"entityUpdateDetail~{entity['entity']}~~65535~{entity['entity']}~{minutes}~{seconds}~{editable}~{actionleft}~{actioncenter}~{actionright}~{buttonleft}~{buttoncenter}~{buttonright}")
+            out_msgs.append(
+                f"entityUpdateDetail~{entity['entity']}~~65535~{entity['entity']}~{minutes}~{seconds}~{editable}~{actionleft}~{actioncenter}~{actionright}~{buttonleft}~{buttoncenter}~{buttonright}")
             return out_msgs
 
     def SendToPanel(self, payload):
@@ -1737,24 +1776,26 @@ class NSPanel(MqttPlugin):
         # ToDo: Handling of SubPages
         # if (activePage.subPage):
         #     return '2|2'
-        
+
         iconleft = Icons.GetIcon('arrow-left-bold')
         iconright = Icons.GetIcon('arrow-right-bold')
         iconup = Icons.GetIcon('arrow-up-bold')
+        iconhome = Icons.GetIcon('home')
+        iconreload = Icons.GetIcon('reload')
 
         if page == 0:
-            left = f"~"
+            left = f"bHome~{iconreload}"
             right = f"bNext~{iconright}"
         elif page == self.no_of_cards - 1:
             left = f"bPrev~{iconleft}"
-            right = f"~"
+            right = f"bHome~{iconhome}"
         elif page == -1 or page == -2:
             left = f"bUp~{iconup}"
-            right = f"~"
+            right = f"bHome~{iconhome}"
         else:
             left = f"bPrev~{iconleft}"
             right = f"bNext~{iconright}"
-            
+
         return f"button~{left}~65535~~~button~{right}~65535~~"
 
     ################################################################
@@ -1785,14 +1826,18 @@ class NSPanel(MqttPlugin):
         self.logger.debug(f"send_mqtt_from_nspanel called with msg={msg}")
 
         link = {1: [f'tele/{self.tasmota_topic}/RESULT', '{"CustomRecv": "event,startup,45,eu"}'],
-                2: [f'tele/{self.tasmota_topic}/RESULT', '{"CustomRecv": "event,buttonPress2,licht.eg.tv_wand_nische,OnOff,0"}'],
-                3: [f'tele/{self.tasmota_topic}/RESULT', '{"CustomRecv": "event,buttonPress2,licht.eg.tv_wand_nische,OnOff,1"}'],
+                2: [f'tele/{self.tasmota_topic}/RESULT',
+                    '{"CustomRecv": "event,buttonPress2,licht.eg.tv_wand_nische,OnOff,0"}'],
+                3: [f'tele/{self.tasmota_topic}/RESULT',
+                    '{"CustomRecv": "event,buttonPress2,licht.eg.tv_wand_nische,OnOff,1"}'],
                 4: [f'tele/{self.tasmota_topic}/RESULT', '{"CustomRecv": "event,sleepReached,cardEntities"}'],
                 5: [f'tele/{self.tasmota_topic}/RESULT', '{"CustomRecv": "event,buttonPress2,screensaver,bExit,1"}'],
-                6: [f'tele/{self.tasmota_topic}/SENSOR', '{"Time":"2022-12-03T13:11:26","ANALOG":{"Temperature1":26.9},"ESP32":{"Temperature":36.7},"TempUnit":"C"}'],
-                7: [f'tele/{self.tasmota_topic}/STATE',  '{"Time":"2022-12-03T13:11:26","Uptime":"0T00:20:13","UptimeSec":1213,"Heap":126,"SleepMode":"Dynamic","Sleep":0,"LoadAvg":1000,"MqttCount":1,"Berry":{"HeapUsed":14,"Objects":218},"POWER1":"ON","POWER2":"OFF","Wifi":{"AP":1,"SSId":"FritzBox","BSSId":"F0:B0:14:4A:08:CD","Channel":1,"Mode":"11n","RSSI":42,"Signal":-79,"LinkCount":1,"Downtime":"0T00:00:07"}}'],
-               20: [f'tele/{self.tasmota_topic}/LWT', 'Online'],
-               21: [f'tele/{self.tasmota_topic}/LWT', 'Offline'],
+                6: [f'tele/{self.tasmota_topic}/SENSOR',
+                    '{"Time":"2022-12-03T13:11:26","ANALOG":{"Temperature1":26.9},"ESP32":{"Temperature":36.7},"TempUnit":"C"}'],
+                7: [f'tele/{self.tasmota_topic}/STATE',
+                    '{"Time":"2022-12-03T13:11:26","Uptime":"0T00:20:13","UptimeSec":1213,"Heap":126,"SleepMode":"Dynamic","Sleep":0,"LoadAvg":1000,"MqttCount":1,"Berry":{"HeapUsed":14,"Objects":218},"POWER1":"ON","POWER2":"OFF","Wifi":{"AP":1,"SSId":"FritzBox","BSSId":"F0:B0:14:4A:08:CD","Channel":1,"Mode":"11n","RSSI":42,"Signal":-79,"LinkCount":1,"Downtime":"0T00:00:07"}}'],
+                20: [f'tele/{self.tasmota_topic}/LWT', 'Online'],
+                21: [f'tele/{self.tasmota_topic}/LWT', 'Offline'],
                 }
 
         if isinstance(msg, int):
@@ -1801,8 +1846,6 @@ class NSPanel(MqttPlugin):
 
             topic = link.get(msg, [f'tele/{self.tasmota_topic}/RESULT', ''])[0]
             payload = link.get(msg, ['', ''])[1]
-            if 'LWT' in topic:
-                retain = True
 
         elif isinstance(msg, dict):
             topic = f'tele/{self.tasmota_topic}/RESULT'
@@ -1820,30 +1863,32 @@ class NSPanel(MqttPlugin):
 
 
 def rgb_dec565(rgb):
-    return ((rgb['red'] >> 3) << 11) | ((rgb['green'] >> 2)) << 5 | ((rgb['blue']) >> 3)
+    return ((rgb['red'] >> 3) << 11) | (rgb['green'] >> 2) << 5 | ((rgb['blue']) >> 3)
+
 
 def scale(val, src, dst):
     """
     Scale the given value from the scale of src to the scale of dst.
     """
-    return int(((val - src[0]) / (src[1]-src[0])) * (dst[1]-dst[0]) + dst[0])
+    return int(((val - src[0]) / (src[1] - src[0])) * (dst[1] - dst[0]) + dst[0])
+
 
 def hsv2rgb(h, s, v):
-    rgb = colorsys.hsv_to_rgb(h,s,v)
+    rgb = colorsys.hsv_to_rgb(h, s, v)
     return tuple(round(i * 255) for i in rgb)
-    
+
+
 def pos_to_color(x, y, wh):
-    #r = 160/2
-    r = wh/2
+    # r = 160/2
+    r = wh / 2
     x = round((x - r) / r * 100) / 100
     y = round((r - y) / r * 100) / 100
-    
-    r = math.sqrt(x*x + y*y)
-    sat = 0
-    if (r > 1):
+
+    r = math.sqrt(x * x + y * y)
+    if r > 1:
         sat = 0
     else:
         sat = r
-    hsv = (math.degrees(math.atan2(y, x))%360/360, sat, 1)
-    rgb = hsv2rgb(hsv[0],hsv[1],hsv[2])
+    hsv = (math.degrees(math.atan2(y, x)) % 360 / 360, sat, 1)
+    rgb = hsv2rgb(hsv[0], hsv[1], hsv[2])
     return rgb
