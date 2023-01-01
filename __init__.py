@@ -6,6 +6,8 @@
 #                       Christian Cordes          info(a)pol3cat.de  
 #########################################################################
 #  This file is part of SmartHomeNG.
+#  https://www.smarthomeNG.de
+#  https://knx-user-forum.de/forum/supportforen/smarthome-py
 #
 #  This plugin connect NSPanel (with tasmota) to SmartHomeNG
 #
@@ -564,7 +566,7 @@ class NSPanel(MqttPlugin):
         dt = self.shtime.now() + timedelta(seconds=20)
         self.scheduler_add('update_nspanel_time', self.send_current_time, next=dt, cycle=60)
         self.scheduler_add('update_nspanel_date', self.send_current_date, cron='1 0 0 * * *', next=dt)
-        
+
         self.logger.debug(f"Add scheduler for online_status")
         dt = self.shtime.now() + timedelta(seconds=(self.telemetry_period - 3))
         self.scheduler_add('check_online_status', self._check_online_status, cycle=self.telemetry_period, next=dt)
@@ -659,7 +661,8 @@ class NSPanel(MqttPlugin):
             self.panel_config.get('config', {}).get('locale', 'de-DE'))
 
     def send_current_time(self):
-        self.publish_tasmota_topic(payload=f"time~{time.strftime('%H:%M', time.localtime())}")
+        secondLine = self.panel_config.get('screensaver', {}).get('secondLine', '')
+        self.publish_tasmota_topic(payload=f"time~{time.strftime('%H:%M', time.localtime())}~{secondLine}")
 
     def send_current_date(self):
         self.publish_tasmota_topic(payload=f"date~{time.strftime('%A, %d.%B %Y', time.localtime())}")
@@ -772,9 +775,8 @@ class NSPanel(MqttPlugin):
 
     def HandleScreensaver(self):
         self.publish_tasmota_topic(payload="pageType~screensaver")
-        self.HandleScreensaverWeatherUpdate()
-        self.HandleScreensaverUpdate()
-        self.HandleScreensaverColors()
+        self.HandleScreensaverWeatherUpdate()  # Geht nur wenn NOTIFY leer wäre! Wird in Nextion so geregelt.       
+        self.HandleScreensaverColors()  # Geht nur wenn NOTIFY leer wäre! Wird in Nextion so geregelt.
 
     def HandleScreensaverUpdate(self):
         self.logger.debug('Function HandleScreensaverUpdate to be done')
@@ -817,8 +819,10 @@ class NSPanel(MqttPlugin):
         icon2 = Icons.GetIcon('wifi-alert')
         icon1Color = rgb_dec565(getattr(Colors, 'White'))
         icon2Color = rgb_dec565(getattr(Colors, 'White'))
+        icon1Size = 1
+        icon2Size = 1
         self.publish_tasmota_topic(
-            payload=f"weatherUpdate~1~2~3~4~5~6~7~8~9~10~11~12~13~14~15~16~{icon1}~{icon1Color}~{icon2}~{icon2Color}~1~1")
+            payload=f"weatherUpdate~1~2~3~4~5~6~7~8~9~10~11~12~13~14~15~16~{icon1}~{icon1Color}~{icon2}~{icon2Color}~{icon1Size}~{icon2Size}")
 
     def HandleHardwareButton(self, method):
         self.logger.info(f"hw {method} pressed")
