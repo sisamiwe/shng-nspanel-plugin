@@ -109,30 +109,58 @@ item_attributes:
               - "Item wird als Zähler für PopupTimer verwendet -> num, r/o"
 
 item_structs:
-    nspanel:
+    default:
+        name: Default-Struct
+
         online:
             type: bool
             nspanel_attr@instance: online
 
-        temperature_analog:
-            type: num
-            nspanel_attr@instance: temp_analog
+        temperature:
+            analog:
+                type: num
+                nspanel_attr@instance: temp_analog
+            esp32:
+                type: num
+                nspanel_attr@instance: temp_esp32
 
-        temperature_esp32:
-            type: num
-            nspanel_attr@instance: temp_esp32
+    demo:
+        name: Demo-Struct
 
         notify:
             type: dict
             nspanel_popup@instance: notify
+            initial_value: "{'heading': 'Kopfzeile', 'text': 'Text\\r\\nmit Umbruch', 'size': 3}"
 
         timer:
             type: num
             nspanel_popup@instance: timer
+            eval: value-1 if value > 0 and sh..timer(1, value-1) is None else value # not perfect but works
 
         chart:
             type: list
             eval: sh.env.system.load.series('avg', '1d', count=50).get('series') # only example for format of data
+
+    simulation:
+        name: Simulation eines NSPanels
+
+        send_msg_no:
+            type: num
+            enforce_updates: yes
+            initial_value: -1
+            
+        send_msg_dict:
+            type: dict
+            enforce_updates: yes
+            initial_value: '{"CustomRecv": ""}'
+            
+        send_message:
+            type: str
+            eval: sh.nspanel.send_mqtt_from_nspanel(value)
+            eval_trigger: 
+              - ..send_msg_no
+              - ..send_msg_dict
+
 
 plugin_functions: NONE
     # Definition of plugin functions defined by this plugin (enter 'plugin_functions: NONE', if section should be empty)
