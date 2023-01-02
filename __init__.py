@@ -97,8 +97,8 @@ class NSPanel(MqttPlugin):
         self.nspanel_items = []
         self.nspanel_config_items = []
         self.nspanel_config_items_page = {}
-        self.panel_version = 45
-        self.panel_model = 'eu'
+        self.panel_version = 0
+        self.panel_model = ''
         self.useMediaEvents = False
         self.screensaverEnabled = False
         self.alive = None
@@ -608,13 +608,13 @@ class NSPanel(MqttPlugin):
         """
         with open(os.path.join(sys.path[0], "plugins", self.get_shortname(), "locale.yaml"), "r") as stream:
             try:
-                locale = yaml.safe_load(stream)
+                locale_dict = yaml.safe_load(stream)
             except yaml.YAMLError as exc:
                 self.logger.warning(f"Exception during parsing of locale yaml file occurred: {exc}")
                 return None
 
-        self.logger.debug(f"_parse_locale_file: locale={locale} available!")
-        return locale
+        self.logger.debug(f"_parse_locale_file: locale={locale_dict} available!")
+        return locale_dict
 
     def _get_items_of_panel_config_to_update_item(self):
         """
@@ -1129,6 +1129,23 @@ class NSPanel(MqttPlugin):
         elif buttonAction[:6] == 'timer-':
             self.logger.debug(f"timer custom command to be implemented")
 
+        elif buttonAction[:6] == 'media-':
+            action = buttonAction[6:]
+            self.logger.debug(f"media called with pageName={pageName} and action={action}")
+            if action == "OnOff":
+                self.logger.debug(f"OnOff to be implemented")
+            elif action == "pause":
+                self.logger.debug(f"Pause to be implemented")
+            elif action == "back":
+                self.logger.debug(f"Back to be implemented")
+            elif action == "next":
+                self.logger.debug(f"Next to be implemented")
+            elif action == "shuffle":
+                self.logger.debug(f"Shuffle to be implemented")
+
+        elif buttonAction == 'volumeSlider':
+            self.logger.debug(f"volumeSlider to be implemented")
+
         elif buttonAction == 'swipeLeft':
             self.logger.debug(f"swipedLeft on screensaver to be implemented")
 
@@ -1316,9 +1333,58 @@ class NSPanel(MqttPlugin):
 
     def GenerateMediaPage(self, page) -> list:
         self.logger.debug(f"GenerateMediaPage called with page={page} to be implemented")
+        page_content = self.panel_config['cards'][page]
+        heading = page_content.get('heading', 'undefined')
+        internalNameEntity = page_content.get('entity', 'undefined')
+        title = page_content.get('title', 'undefined')
+        titleColor = page_content.get('titleColor', 65535)
+        author = page_content.get('author', 'undefined')
+        authorColor = page_content.get('authorColor', 65535)
+        volume = page_content.get('volume', 0)
+        playPauseIcon = page_content.get('playPauseIcon', Icons.GetIcon('play-pause'))
+        onOff = page_content.get('onOffBtn', 0)
+        if onOff == '':
+            onOffBtn = 'disable'
+        elif onOff == 0:
+            onOffBtn = rgb_dec565(getattr(Colors, 'White'))
+        else:
+            onOffBtn = rgb_dec565(getattr(Colors, 'On'))
+        shuffle = page_content.get('iconShuffle', 0)
+        if shuffle == '':
+            iconShuffle = 'disable'
+        elif shuffle == 0:
+            iconShuffle = Icons.GetIcon('shuffle-disabled')
+        else:
+            iconShuffle = Icons.GetIcon('shuffle')
+            
+        dummy_items = "button~name~icon~65535~name~ignore"
 
         out_msgs = list()
         out_msgs.append('pageType~cardMedia')
+        
+        # entityUpd~Kitchen~button~navigation.up~U~65535~~~delete~~~~~~media_player.kitchen~I'm a Hurricane~~Wellmess~~100~A~64704~B~media_pl~media_player.kitchen~C~17299~Kitchen~
+        PageData = (
+            'entityUpd~'
+            f'{heading}~'  # Heading
+            f'{self.GetNavigationString(page)}~'  # Page Navigation
+            f'{internalNameEntity}~'  # internalNameEntity
+            f'{title}~'
+            f'{titleColor}~'
+            f'{author}~'
+            f'{authorColor}~'
+            f'{volume}~'
+            f'{playPauseIcon}~'
+            f'{onOffBtn}~'
+            f'{iconShuffle}~'
+            f'{dummy_items}~'
+            f'{dummy_items}~'
+            f'{dummy_items}~'
+            f'{dummy_items}~'
+            f'{dummy_items}~'
+            f'{dummy_items}~'
+        )
+
+        out_msgs.append(PageData)
         return out_msgs
 
     def GenerateAlarmPage(self, page) -> list:
