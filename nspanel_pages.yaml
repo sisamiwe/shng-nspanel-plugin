@@ -108,6 +108,12 @@ cards:
     # pageType: cardMedia
     # entity: MediaPlayer
 
+  - pageType: cardChart
+    heading: CPU Load
+    Color: 'Red'
+    item: chart
+    yAxisLabel: 'scaled to maximum'
+
   - pageType: cardAlarm
     heading: "KeyPad" #Did not change the name, cause of inner use. There is no topic on the display.
     items:
@@ -172,7 +178,7 @@ cards:
 screensaver:
     heading: Hallo
     text: Heute keine Termin
-    2ndLine: Hier ist die zweite Reihe
+    secondLine: Hier ist die zweite Reihe
     #entity: weather.k3ll3r
     # weatherOverrideForecast4:
     #     entity: sensor.example_item
