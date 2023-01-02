@@ -4,8 +4,8 @@ config:
   brightness_active: 99         # 0-100%
   temperatureUnit: °C
   locale: de-DE
-  timeFormat: '%H:%M'           # currently not used
-  dateFormat: '%A, %d. %B %Y'   # currently not used
+  timeFormat: '%H:%M'
+  dateFormat: '%A, %d. %B %Y'
   sleep_brightness:
     - time: "7:00:00"
       value: 10

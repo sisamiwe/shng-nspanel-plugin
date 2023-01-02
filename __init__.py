@@ -27,7 +27,6 @@
 #########################################################################
 
 from datetime import datetime, timedelta
-import time
 import yaml
 import queue
 import os
@@ -40,6 +39,7 @@ from .webif import WebInterface
 
 from . import nspanel_icons_colors
 from lib.item import Items
+from lib.shtime import Shtime
 
 Icons = nspanel_icons_colors.IconsSelector()
 Colors = nspanel_icons_colors.ColorThemes()
@@ -66,6 +66,7 @@ class NSPanel(MqttPlugin):
         if not self._init_complete:
             return
 
+        self.shtime = Shtime.get_instance()
         self.items = Items.get_instance()
 
         # get the parameters for the plugin (as defined in metadata plugin.yaml):
@@ -662,10 +663,14 @@ class NSPanel(MqttPlugin):
 
     def send_current_time(self):
         secondLine = self.panel_config.get('config', {}).get('screensaver', {}).get('secondLine', '')
-        self.publish_tasmota_topic(payload=f"time~{time.strftime('%H:%M', time.localtime())}~{secondLine}")
+        timeFormat = self.panel_config.get('config', {}).get('timeFormat', "%H:%M")
+        self.publish_tasmota_topic(payload=f"time~{self.shtime.now().strftime(timeFormat)}~{secondLine}")
 
     def send_current_date(self):
-        self.publish_tasmota_topic(payload=f"date~{time.strftime('%A, %d. %B %Y', time.localtime())}")
+        dateFormat = self.panel_config.get('config', {}).get('dateFormat', "%A, %-d. %B %Y")
+        # replace some variables to get localized strings
+        dateFormat = dateFormat.replace('%A', self.shtime.weekday_name()) # TODO add code after merge in main repository .replace('%B', self.shtime.current_monthname())
+        self.publish_tasmota_topic(payload=f"date~{self.shtime.now().strftime(dateFormat)}")
 
     def send_screensavertimeout(self):
         screensavertimeout = self.panel_config.get('config', {}).get('screensaver_timeout', 10)
@@ -1429,12 +1434,12 @@ class NSPanel(MqttPlugin):
             iconShuffle = Icons.GetIcon('shuffle-disabled')
         else:
             iconShuffle = Icons.GetIcon('shuffle')
-            
+
         dummy_items = "button~name~icon~65535~name~ignore"
 
         out_msgs = list()
         out_msgs.append('pageType~cardMedia')
-        
+
         # entityUpd~Kitchen~button~navigation.up~U~65535~~~delete~~~~~~media_player.kitchen~I'm a Hurricane~~Wellmess~~100~A~64704~B~media_pl~media_player.kitchen~C~17299~Kitchen~
         PageData = (
             'entityUpd~'
