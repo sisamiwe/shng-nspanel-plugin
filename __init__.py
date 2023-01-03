@@ -275,6 +275,8 @@ class NSPanel(MqttPlugin):
                 self.tasmota_devices['online_timeout'] = datetime.now() + timedelta(seconds=self.telemetry_period + 5)
                 self._add_scheduler_time_date()
                 self.SendToPanel('pageType~pageStartup')
+                # set telemetry to get latest STATE and SENSOR information
+                self._set_telemetry_period(self.telemetry_period)
             else:
                 self._remove_scheduler_time_date()
 
@@ -471,13 +473,13 @@ class NSPanel(MqttPlugin):
             else:
                 self.logger.debug(f'_check_online_status: Checking online status of {self.tasmota_topic} successful')
 
-    def _set_telemetry_period(self) -> None:
+    def _set_telemetry_period(self, telemetry_period: int) -> None:
         """
         sets telemetry period for given topic
         """
 
-        self.logger.info(f"run: Setting telemetry period to {self.telemetry_period} seconds")
-        self.publish_tasmota_topic('cmnd', self.tasmota_topic, 'teleperiod', self.telemetry_period)
+        self.logger.info(f"run: Setting telemetry period to {telemetry_period} seconds")
+        self.publish_tasmota_topic('cmnd', self.tasmota_topic, 'teleperiod', telemetry_period)
 
     def _handle_wifi(self, payload: dict) -> None:
         """
@@ -495,7 +497,7 @@ class NSPanel(MqttPlugin):
 
         self.tasmota_devices['teleperiod'] = teleperiod
         if teleperiod != self.telemetry_period:
-            self._set_telemetry_period()
+            self._set_telemetry_period(self.telemetry_period)
 
     def _handle_uptime(self, uptime: str) -> None:
         self.logger.debug(f"Received Message contains Uptime information. uptime={uptime}")
