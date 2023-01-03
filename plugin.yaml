@@ -89,10 +89,10 @@ item_attributes:
             en: "Attribute of NSPanels shall be read/written."
         valid_list:
             - online
+            - relay1
+            - relay2
             - temp_analog
             - temp_esp32
-            - power1
-            - power2
 
     nspanel_popup:
         type: str
@@ -115,6 +115,14 @@ item_structs:
         online:
             type: bool
             nspanel_attr@instance: online
+
+        relay1:
+            type: bool
+            nspanel_attr@instance: relay1
+
+        relay2:
+            type: bool
+            nspanel_attr@instance: relay2
 
         temperature:
             analog:

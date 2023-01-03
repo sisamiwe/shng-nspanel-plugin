@@ -183,6 +183,9 @@ class NSPanel(MqttPlugin):
             else:
                 return
 
+            if nspanel_attr[:5] == 'relay':
+                return self.update_item
+
             # fill tasmota_device dict
             self.tasmota_devices['connected_items'][f'item_{nspanel_attr}'] = item
             self.logger.info(self.tasmota_devices)
@@ -226,7 +229,19 @@ class NSPanel(MqttPlugin):
             # and only, if the item has not been changed by this plugin:
             self.logger.debug(
                 f"update_item was called with item {item.property.path} from caller {caller}, source {source} and dest {dest}")
-            if self.has_iattr(item.conf, 'nspanel_popup'):
+
+            if self.has_iattr(item.conf, 'nspanel_attr'):
+                nspanel_attr = self.get_iattr_value(item.conf, 'nspanel_attr')
+                if nspanel_attr[:5] == 'relay':
+                    value = item()
+                    # check data type
+                    if not isinstance(value, bool):
+                        return
+                    if value is not None:
+                        relay = nspanel_attr[5:]
+                        self.publish_tasmota_topic('cmnd', self.tasmota_topic, f"POWER{relay}", value, item, bool_values=['OFF', 'ON'])
+
+            elif self.has_iattr(item.conf, 'nspanel_popup'):
                 if self.get_iattr_value(item.conf, 'nspanel_popup') == 'notify':
                     item_value = item()
                     if isinstance(item_value, dict):
