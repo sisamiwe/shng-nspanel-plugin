@@ -286,15 +286,15 @@ class NSPanel(MqttPlugin):
 
             if payload:
                 self.tasmota_devices['online_timeout'] = datetime.now() + timedelta(seconds=self.telemetry_period + 5)
+                self.tasmota_devices['online'] = payload
+                self._set_item_value('item_online', payload)
                 self._add_scheduler_time_date()
                 self.SendToPanel('pageType~pageStartup')
                 # set telemetry to get latest STATE and SENSOR information
                 self._set_telemetry_period(self.telemetry_period)
             else:
                 self._remove_scheduler_time_date()
-
-            self.tasmota_devices['online'] = payload
-            self._set_item_value('item_online', payload, info_topic)
+                self._set_device_offline()
 
     def on_mqtt_message(self, topic: str, payload: dict, qos: int = None, retain: bool = None) -> None:
         """
@@ -449,9 +449,9 @@ class NSPanel(MqttPlugin):
                 f"{self.tasmota_topic}: No item for itemtype '{itemtype}' defined to set to '{value}'.")
 
     def _set_device_offline(self):
-
+        self.tasmota_devices['online_timeout'] = '-'
         self.tasmota_devices['online'] = False
-        self._set_item_value(self.tasmota_topic, 'item_online', 'check_online_status')
+        self._set_item_value(self.tasmota_topic, 'item_online')
         self.logger.info(
             f"{self.tasmota_topic} is not online any more - online_timeout={self.tasmota_devices['online_timeout']}, now={datetime.now()}")
 
@@ -466,7 +466,7 @@ class NSPanel(MqttPlugin):
         checks all tasmota topics, if last message is with telemetry period. If not set tasmota_topic offline
         """
 
-        self.logger.info("_check_online_status: Checking online status of connected devices")
+        self.logger.info(f"_check_online_status: Checking online status of {self.tasmota_topic}")
         if self.tasmota_devices.get('online') is True and self.tasmota_devices.get('online_timeout'):
             if self.tasmota_devices['online_timeout'] < datetime.now():
                 self._set_device_offline()
