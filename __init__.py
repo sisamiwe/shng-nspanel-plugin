@@ -91,8 +91,7 @@ class NSPanel(MqttPlugin):
 
         # define properties
         self.current_page = 0
-        self.tasmota_devices = {'connected_to_item': False, 'online': False, 'status': 'None', 'connected_items': {},
-                                'uptime': '-', 'sensors': {}, 'relay': {}}
+        self.tasmota_devices = {'online': False, 'connected_items': {}, 'uptime': '-', 'sensors': {}, 'relay': {}}
         self.custom_msg_queue = queue.Queue(maxsize=50)  # Queue containing last 50 messages containing "CustomRecv"
         self.nspanel_items = []
         self.nspanel_config_items = []
@@ -185,7 +184,6 @@ class NSPanel(MqttPlugin):
                 return
 
             # fill tasmota_device dict
-            self.tasmota_devices['status'] = 'item.conf'
             self.tasmota_devices['connected_items'][f'item_{nspanel_attr}'] = item
             self.logger.info(self.tasmota_devices)
 
@@ -311,11 +309,7 @@ class NSPanel(MqttPlugin):
                     self.logger.info(f"Received Message decoded as teleperiod message.")
                     self._handle_teleperiod(payload['TelePeriod'])
 
-                elif 'Module' in payload:
-                    self.logger.info(f"Received Message decoded as Module message.")
-                    self._handle_module(payload['Module'])
-
-                # Handling of Light messages
+                # Handling of CustomRecv messages
                 elif 'CustomRecv' in payload:
                     self.logger.info(
                         f"Received Message decoded as NSPanel Message, will be put to queue for logging reasons. {self.custom_msg_queue.qsize() + 1} messages logged.")
@@ -336,11 +330,6 @@ class NSPanel(MqttPlugin):
                 if 'Uptime' in payload:
                     self.logger.info(f"Received Message contains Uptime information.")
                     self._handle_uptime(payload['Uptime'])
-
-                # Handling of UptimeSec
-                if 'UptimeSec' in payload:
-                    self.logger.info(f"Received Message contains UptimeSec information.")
-                    self._handle_uptime_sec(payload['UptimeSec'])
 
             elif isinstance(payload, dict) and info_topic == 'SENSOR':
                 self.logger.info(f"Received Message contains sensor information.")
@@ -503,10 +492,6 @@ class NSPanel(MqttPlugin):
         self.logger.debug(f"Received Message contains Uptime information. uptime={uptime}")
         self.tasmota_devices['uptime'] = uptime
 
-    def _handle_uptime_sec(self, uptime_sec: int) -> None:
-        self.logger.debug(f"Received Message contains UptimeSec information. uptime={uptime_sec}")
-        self.tasmota_devices['UptimeSec'] = int(uptime_sec)
-
     def _handle_power(self, function: str, payload: dict) -> None:
         """
         Extracts Power information out of payload and updates plugin dict
@@ -521,16 +506,6 @@ class NSPanel(MqttPlugin):
             relay_index = 1 if len(power) == 5 else str(power[5:])
             item_relay = f'item_relay{relay_index}'
             self._set_item_value(item_relay, power_dict[power], function)
-
-    def _handle_module(self, payload: dict) -> None:
-        """
-        Extracts Module information out of payload and updates plugin dict
-        :param payload:         MQTT message payload
-        """
-        template = next(iter(payload))
-        module = payload[template]
-        self.tasmota_devices['module'] = module
-        self.tasmota_devices['tasmota_template'] = template
 
     def _handle_sensor(self, function: str, payload: dict) -> None:
         """
