@@ -629,7 +629,7 @@ class NSPanel(MqttPlugin):
             entities = card.get('entities')
             if entities is not None:
                 for entity in entities:
-                    item = entity.get('internalNameEntity')
+                    item = entity.get('item')
                     # Add all possible items without check, parse_item is only called for valid items
                     if item is not None and item not in temp:
                         temp.append(item)
@@ -692,20 +692,20 @@ class NSPanel(MqttPlugin):
         event,screensaverOpen - Screensaver has opened
         # cardEntities Page
         event,*eventName*,*entityName*,*actionName*,*optionalValue*
-        event,buttonPress2,internalNameEntity,up
-        event,buttonPress2,internalNameEntity,down
-        event,buttonPress2,internalNameEntity,stop
-        event,buttonPress2,internalNameEntity,OnOff,1
-        event,buttonPress2,internalNameEntity,button
+        event,buttonPress2,item,up
+        event,buttonPress2,item,down
+        event,buttonPress2,item,stop
+        event,buttonPress2,item,OnOff,1
+        event,buttonPress2,item,button
         # popupLight Page
-        event,pageOpenDetail,popupLight,internalNameEntity
-        event,buttonPress2,internalNameEntity,OnOff,1
-        event,buttonPress2,internalNameEntity,brightnessSlider,50
-        event,buttonPress2,internalNameEntity,colorTempSlider,50
-        event,buttonPress2,internalNameEntity,colorWheel,x|y|wh
+        event,pageOpenDetail,popupLight,item
+        event,buttonPress2,item,OnOff,1
+        event,buttonPress2,item,brightnessSlider,50
+        event,buttonPress2,item,colorTempSlider,50
+        event,buttonPress2,item,colorWheel,x|y|wh
         # popupShutter Page
-        event,pageOpenDetail,popupShutter,internalNameEntity
-        event,buttonPress2,internalNameEntity,positionSlider,50
+        event,pageOpenDetail,popupShutter,item
+        event,buttonPress2,item,positionSlider,50
         # popupNotify Page
         event,buttonPress2,*internalName*,notifyAction,yes
         event,buttonPress2,*internalName*,notifyAction,no
@@ -713,12 +713,12 @@ class NSPanel(MqttPlugin):
         event,buttonPress2,*entityName*,tempUpd,*temperature*
         event,buttonPress2,*entityName*,hvac_action,*hvac_action*
         # cardMedia Page
-        event,buttonPress2,internalNameEntity,media-back
-        event,buttonPress2,internalNameEntity,media-pause
-        event,buttonPress2,internalNameEntity,media-next
-        event,buttonPress2,internalNameEntity,volumeSlider,75
+        event,buttonPress2,item,media-back
+        event,buttonPress2,item,media-pause
+        event,buttonPress2,item,media-next
+        event,buttonPress2,item,volumeSlider,75
         # cardAlarm Page
-        event,buttonPress2,internalNameEntity,actionName,code
+        event,buttonPress2,item,actionName,code
         """
 
         try:
@@ -751,7 +751,7 @@ class NSPanel(MqttPlugin):
                 self.HandleScreensaver()
 
             elif method == 'pageOpenDetail':
-                # event,pageOpenDetail,popupLight,internalNameEntity
+                # event,pageOpenDetail,popupLight,entity
                 self.screensaverEnabled = False
                 self.GenerateDetailPage(words[2], words[3])
 
@@ -933,7 +933,7 @@ class NSPanel(MqttPlugin):
                     # popupTimer appears without interaction
                 # button / light / switch / text / etc.
                 else:
-                    item_name = entity['internalNameEntity']
+                    item_name = entity['item']
                     item = self.items.return_item(item_name)
                     if item is not None:
                         if entity['type'] == 'text':
@@ -1266,10 +1266,10 @@ class NSPanel(MqttPlugin):
         page_content = self.panel_config['cards'][page]
 
         # Compile PageData according to:
-        # entityUpd~*heading*~*navigation*~*internalNameEntity*~*currentTemp*~*destTemp*~*status*~*minTemp*~*maxTemp*~*stepTemp*[[~*iconId*~*activeColor*~*state*~*hvac_action*]]~tCurTempLbl~tStateLbl~tALbl~iconTemperature~dstTempTwoTempMode~btDetail
+        # entityUpd~*heading*~*navigation*~*item*~*currentTemp*~*destTemp*~*status*~*minTemp*~*maxTemp*~*stepTemp*[[~*iconId*~*activeColor*~*state*~*hvac_action*]]~tCurTempLbl~tStateLbl~tALbl~iconTemperature~dstTempTwoTempMode~btDetail
         # [[]] are not part of the command~ this part repeats 8 times for the buttons
 
-        internalNameEntity = page_content.get('entity', 'undefined')
+        entity = page_content.get('entity', 'undefined')
         heading = page_content.get('heading', 'undefined')
         items = page_content.get('items', 'undefined')
         currentTemp = str(self.items.return_item(items.get('item_temp_current', 'undefined'))()).replace(".", ",")
@@ -1311,9 +1311,9 @@ class NSPanel(MqttPlugin):
 
         PageData = (
             'entityUpd~'
-            f'{heading}~'  # Heading
-            f'{self.GetNavigationString(page)}~'  # Page Navigation
-            f'{internalNameEntity}~'  # internalNameEntity
+            f'{heading}~'
+            f'{self.GetNavigationString(page)}~'
+            f'{entity}~'
             f'{currentTemp} {temperatureUnit}~'  # Ist-Temperatur (String)
             f'{destTemp}~'  # Soll-Temperatur (numerisch ohne Komma in Zehntelgrad)
             f'{statusStr}~'  # Mode
@@ -1337,7 +1337,7 @@ class NSPanel(MqttPlugin):
         self.logger.debug(f"GenerateMediaPage called with page={page} to be implemented")
         page_content = self.panel_config['cards'][page]
         heading = page_content.get('heading', 'undefined')
-        internalNameEntity = page_content.get('entity', 'undefined')
+        entity = page_content.get('entity', 'undefined')
         title = page_content.get('title', 'undefined')
         titleColor = page_content.get('titleColor', 65535)
         author = page_content.get('author', 'undefined')
@@ -1368,8 +1368,8 @@ class NSPanel(MqttPlugin):
         PageData = (
             'entityUpd~'
             f'{heading}~'  # Heading
-            f'{self.GetNavigationString(page)}~'  # Page Navigation
-            f'{internalNameEntity}~'  # internalNameEntity
+            f'{self.GetNavigationString(page)}~'
+            f'{entity}~'
             f'{title}~'
             f'{titleColor}~'
             f'{author}~'
@@ -1397,7 +1397,7 @@ class NSPanel(MqttPlugin):
 
         page_content = self.panel_config['cards'][page]
 
-        heading = page_content.get('heading', 'undefined')
+        entity = page_content.get('entity', 'undefined')
         items = page_content.get('items', 'undefined')
         iconId = Icons.GetIcon('home')  # Icons.GetIcon(items.get('iconId', 'home'))
         iconColor = rgb_dec565(
@@ -1458,11 +1458,11 @@ class NSPanel(MqttPlugin):
             arm3 = items.get('arm3', None)
             arm4 = ""
 
-        # entityUpd~*internalNameEntity*~*navigation*~*arm1*~*arm1ActionName*~*arm2*~*arm2ActionName*~*arm3*~*arm3ActionName*~*arm4*~*arm4ActionName*~*icon*~*iconColor*~*numpadStatus*~*flashing*
+        # entityUpd~*entity*~*navigation*~*arm1*~*arm1ActionName*~*arm2*~*arm2ActionName*~*arm3*~*arm3ActionName*~*arm4*~*arm4ActionName*~*icon*~*iconColor*~*numpadStatus*~*flashing*
         pageData = (
-            'entityUpd~'  # entityUpd
-            f'{heading}~'  # heading
-            f'{self.GetNavigationString(page)}~'  # navigation
+            'entityUpd~'
+            f'{entity}~'
+            f'{self.GetNavigationString(page)}~'
             f'{arm1}~'  # Statusname for modus 1
             f'{arm1ActionName}~'  # Status item for modus 1
             f'{arm2}~'  # Statusname for modus 2
@@ -1621,7 +1621,10 @@ class NSPanel(MqttPlugin):
             f"{yAxisTick}"
         )
 
-        max_value = max(map(lambda x: x[1], series_list))
+        # Check if list is empty
+        if series_list:
+            max_value = max(map(lambda x: x[1], series_list))
+
         for idx, element in enumerate(series_list):
             value = element[1]
             if value < 0:
@@ -1668,7 +1671,7 @@ class NSPanel(MqttPlugin):
             if idx > maxItems:
                 break
 
-            item = self.items.return_item(entity['internalNameEntity'])
+            item = self.items.return_item(entity['item'])
             value = item() if item else entity.get('optionalValue', 0)
             if entity['type'] in ['switch', 'light']:
                 value = int(value)
