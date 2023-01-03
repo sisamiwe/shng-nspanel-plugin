@@ -334,7 +334,7 @@ class NSPanel(MqttPlugin):
                 # Handling of Power messages
                 elif any(item.startswith("POWER") for item in payload.keys()):
                     self.logger.info(f"Received Message decoded as power message.")
-                    self._handle_power(info_topic, payload)
+                    self._handle_power(payload)
 
                 # Handling of Wi-Fi
                 if 'Wifi' in payload:
@@ -348,7 +348,7 @@ class NSPanel(MqttPlugin):
 
             elif isinstance(payload, dict) and info_topic == 'SENSOR':
                 self.logger.info(f"Received Message contains sensor information.")
-                self._handle_sensor(info_topic, payload)
+                self._handle_sensor(payload)
 
             else:
                 self.logger.warning(f"Received Message '{payload}' not handled within plugin.")
@@ -376,7 +376,7 @@ class NSPanel(MqttPlugin):
                 tasmota_relay = str(info_topic[5:])
                 tasmota_relay = '1' if not tasmota_relay else None
                 item_relay = f'item_relay{tasmota_relay}'
-                self._set_item_value(item_relay, payload == 'ON', info_topic)
+                self._set_item_value(item_relay, payload == 'ON')
                 self.tasmota_devices['relay'][info_topic] = payload
 
     ################################
@@ -428,16 +428,12 @@ class NSPanel(MqttPlugin):
     # Tasmota Stuff
     ################################
 
-    def _set_item_value(self, itemtype: str, value, info_topic: str = '') -> None:
+    def _set_item_value(self, itemtype: str, value) -> None:
         """
         Sets item value
         :param itemtype:        itemtype to be set
         :param value:           value to be set
-        :param info_topic:      MQTT info_topic
         """
-
-        # create source of item value
-        src = f"{self.tasmota_topic}:{info_topic}" if info_topic != '' else f"{self.tasmota_topic}"
 
         if itemtype in self.tasmota_devices['connected_items']:
             # get item to be set
@@ -445,12 +441,12 @@ class NSPanel(MqttPlugin):
 
             # set item value
             self.logger.info(
-                f"{self.tasmota_topic}: Item '{item.id()}' via itemtype '{itemtype}' set to value '{value}' provided by '{src}'.")
-            item(value, self.get_shortname(), src)
+                f"{self.tasmota_topic}: Item '{item.id()}' via itemtype '{itemtype}' set to value '{value}'.")
+            item(value, self.get_shortname())
 
         else:
             self.logger.debug(
-                f"{self.tasmota_topic}: No item for itemtype '{itemtype}' defined to set to '{value}' provided by '{src}'.")
+                f"{self.tasmota_topic}: No item for itemtype '{itemtype}' defined to set to '{value}'.")
 
     def _set_device_offline(self):
 
@@ -509,10 +505,9 @@ class NSPanel(MqttPlugin):
         self.tasmota_devices['uptime'] = uptime
         self._set_item_value('item_uptime', uptime)
 
-    def _handle_power(self, function: str, payload: dict) -> None:
+    def _handle_power(self, payload: dict) -> None:
         """
         Extracts Power information out of payload and updates plugin dict
-        :param function:        Function of Device (equals info_topic)
         :param payload:         MQTT message payload
         """
         # payload = {"Time": "2022-11-21T12:56:34", "Uptime": "0T00:00:11", "UptimeSec": 11, "Heap": 27, "SleepMode": "Dynamic", "Sleep": 50, "LoadAvg": 19, "MqttCount": 0, "POWER1": "OFF", "POWER2": "OFF", "POWER3": "OFF", "POWER4": "OFF", "Wifi": {"AP": 1, "SSId": "WLAN-Access", "BSSId": "38:10:D5:15:87:69", "Channel": 1, "Mode": "11n", "RSSI": 82, "Signal": -59, "LinkCount": 1, "Downtime": "0T00:00:03"}}
@@ -522,11 +517,10 @@ class NSPanel(MqttPlugin):
         for power in power_dict:
             relay_index = 1 if len(power) == 5 else str(power[5:])
             item_relay = f'item_relay{relay_index}'
-            self._set_item_value(item_relay, power_dict[power], function)
+            self._set_item_value(item_relay, power_dict[power])
 
-    def _handle_sensor(self, function: str, payload: dict) -> None:
+    def _handle_sensor(self, payload: dict) -> None:
         """
-        :param function:
         :param payload:
         :return:
         """
@@ -544,7 +538,7 @@ class NSPanel(MqttPlugin):
                 for key in self.TEMP_SENSOR_KEYS:
                     if key in data:
                         self.tasmota_devices['sensors'][sensor][key.lower()] = data[key]
-                        self._set_item_value(self.TEMP_SENSOR_KEYS[key], data[key], function)
+                        self._set_item_value(self.TEMP_SENSOR_KEYS[key], data[key])
 
     ################################
     #  NSPage Stuff
