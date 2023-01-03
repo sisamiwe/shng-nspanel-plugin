@@ -496,6 +496,7 @@ class NSPanel(MqttPlugin):
             if isinstance(wifi_signal, str) and wifi_signal.isdigit():
                 wifi_signal = int(wifi_signal)
             self.tasmota_devices['wifi_signal'] = wifi_signal
+            self._set_item_value('item_wifi_signal', wifi_signal)
 
     def _handle_teleperiod(self, teleperiod: dict) -> None:
 
@@ -506,6 +507,7 @@ class NSPanel(MqttPlugin):
     def _handle_uptime(self, uptime: str) -> None:
         self.logger.debug(f"Received Message contains Uptime information. uptime={uptime}")
         self.tasmota_devices['uptime'] = uptime
+        self._set_item_value('item_uptime', uptime)
 
     def _handle_power(self, function: str, payload: dict) -> None:
         """

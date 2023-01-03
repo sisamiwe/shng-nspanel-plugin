@@ -93,6 +93,8 @@ item_attributes:
             - relay2
             - temp_analog
             - temp_esp32
+            - uptime
+            - wifi_signal
 
     nspanel_popup:
         type: str
@@ -131,6 +133,14 @@ item_structs:
             esp32:
                 type: num
                 nspanel_attr@instance: temp_esp32
+
+        uptime:
+            type: str
+            nspanel_attr@instance: uptime
+
+        wifi_signal:
+            type: num
+            nspanel_attr@instance: wifi_signal
 
     demo:
         name: Demo-Struct
