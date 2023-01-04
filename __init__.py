@@ -759,9 +759,10 @@ class NSPanel(MqttPlugin):
 
     def HandleScreensaver(self):
         self.publish_tasmota_topic(payload="pageType~screensaver")
-        self.HandleScreensaverWeatherUpdate()  # Geht nur wenn NOTIFY leer wäre! Wird in Nextion so geregelt.       
+        self.HandleScreensaverIconUpdate()
+        #self.HandleScreensaverWeatherUpdate()  # Geht nur wenn NOTIFY leer wäre! Wird in Nextion so geregelt.       
         self.HandleScreensaverColors()  # Geht nur wenn NOTIFY leer wäre! Wird in Nextion so geregelt.
-
+        
     def HandleScreensaverUpdate(self):
         self.logger.debug('Function HandleScreensaverUpdate to be done')
         heading = self.panel_config.get('screensaver', {}).get('heading', '')
@@ -796,6 +797,17 @@ class NSPanel(MqttPlugin):
         tTimeAdd = rgb_dec565(getattr(Colors, 'Red'))
         self.publish_tasmota_topic(
             payload=f"color~{background}~{timestr}~{timeAPPM}~{date}~{tMainIcon}~{tMainText}~{tForecast1}~{tForecast2}~{tForecast3}~{tForecast4}~{tF1Icon}~{tF2Icon}~{tF3Icon}~{tF4Icon}~{tForecast1Val}~{tForecast2Val}~{tForecast3Val}~{tForecast4Val}~{bar}~{tMRIcon}~{tMR}~{tTimeAdd}")
+
+    def HandleScreensaverIconUpdate(self):
+        self.logger.info('Function HandleScreensaverIconUpdate to be implemented')
+        icon1 = Icons.GetIcon('wifi')
+        icon2 = Icons.GetIcon('wifi-alert')
+        icon1Color = rgb_dec565(getattr(Colors, 'White'))
+        icon2Color = rgb_dec565(getattr(Colors, 'White'))
+        icon1Font = 1
+        icon2Font = 1
+        self.publish_tasmota_topic(
+            payload=f"statusUpdate~{icon1}~{icon1Color}~{icon2}~{icon2Color}~{icon1Font}~{icon2Font}")    
 
     def HandleScreensaverWeatherUpdate(self):
         self.logger.info('Function HandleScreensaverWeatherUpdate to be implemented')
