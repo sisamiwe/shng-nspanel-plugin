@@ -87,9 +87,9 @@ class WebInterface(SmartPluginWebIf):
         # add values to be passed to the Jinja2 template eg: tmpl.render(p=self.plugin, interface=interface, ...)
         return tmpl.render(p=self.plugin,
                            webif_pagelength=pagelength,
-                           items=self.plugin.nspanel_items,
+                           items=self.plugin.panel_items,
                            custom_msg_list=list(self.plugin.custom_msg_queue.queue),
-                           item_count=len(self.plugin.nspanel_items)
+                           item_count=len(self.plugin.panel_items)
                            )
 
     @cherrypy.expose

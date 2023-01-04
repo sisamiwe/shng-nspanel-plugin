@@ -91,11 +91,11 @@ class NSPanel(MqttPlugin):
 
         # define properties
         self.current_page = 0
-        self.nspanel_status = {'online': False, 'online_timeout': '', 'connected_items': {}, 'uptime': '-', 'sensors': {}, 'relay': {}}
+        self.panel_status = {'online': False, 'online_timeout': '', 'connected_items': {}, 'uptime': '-', 'sensors': {}, 'relay': {}}
         self.custom_msg_queue = queue.Queue(maxsize=50)  # Queue containing last 50 messages containing "CustomRecv"
-        self.nspanel_items = []
-        self.nspanel_config_items = []
-        self.nspanel_config_items_page = {}
+        self.panel_items = []
+        self.panel_config_items = []
+        self.panel_config_items_page = {}
         self.panel_version = 0
         self.panel_model = ''
         self.useMediaEvents = False
@@ -184,11 +184,11 @@ class NSPanel(MqttPlugin):
                 return
 
             # fill tasmota_device dict
-            self.nspanel_status['connected_items'][f'item_{nspanel_attr}'] = item
+            self.panel_status['connected_items'][f'item_{nspanel_attr}'] = item
 
             # append to list used for web interface
-            if item not in self.nspanel_items:
-                self.nspanel_items.append(item)
+            if item not in self.panel_items:
+                self.panel_items.append(item)
 
             if nspanel_attr[:5] == 'relay':
                 return self.update_item
@@ -199,7 +199,7 @@ class NSPanel(MqttPlugin):
             self.logger.info(f"parsing item: {item.id()} with nspanel_popup={nspanel_popup}")
             return self.update_item
 
-        if item.property.path in self.nspanel_config_items:
+        if item.property.path in self.panel_config_items:
             return self.update_item
 
         return None
@@ -254,7 +254,7 @@ class NSPanel(MqttPlugin):
                     if entity_name is not None:
                         self.SendToPanel(self.GenerateDetailTimer(entity_name))
             elif not self.screensaverEnabled:
-                if item.property.path in self.nspanel_config_items_page[self.current_page]:
+                if item.property.path in self.panel_config_items_page[self.current_page]:
                     self.GeneratePage(self.current_page)
                 else:
                     self.logger.debug(f"item not on current_page = {self.current_page}")
@@ -284,8 +284,8 @@ class NSPanel(MqttPlugin):
         else:
 
             if payload:
-                self.nspanel_status['online_timeout'] = datetime.now() + timedelta(seconds=self.telemetry_period + 5)
-                self.nspanel_status['online'] = payload
+                self.panel_status['online_timeout'] = datetime.now() + timedelta(seconds=self.telemetry_period + 5)
+                self.panel_status['online'] = payload
                 self._set_item_value('item_online', payload)
                 self._add_scheduler_time_date()
                 self.SendToPanel('pageType~pageStartup')
@@ -353,7 +353,7 @@ class NSPanel(MqttPlugin):
                 self.logger.warning(f"Received Message '{payload}' not handled within plugin.")
 
             # setting new online-timeout
-            self.nspanel_status['online_timeout'] = datetime.now() + timedelta(seconds=self.telemetry_period + 5)
+            self.panel_status['online_timeout'] = datetime.now() + timedelta(seconds=self.telemetry_period + 5)
 
     def on_mqtt_power_message(self, topic: str, payload: dict, qos: int = None, retain: bool = None) -> None:
         """
@@ -376,7 +376,7 @@ class NSPanel(MqttPlugin):
                 tasmota_relay = '1' if not tasmota_relay else None
                 item_relay = f'item_relay{tasmota_relay}'
                 self._set_item_value(item_relay, payload == 'ON')
-                self.nspanel_status['relay'][info_topic] = payload
+                self.panel_status['relay'][info_topic] = payload
 
     ################################
     # MQTT Stuff
@@ -434,9 +434,9 @@ class NSPanel(MqttPlugin):
         :param value:           value to be set
         """
 
-        if itemtype in self.nspanel_status['connected_items']:
+        if itemtype in self.panel_status['connected_items']:
             # get item to be set
-            item = self.nspanel_status['connected_items'][itemtype]
+            item = self.panel_status['connected_items'][itemtype]
 
             # set item value
             self.logger.info(
@@ -450,15 +450,15 @@ class NSPanel(MqttPlugin):
     def _set_device_offline(self):
         self._set_item_value('item_online', False)
         self.logger.info(
-            f"{self.tasmota_topic} is not online any more - online_timeout={self.nspanel_status['online_timeout']}, now={datetime.now()}")
+            f"{self.tasmota_topic} is not online any more - online_timeout={self.panel_status['online_timeout']}, now={datetime.now()}")
 
         # clean data to show correct status
-        self.nspanel_status['online_timeout'] = '-'
-        self.nspanel_status['online'] = False
-        self.nspanel_status['uptime'] = '-'
-        self.nspanel_status['wifi_signal'] = 0
-        self.nspanel_status['sensors'].clear()
-        self.nspanel_status['relay'].clear()
+        self.panel_status['online_timeout'] = '-'
+        self.panel_status['online'] = False
+        self.panel_status['uptime'] = '-'
+        self.panel_status['wifi_signal'] = 0
+        self.panel_status['sensors'].clear()
+        self.panel_status['relay'].clear()
 
         self._remove_scheduler_time_date()
 
@@ -468,8 +468,8 @@ class NSPanel(MqttPlugin):
         """
 
         self.logger.info(f"_check_online_status: Checking online status of {self.tasmota_topic}")
-        if self.nspanel_status.get('online') is True and self.nspanel_status.get('online_timeout'):
-            if self.nspanel_status['online_timeout'] < datetime.now():
+        if self.panel_status.get('online') is True and self.panel_status.get('online_timeout'):
+            if self.panel_status['online_timeout'] < datetime.now():
                 self._set_device_offline()
             else:
                 self.logger.debug(f'_check_online_status: Checking online status of {self.tasmota_topic} successful')
@@ -492,18 +492,18 @@ class NSPanel(MqttPlugin):
         if wifi_signal:
             if isinstance(wifi_signal, str) and wifi_signal.isdigit():
                 wifi_signal = int(wifi_signal)
-            self.nspanel_status['wifi_signal'] = wifi_signal
+            self.panel_status['wifi_signal'] = wifi_signal
             self._set_item_value('item_wifi_signal', wifi_signal)
 
     def _handle_teleperiod(self, teleperiod: dict) -> None:
 
-        self.nspanel_status['teleperiod'] = teleperiod
+        self.panel_status['teleperiod'] = teleperiod
         if teleperiod != self.telemetry_period:
             self._set_telemetry_period(self.telemetry_period)
 
     def _handle_uptime(self, uptime: str) -> None:
         self.logger.debug(f"Received Message contains Uptime information. uptime={uptime}")
-        self.nspanel_status['uptime'] = uptime
+        self.panel_status['uptime'] = uptime
         self._set_item_value('item_uptime', uptime)
 
     def _handle_power(self, payload: dict) -> None:
@@ -514,7 +514,7 @@ class NSPanel(MqttPlugin):
         # payload = {"Time": "2022-11-21T12:56:34", "Uptime": "0T00:00:11", "UptimeSec": 11, "Heap": 27, "SleepMode": "Dynamic", "Sleep": 50, "LoadAvg": 19, "MqttCount": 0, "POWER1": "OFF", "POWER2": "OFF", "POWER3": "OFF", "POWER4": "OFF", "Wifi": {"AP": 1, "SSId": "WLAN-Access", "BSSId": "38:10:D5:15:87:69", "Channel": 1, "Mode": "11n", "RSSI": 82, "Signal": -59, "LinkCount": 1, "Downtime": "0T00:00:03"}}
 
         power_dict = {key: val for key, val in payload.items() if key.startswith('POWER')}
-        self.nspanel_status['relay'].update(power_dict)
+        self.panel_status['relay'].update(power_dict)
         for power in power_dict:
             relay_index = 1 if len(power) == 5 else str(power[5:])
             item_relay = f'item_relay{relay_index}'
@@ -533,12 +533,12 @@ class NSPanel(MqttPlugin):
 
             if data and isinstance(data, dict):
                 self.logger.info(f"Received Message decoded as {sensor} Sensor message.")
-                if sensor not in self.nspanel_status['sensors']:
-                    self.nspanel_status['sensors'][sensor] = {}
+                if sensor not in self.panel_status['sensors']:
+                    self.panel_status['sensors'][sensor] = {}
 
                 for key in self.TEMP_SENSOR_KEYS:
                     if key in data:
-                        self.nspanel_status['sensors'][sensor][key.lower()] = data[key]
+                        self.panel_status['sensors'][sensor][key.lower()] = data[key]
                         self._set_item_value(self.TEMP_SENSOR_KEYS[key], data[key])
 
     ################################
@@ -611,7 +611,7 @@ class NSPanel(MqttPlugin):
         """
 
         for idx, card in enumerate(self.panel_config['cards']):
-            self.nspanel_config_items_page[idx] = []
+            self.panel_config_items_page[idx] = []
             temp = []
             entities = card.get('entities')
             if entities is not None:
@@ -620,10 +620,10 @@ class NSPanel(MqttPlugin):
                     # Add all possible items without check, parse_item is only called for valid items
                     if item is not None and item not in temp:
                         temp.append(item)
-                        if item not in self.nspanel_config_items:
-                            self.nspanel_config_items.append(item)
+                        if item not in self.panel_config_items:
+                            self.panel_config_items.append(item)
 
-            self.nspanel_config_items_page[idx] = temp
+            self.panel_config_items_page[idx] = temp
 
     def _next_page(self):
         """
