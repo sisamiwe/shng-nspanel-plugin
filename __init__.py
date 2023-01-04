@@ -237,10 +237,14 @@ class NSPanel(MqttPlugin):
                         self.publish_tasmota_topic('cmnd', self.tasmota_topic, f"POWER{relay}", value, item, bool_values=['OFF', 'ON'])
 
             elif self.has_iattr(item.conf, 'nspanel_popup'):
-                if self.get_iattr_value(item.conf, 'nspanel_popup') == 'notify':
+                nspanel_popup = self.get_iattr_value(item.conf, 'nspanel_popup')
+                if nspanel_popup[:6] == 'notify':
                     item_value = item()
                     if isinstance(item_value, dict):
-                        self.SendToPanel(self.GeneratePopupNotify(item_value))
+                        if nspanel_popup[6:] == '_screensaver':
+                            self.SendToPanel(self.GenerateScreensaverNotify(item_value))
+                        else:
+                            self.SendToPanel(self.GeneratePopupNotify(item_value))
                     else:
                         self.logger.warning(f"{item.id} must be a dict")
                 elif self.get_iattr_value(item.conf, 'nspanel_popup') == 'timer':
@@ -762,13 +766,6 @@ class NSPanel(MqttPlugin):
         self.HandleScreensaverWeatherUpdate()  # Geht nur wenn NOTIFY leer wäre! Wird in Nextion so geregelt.       
         self.HandleScreensaverColors()  # Geht nur wenn NOTIFY leer wäre! Wird in Nextion so geregelt.
 
-    def HandleScreensaverUpdate(self):
-        self.logger.debug('Function HandleScreensaverUpdate to be done')
-        heading = self.panel_config.get('screensaver', {}).get('heading', '')
-        text = self.panel_config.get('screensaver', {}).get('text', '')
-        self.publish_tasmota_topic(payload=f"notify~{heading}~{text}")
-        self.HandleScreensaverColors()
-
     def HandleScreensaverColors(self):
         # payload: color~background~time~timeAMPM~date~tMainIcon~tMainText~tForecast1~tForecast2~tForecast3~tForecast4~tF1Icon~tF2Icon~tF3Icon~tF4Icon~tForecast1Val~tForecast2Val~tForecast3Val~tForecast4Val~bar~tMRIcon~tMR~tTimeAdd
         self.logger.info('Function HandleScreensaverColors to be done')
@@ -807,6 +804,18 @@ class NSPanel(MqttPlugin):
         icon2Size = 1
         self.publish_tasmota_topic(
             payload=f"weatherUpdate~1~2~3~4~5~6~7~8~9~10~11~12~13~14~15~16~{icon1}~{icon1Color}~{icon2}~{icon2Color}~{icon1Size}~{icon2Size}")
+
+    def GenerateScreensaverNotify(self, value) -> str:
+        self.logger.debug(f"GenerateScreensaverNotify called with item={value}")
+
+        if not self.screensaverEnabled:
+            self.HandleScreensaver()
+
+        heading = value.get('heading', '')
+        text = value.get('text', '')
+        out_msgs = list()
+        out_msgs.append(f"notify~{heading}~{text}")
+        return out_msgs
 
     def HandleHardwareButton(self, method):
         self.logger.info(f"hw {method} pressed")

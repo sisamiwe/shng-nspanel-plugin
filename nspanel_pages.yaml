@@ -174,8 +174,6 @@ cards:
   #         speed: 1 # use -1 for other direction
 
 screensaver:
-    heading: Hallo
-    text: Heute keine Termin
     secondLine: Hier ist die zweite Reihe
     #entity: weather.k3ll3r
     # weatherOverrideForecast4:

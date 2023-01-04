@@ -104,10 +104,12 @@ item_attributes:
             en: "Page independent item of NSPanel."
         valid_list:
             - notify
+            - notify_screensaver
             - timer
         valid_list_description:
             de:
               - "Inhalt wird als PopupNotify angezeigt.-> dict, w/o"
+              - "Inhalt wird auf dem Screensaver angezeigt-> dict, w/o"
               - "Item wird als Zähler für PopupTimer verwendet -> num, r/o"
 
 item_structs:
@@ -145,10 +147,15 @@ item_structs:
     demo:
         name: Demo-Struct
 
-        notify:
+        notify_popup:
             type: dict
             nspanel_popup@instance: notify
             initial_value: "{'heading': 'Kopfzeile', 'text': 'Text\\r\\nmit Umbruch', 'size': 3}"
+
+        notify_screensaver:
+            type: dict
+            nspanel_popup@instance: notify_screensaver
+            initial_value: "{'heading': 'Kopfzeile', 'text': 'Text\\r\\nmit Umbruch'}"
 
         timer:
             type: num
