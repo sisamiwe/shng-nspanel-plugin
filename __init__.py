@@ -292,7 +292,6 @@ class NSPanel(MqttPlugin):
                 # set telemetry to get latest STATE and SENSOR information
                 self._set_telemetry_period(self.telemetry_period)
             else:
-                self._remove_scheduler_time_date()
                 self._set_device_offline()
 
     def on_mqtt_message(self, topic: str, payload: dict, qos: int = None, retain: bool = None) -> None:
