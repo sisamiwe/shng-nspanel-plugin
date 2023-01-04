@@ -158,6 +158,7 @@ item_structs:
         chart:
             type: list
             eval: sh.env.system.load.series('avg', '1d', count=50).get('series') # only example for format of data
+            cycle: 600
 
     simulation:
         name: Simulation eines NSPanels

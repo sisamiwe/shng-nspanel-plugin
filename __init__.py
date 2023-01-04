@@ -91,7 +91,7 @@ class NSPanel(MqttPlugin):
 
         # define properties
         self.current_page = 0
-        self.nspanel_status = {'online': False, 'connected_items': {}, 'uptime': '-', 'sensors': {}, 'relay': {}}
+        self.nspanel_status = {'online': False, 'online_timeout': '', 'connected_items': {}, 'uptime': '-', 'sensors': {}, 'relay': {}}
         self.custom_msg_queue = queue.Queue(maxsize=50)  # Queue containing last 50 messages containing "CustomRecv"
         self.nspanel_items = []
         self.nspanel_config_items = []
@@ -183,16 +183,15 @@ class NSPanel(MqttPlugin):
             else:
                 return
 
-            if nspanel_attr[:5] == 'relay':
-                return self.update_item
-
             # fill tasmota_device dict
             self.nspanel_status['connected_items'][f'item_{nspanel_attr}'] = item
-            self.logger.info(self.nspanel_status)
 
             # append to list used for web interface
             if item not in self.nspanel_items:
                 self.nspanel_items.append(item)
+
+            if nspanel_attr[:5] == 'relay':
+                return self.update_item
 
         # search for notify items
         if self.has_iattr(item.conf, 'nspanel_popup'):
@@ -449,13 +448,15 @@ class NSPanel(MqttPlugin):
                 f"{self.tasmota_topic}: No item for itemtype '{itemtype}' defined to set to '{value}'.")
 
     def _set_device_offline(self):
-        self.nspanel_status['online_timeout'] = '-'
-        self.nspanel_status['online'] = False
-        self._set_item_value(self.tasmota_topic, 'item_online')
+        self._set_item_value('item_online', False)
         self.logger.info(
             f"{self.tasmota_topic} is not online any more - online_timeout={self.nspanel_status['online_timeout']}, now={datetime.now()}")
 
-        # clean data from dict to show correct status
+        # clean data to show correct status
+        self.nspanel_status['online_timeout'] = '-'
+        self.nspanel_status['online'] = False
+        self.nspanel_status['uptime'] = '-'
+        self.nspanel_status['wifi_signal'] = 0
         self.nspanel_status['sensors'].clear()
         self.nspanel_status['relay'].clear()
 
