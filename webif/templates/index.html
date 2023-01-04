@@ -3,7 +3,7 @@
 {% set logo_frame = false %}
 
 <!-- set update_interval to a value > 0 (in milliseconds) to enable periodic data updates -->
-{% set update_interval = 0 %}
+{% set update_interval = 5000 %}
 
 <!--
 	Additional script tag for plugin specific javascript code go into this block
@@ -102,7 +102,7 @@
 <!--
 	Define the number of tabs for the body of the web interface (1 - 3)
 -->
-{% set tabcount = 4 %}
+{% set tabcount = 2 %}
 
 
 <!--
@@ -148,7 +148,7 @@
 <!--
 	Content block for the second tab of the Webinterface
 -->
-{% set tab2title = "<strong>" ~ p.get_shortname() ~ " Geräte</strong> (" ~ device_count ~ ")" %}
+{% set tab2title = "<strong>" ~ p.get_shortname() ~ " Gerät</strong> " %}
 {% block bodytab2 %}
 <div class="container-fluid m-2 table-resize">
 	<table id="">
@@ -167,8 +167,13 @@
 			</tr>
 			<tr>
           		<td></td>
-				<td class="py-1">tasmota_devices</td>
-				<td class="py-1">{{ p.tasmota_devices }}</td>
+				<td class="py-1">panel_status</td>
+				<td class="py-1">{{ p.panel_status }}</td>
+			</tr>
+			<tr>
+          		<td></td>
+				<td class="py-1">panel_items</td>
+				<td class="py-1">{{ p.panel_items }}</td>
 			</tr>
 			<tr>
           		<td></td>

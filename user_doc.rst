@@ -1,9 +1,13 @@
-.. index:: Plugins; sample_mqtt
-.. index:: sample_mqtt
+.. index:: nspanel
+.. index:: Plugins; nspanel
+.. index:: mqtt; nspanel Plugin
+
 
 ===========
-sample_mqtt
+nspanel
 ===========
+
+Das Plugin dient der Ansteuerung von SONOFF NSPanels, die mit Tasmota geflashed sind und das Lovelace-UI benutzen. Das Plugin kommuniziert über das MQTT-Modul.
 
 .. image:: webif/static/img/plugin_logo.png
    :alt: plugin logo
@@ -15,59 +19,45 @@ sample_mqtt
 
 Anforderungen
 -------------
-Anforderungen des Plugins auflisten. Werden spezielle Soft- oder Hardwarekomponenten benötigt?
-
 Notwendige Software
 ~~~~~~~~~~~~~~~~~~~
 
-* die
-* benötigte
-* Software
-* auflisten
-
-Dies beinhaltet Python- und SmartHomeNG-Module
+* Tasmota https://tasmota.github.io/
+* nspanel-lovelace-ui https://github.com/joBr99/nspanel-lovelace-ui
+* MQTT-Modul
 
 Unterstützte Geräte
 ~~~~~~~~~~~~~~~~~~~
 
-* die
-* unterstütze
-* Hardware
-* auflisten
+* SONOFF NSPanel
 
 
 Konfiguration
 -------------
 
-plugin.yaml
-~~~~~~~~~~~
+Die Konfiguration des Karten erolgt in der Datei ```nspanel_pages.yaml```
 
-Bitte die Dokumentation lesen, die aus den Metadaten der plugin.yaml erzeugt wurde.
+### Hilfreiche Tasmota-Regeln:
+Einige Funktionen lassen müssen zusätzlich
 
+Zeige ein Meldung, wenn das NSPanel die WLAN-Verbindung verloren hat:  
+```Rule2 ON wifi#disconnected DO Backlog CustomSend pageType~screensaver; CustomSend time~~Keine WLAN-Verbindung; CustomSend date~ ENDON```
 
-items.yaml
-~~~~~~~~~~
-
-Bitte die Dokumentation lesen, die aus den Metadaten der plugin.yaml erzeugt wurde.
-
-
-logic.yaml
-~~~~~~~~~~
-
-Bitte die Dokumentation lesen, die aus den Metadaten der plugin.yaml erzeugt wurde.
+Zeige ein Meldung, wenn das NSPanel die Verbindung zum MQTT-Broker verloren hat:  
+```Rule1 ON mqtt#disconnected DO Backlog CustomSend pageType~screensaver; CustomSend time~~Keine MQTT-Verbindung; CustomSend date~ ENDON```
 
 
-Funktionen
-~~~~~~~~~~
+Benutze den linken Taster für individuelle Funktionen statt das interne Relais zu schalten:  
+```Rule3 ON Button1#state do Publish stat/%topic%/RESULT {\"CustomRecv\":\"event,button1\"} ENDON```
 
-Bitte die Dokumentation lesen, die aus den Metadaten der plugin.yaml erzeugt wurde.
+Benutze den rechten Taster für individuelle Funktionen statt das interne Relais zu schalten:  
+```Rule4 ON Button2#state do Publish stat/%topic%/RESULT {\"CustomRecv\":\"event,button2\"} ENDON```
 
 
 Beispiele
 ---------
 
-Hier können ausführlichere Beispiele und Anwendungsfälle beschrieben werden.
-
+ToDo
 
 Web Interface
 -------------

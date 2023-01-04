@@ -23,13 +23,11 @@ cards:
 #     entities:
 #       - entity: timer_id
 #         type: timer # timerPopup starts automatically without calling pageType~popupTimer
-#         internalNameEntity: MyTimer # identical to entity could be removed later
 #         item: MyTimer
 #         iconId: timer
 #         displayNameEntity: Timer
 #       - entity: licht1_id
 #         type: popupLight
-#         internalNameEntity: licht1_id # identical to entity could be removed later
 #         iconId: lightbulb-fluorescent-tube-outline
 #         displayNameEntity: Stern
 #         item_onoff: Licht1.Unten.OnOff
@@ -42,21 +40,21 @@ cards:
 #         item_color: Licht1.Color
   #     - entity: DEF
   #       type: switch
-  #       internalNameEntity: EG.Arbeiten.EDV
+  #       item: EG.Arbeiten.EDV
   #       iconId: power-socket-de
   #       iconColor: 17299
   #       displayNameEntity: Steckdose EDV
   #       optionalValue: 0
   #     - entity: GHJ
   #       type: text
-  #       internalNameEntity: EG.Arbeiten.Heizung.ist
+  #       item: EG.Arbeiten.Heizung.ist
   #       iconId: temperature-celsius
   #       iconColor: 17299
   #       displayNameEntity: Temperatur
   #       optionalValue: 22
   #     - entity: KLM
   #       type: shutter
-  #       internalNameEntity: EG.Arbeiten.Rollladen.pos
+  #       item: EG.Arbeiten.Rollladen.pos
   #       iconId: window-shutter
   #       iconColor: 17299
   #       displayNameEntity: Rolladen
@@ -68,7 +66,7 @@ cards:
   #   entities:
   #     - entity: B1
   #       type: light
-  #       internalNameEntity: OG.Arbeit.Licht1
+  #       item: OG.Arbeit.Licht1
   #       iconId: lightbulb
   #       onColor: 65222
   #       offColor: 17299
@@ -76,7 +74,7 @@ cards:
   #       optionalValue: 0
   #     - entity: B2
   #       type: light
-  #       internalNameEntity: KG.Technik.Steckdose2
+  #       item: KG.Technik.Steckdose2
   #       iconId: star-outline
   #       onColor: 65222
   #       offColor: 17299
@@ -84,21 +82,21 @@ cards:
   #       optionalValue: 0
   #     - entity: B3
   #       type: text
-  #       internalNameEntity: OG.Arbeit.Temperatur
+  #       item: OG.Arbeit.Temperatur
   #       iconId: 20
   #       onColor: 65222
   #       offColor: 15299
   #       displayNameEntity: Temperatur
   #     - entity: B4
   #       type: switch
-  #       internalNameEntity: OG.Arbeit.Steckdose1
+  #       item: OG.Arbeit.Steckdose1
   #       iconId: power-socket-de
   #       onColor: 65222
   #       offColor: 17299
   #       displayNameEntity: Steckdose
   #     - entity: B5
   #       type: switch
-  #       internalNameEntity: OG.Arbeit.Steckdose2
+  #       item: OG.Arbeit.Steckdose2
   #       iconId: power-socket-de
   #       onColor: 65222
   #       offColor: 17299
@@ -115,7 +113,7 @@ cards:
     yAxisLabel: 'scaled to maximum'
 
   - pageType: cardAlarm
-    heading: "KeyPad" #Did not change the name, cause of inner use. There is no topic on the display.
+    entity: KeyPad
     items:
         arm1: "Anwesend"
         arm2: "Abwesend"

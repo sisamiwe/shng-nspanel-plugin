@@ -89,10 +89,12 @@ item_attributes:
             en: "Attribute of NSPanels shall be read/written."
         valid_list:
             - online
+            - relay1
+            - relay2
             - temp_analog
             - temp_esp32
-            - power1
-            - power2
+            - uptime
+            - wifi_signal
 
     nspanel_popup:
         type: str
@@ -116,6 +118,14 @@ item_structs:
             type: bool
             nspanel_attr@instance: online
 
+        relay1:
+            type: bool
+            nspanel_attr@instance: relay1
+
+        relay2:
+            type: bool
+            nspanel_attr@instance: relay2
+
         temperature:
             analog:
                 type: num
@@ -123,6 +133,14 @@ item_structs:
             esp32:
                 type: num
                 nspanel_attr@instance: temp_esp32
+
+        uptime:
+            type: str
+            nspanel_attr@instance: uptime
+
+        wifi_signal:
+            type: num
+            nspanel_attr@instance: wifi_signal
 
     demo:
         name: Demo-Struct
@@ -140,6 +158,7 @@ item_structs:
         chart:
             type: list
             eval: sh.env.system.load.series('avg', '1d', count=50).get('series') # only example for format of data
+            cycle: 600
 
     simulation:
         name: Simulation eines NSPanels
