@@ -91,9 +91,9 @@ class NSPanel(MqttPlugin):
 
         # define properties
         self.current_page = 0
-        self.panel_status = {'online': False, 'online_timeout': '', 'connected_items': {}, 'uptime': '-', 'sensors': {}, 'relay': {}}
+        self.panel_status = {'online': False, 'online_timeout': '', 'uptime': '-', 'sensors': {}, 'relay': {}}
         self.custom_msg_queue = queue.Queue(maxsize=50)  # Queue containing last 50 messages containing "CustomRecv"
-        self.panel_items = []
+        self.panel_items = {}
         self.panel_config_items = []
         self.panel_config_items_page = {}
         self.panel_version = 0
@@ -183,12 +183,8 @@ class NSPanel(MqttPlugin):
             else:
                 return
 
-            # fill tasmota_device dict
-            self.panel_status['connected_items'][f'item_{nspanel_attr}'] = item
-
-            # append to list used for web interface
-            if item not in self.panel_items:
-                self.panel_items.append(item)
+            # fill panel_items dict / used for web interface
+            self.panel_items[f'item_{nspanel_attr}'] = item
 
             if nspanel_attr[:5] == 'relay':
                 return self.update_item
@@ -433,9 +429,9 @@ class NSPanel(MqttPlugin):
         :param value:           value to be set
         """
 
-        if itemtype in self.panel_status['connected_items']:
+        if itemtype in self.panel_items:
             # get item to be set
-            item = self.panel_status['connected_items'][itemtype]
+            item = self.panel_items[itemtype]
 
             # set item value
             self.logger.info(
