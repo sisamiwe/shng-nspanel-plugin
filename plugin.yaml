@@ -48,9 +48,10 @@ parameters:
 
     config_file_location:
         type: str
+        default: 'plugins/priv_nspanel/nspanel_pages_demo.yaml'
         description:
-            de: 'Speicherort der Konfigurationsdatei relativ zum smarthome Ordner bspw: /usr/local/smarthome/plugins/_priv_nspanel/nspanel_pages.yaml'
-            en: 'Location of Config_file relatively to smarthome directory e.g. /usr/local/smarthome/plugins/_priv_nspanel/nspanel_pages.yaml'
+            de: 'Speicherort der Konfigurationsdatei relativ zum smarthome Ordner bspw: priv_nspanel/nspanel_pages_demo.yaml'
+            en: 'Location of Config_file relatively to smarthome directory e.g. plugins/priv_nspanel/nspanel_pages_demo.yaml'
 
     webif_pagelength:
         type: int
@@ -91,6 +92,8 @@ item_attributes:
             - online
             - relay1
             - relay2
+            - screensaver_statusiconleft
+            - screensaver_statusiconright
             - temp_analog
             - temp_esp32
             - uptime
@@ -150,12 +153,22 @@ item_structs:
         notify_popup:
             type: dict
             nspanel_popup@instance: notify
-            initial_value: "{'heading': 'Kopfzeile', 'text': 'Text\\r\\nmit Umbruch', 'size': 3}"
+            initial_value: "{'heading': 'Hinweis', 'text': 'Text\\r\\nmit Umbruch', 'size': 3}"
 
         notify_screensaver:
             type: dict
             nspanel_popup@instance: notify_screensaver
-            initial_value: "{'heading': 'Kopfzeile', 'text': 'Text\\r\\nmit Umbruch'}"
+            initial_value: "{'heading': 'Hinweis', 'text': 'Text\\r\\nmit Umbruch'}"
+
+        screensaver:
+            statusIconLeft:
+                type: dict
+                nspanel_attr@instance: screensaver_statusiconleft
+                initial_value: "{'icon': 'email', 'color': 'White'}"
+            statusIconRight:
+                type: dict
+                nspanel_attr@instance: screensaver_statusiconright
+                initial_value: "{'icon': 'phone', 'color': 'White'}"
 
         timer:
             type: num

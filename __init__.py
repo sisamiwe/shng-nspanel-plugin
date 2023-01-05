@@ -188,6 +188,8 @@ class NSPanel(MqttPlugin):
 
             if nspanel_attr[:5] == 'relay':
                 return self.update_item
+            if nspanel_attr[:11] == 'screensaver':
+                return self.update_item
 
         # search for notify items
         if self.has_iattr(item.conf, 'nspanel_popup'):
@@ -235,6 +237,9 @@ class NSPanel(MqttPlugin):
                     if value is not None:
                         relay = nspanel_attr[5:]
                         self.publish_tasmota_topic('cmnd', self.tasmota_topic, f"POWER{relay}", value, item, bool_values=['OFF', 'ON'])
+
+                if nspanel_attr[:11] == 'screensaver':
+                    self.HandleScreensaverIconUpdate()
 
             elif self.has_iattr(item.conf, 'nspanel_popup'):
                 nspanel_popup = self.get_iattr_value(item.conf, 'nspanel_popup')
@@ -656,7 +661,7 @@ class NSPanel(MqttPlugin):
             self.panel_config.get('config', {}).get('locale', 'de-DE'))
 
     def send_current_time(self):
-        secondLine = self.panel_config.get('config', {}).get('screensaver_secondLine', '')
+        secondLine = self.panel_config.get('config', {}).get('screensaver', {}).get('secondLine', '')
         self.publish_tasmota_topic(payload=f"time~{time.strftime('%H:%M', time.localtime())}~{secondLine}")
 
     def send_current_date(self):
@@ -802,13 +807,30 @@ class NSPanel(MqttPlugin):
             payload=f"color~{background}~{timestr}~{timeAPPM}~{date}~{tMainIcon}~{tMainText}~{tForecast1}~{tForecast2}~{tForecast3}~{tForecast4}~{tF1Icon}~{tF2Icon}~{tF3Icon}~{tF4Icon}~{tForecast1Val}~{tForecast2Val}~{tForecast3Val}~{tForecast4Val}~{bar}~{tMRIcon}~{tMR}~{tTimeAdd}")
 
     def get_status_icons(self) -> str:
-        self.logger.debug("get_status_icons called to be implemented")
-        icon1 = Icons.GetIcon('wifi')
-        icon2 = Icons.GetIcon('wifi-alert')
-        icon1Color = rgb_dec565(getattr(Colors, 'White'))
-        icon2Color = rgb_dec565(getattr(Colors, 'White'))
-        icon1Font = 1
-        icon2Font = 1
+        self.logger.debug("get_status_icons called")
+        screensaver = self.panel_config.get('config', {}).get('screensaver', {})
+        iconLeft = self.items.return_item(screensaver.get('statusIconLeft', None))()
+        iconRight = self.items.return_item(screensaver.get('statusIconRight', None))()
+        iconSize = screensaver.get('statusIconBig', True)
+        if iconSize:
+            iconSize = 1
+        else:
+            iconSize = ''
+
+        # Left Icon
+        icon1 = ''
+        icon1Color = 'White'
+        if isinstance(iconLeft, dict):
+            icon1 = Icons.GetIcon(iconLeft.get('icon', ''))
+            icon1Color = rgb_dec565(getattr(Colors, iconLeft.get('color', 'White')))
+        # Right Icon
+        icon2 = ''
+        icon2Color = 'White'
+        if isinstance(iconRight, dict):
+            icon2 = Icons.GetIcon(iconRight.get('icon', ''))
+            icon2Color = rgb_dec565(getattr(Colors, iconRight.get('color', 'White')))
+        icon1Font = iconSize
+        icon2Font = iconSize
         return f"{icon1}~{icon1Color}~{icon2}~{icon2Color}~{icon1Font}~{icon2Font}"
 
     def HandleScreensaverIconUpdate(self):
