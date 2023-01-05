@@ -91,7 +91,7 @@ class NSPanel(MqttPlugin):
 
         # define properties
         self.current_page = 0
-        self.panel_status = {'online': False, 'online_timeout': datetime.now(), 'uptime': '-', 'sensors': {}, 'relay': {}}
+        self.panel_status = {'online': False, 'online_timeout': datetime.now(), 'uptime': '-', 'sensors': {}, 'relay': {}, 'screensaverActive': False}
         self.custom_msg_queue = queue.Queue(maxsize=50)  # Queue containing last 50 messages containing "CustomRecv"
         self.panel_items = {}
         self.panel_config_items = []
@@ -99,7 +99,6 @@ class NSPanel(MqttPlugin):
         self.panel_version = 0
         self.panel_model = ''
         self.useMediaEvents = False
-        self.screensaverEnabled = False
         self.alive = None
 
         # read panel config file
@@ -258,7 +257,7 @@ class NSPanel(MqttPlugin):
                         (entity['entity'] for entity in entities if entity.get('item', '') == item.property.path), None)
                     if entity_name is not None:
                         self.SendToPanel(self.GenerateDetailTimer(entity_name))
-            elif not self.screensaverEnabled:
+            elif not self.panel_status['screensaver_active']:
                 if item.property.path in self.panel_config_items_page[self.current_page]:
                     self.GeneratePage(self.current_page)
                 else:
@@ -459,6 +458,7 @@ class NSPanel(MqttPlugin):
         # clean data to show correct status
         self.panel_status['online_timeout'] = datetime.now()
         self.panel_status['online'] = False
+        self.panel_status['screensaver_active'] = False
         self.panel_status['uptime'] = '-'
         self.panel_status['wifi_signal'] = 0
         self.panel_status['sensors'].clear()
@@ -733,8 +733,9 @@ class NSPanel(MqttPlugin):
         words = content_list
 
         if typ == 'event':
+            self.panel_status['screensaver_active'] = False
             if method == 'startup':
-                self.screensaverEnabled = True
+                self.panel_status['screensaver_active'] = True
                 self.panel_version = words[2]
                 self.panel_model = words[3]
                 self.HandleStartupProcess()
@@ -744,27 +745,25 @@ class NSPanel(MqttPlugin):
             elif method == 'sleepReached':
                 # event,sleepReached,cardEntities
                 self.useMediaEvents = False
-                self.screensaverEnabled = True
+                self.panel_status['screensaver_active'] = True
                 self.current_page = 0
                 self.HandleScreensaver()
 
             elif method == 'pageOpenDetail':
                 # event,pageOpenDetail,popupLight,entity
-                self.screensaverEnabled = False
                 self.GenerateDetailPage(words[2], words[3])
 
             elif method == 'buttonPress2':
-                self.screensaverEnabled = False
                 self.logger.debug(f"{words[0]} - {words[1]} - {words[2]} - {words[3]}")
                 self.HandleButtonEvent(words)
 
             elif method == 'button1':
-                self.screensaverEnabled = False
                 self.HandleHardwareButton(method)
 
             elif method == 'button2':
-                self.screensaverEnabled = False
                 self.HandleHardwareButton(method)
+
+            self._set_item_value('item_screensaver_active', self.panel_status['screensaver_active'])
 
     def HandleStartupProcess(self):
         self.logger.debug("HandleStartupProcess called")
@@ -883,7 +882,7 @@ class NSPanel(MqttPlugin):
     def GenerateScreensaverNotify(self, value) -> list:
         self.logger.debug(f"GenerateScreensaverNotify called with item={value}")
 
-        if not self.screensaverEnabled:
+        if not self.panel_status['screensaver_active']:
             self.HandleScreensaver()
 
         heading = value.get('heading', '')
