@@ -160,7 +160,7 @@ class NSPanel(MqttPlugin):
         self.stop_subscriptions()
 
         # remove scheduler
-        self._remove_scheduler_time_date()
+        self._remove_scheduler()
 
     def parse_item(self, item):
         """
@@ -287,7 +287,7 @@ class NSPanel(MqttPlugin):
                 self.panel_status['online_timeout'] = datetime.now() + timedelta(seconds=self.telemetry_period + 5)
                 self.panel_status['online'] = payload
                 self._set_item_value('item_online', payload)
-                self._add_scheduler_time_date()
+                self._add_scheduler()
                 self.SendToPanel('pageType~pageStartup')
                 # set telemetry to get latest STATE and SENSOR information
                 self._set_telemetry_period(self.telemetry_period)
@@ -459,7 +459,7 @@ class NSPanel(MqttPlugin):
         self.panel_status['sensors'].clear()
         self.panel_status['relay'].clear()
 
-        self._remove_scheduler_time_date()
+        self._remove_scheduler()
 
     def _check_online_status(self):
         """
@@ -544,7 +544,7 @@ class NSPanel(MqttPlugin):
     #  NSPage Stuff
     ################################
 
-    def _add_scheduler_time_date(self):
+    def _add_scheduler(self):
         """
         add scheduler for cyclic time and date update
         """
@@ -552,25 +552,32 @@ class NSPanel(MqttPlugin):
         self.logger.debug('Add scheduler for cyclic updates of time and date')
 
         dt = self.shtime.now() + timedelta(seconds=20)
-        self.scheduler_add('update_nspanel_time', self.send_current_time, next=dt, cycle=60)
-        self.scheduler_add('update_nspanel_date', self.send_current_date, cron='1 0 0 * * *', next=dt)
+        self.scheduler_add('update_time', self.send_current_time, next=dt, cycle=60)
+        self.scheduler_add('update_date', self.send_current_date, cron='1 0 0 * * *', next=dt)
 
         self.logger.debug(f"Add scheduler for online_status")
         dt = self.shtime.now() + timedelta(seconds=(self.telemetry_period - 3))
         self.scheduler_add('check_online_status', self._check_online_status, cycle=self.telemetry_period, next=dt)
 
-    def _remove_scheduler_time_date(self):
+        self.logger.debug('Add scheduler for weather')
+        dt = dt + timedelta(seconds=20)
+        self.scheduler_add('update_weather', self.HandleScreensaverWeatherUpdate, next=dt, cycle=3600)
+
+    def _remove_scheduler(self):
         """
         remove scheduler for cyclic time and date update
         """
 
         self.logger.debug('Remove scheduler for cyclic updates of time and date')
 
-        self.scheduler_remove('update_nspanel_time')
-        self.scheduler_remove('update_nspanel_date')
+        self.scheduler_remove('update_time')
+        self.scheduler_remove('update_date')
 
         self.logger.debug('Remove scheduler for online status')
         self.scheduler_remove('check_online_status')
+        
+        self.logger.debug('Remove scheduler for weather')
+        self.scheduler_remove('update_weather')
 
     def _parse_config_file(self):
         """
@@ -649,7 +656,7 @@ class NSPanel(MqttPlugin):
             self.panel_config.get('config', {}).get('locale', 'de-DE'))
 
     def send_current_time(self):
-        secondLine = self.panel_config.get('screensaver', {}).get('secondLine', '')
+        secondLine = self.panel_config.get('config', {}).get('screensaver_secondLine', '')
         self.publish_tasmota_topic(payload=f"time~{time.strftime('%H:%M', time.localtime())}~{secondLine}")
 
     def send_current_date(self):
@@ -795,15 +802,45 @@ class NSPanel(MqttPlugin):
             payload=f"color~{background}~{timestr}~{timeAPPM}~{date}~{tMainIcon}~{tMainText}~{tForecast1}~{tForecast2}~{tForecast3}~{tForecast4}~{tF1Icon}~{tF2Icon}~{tF3Icon}~{tF4Icon}~{tForecast1Val}~{tForecast2Val}~{tForecast3Val}~{tForecast4Val}~{bar}~{tMRIcon}~{tMR}~{tTimeAdd}")
 
     def HandleScreensaverWeatherUpdate(self):
-        self.logger.info('Function HandleScreensaverWeatherUpdate to be implemented')
-        icon1 = Icons.GetIcon('wifi')
-        icon2 = Icons.GetIcon('wifi-alert')
-        icon1Color = rgb_dec565(getattr(Colors, 'White'))
-        icon2Color = rgb_dec565(getattr(Colors, 'White'))
-        icon1Size = 1
-        icon2Size = 1
-        self.publish_tasmota_topic(
-            payload=f"weatherUpdate~1~2~3~4~5~6~7~8~9~10~11~12~13~14~15~16~{icon1}~{icon1Color}~{icon2}~{icon2Color}~{icon1Size}~{icon2Size}")
+        self.logger.info('Function HandleScreensaverWeatherUpdate')
+        weather = self.panel_config.get('config', {}).get('weather', {})
+
+        if weather:
+            # actual weather
+            tMainIcon = Icons.GetIcon(self.items.return_item(weather[0].get('icon'))())
+            tMainText = self.items.return_item(weather[0].get('text'))()
+            optionalLayoutIcon = ""
+            optionalLayoutText = ""
+            if weather[0].get('alternativLayout', False):
+                optionalLayoutItemValue = self.items.return_item(weather[0].get('second_icon'))()
+                optionalLayoutIcon = Icons.GetIcon(optionalLayoutItemValue)
+                if not optionalLayoutIcon:
+                    optionalLayoutIcon = optionalLayoutItemValue
+                optionalLayoutIcon = optionalLayoutIcon
+                optionalLayoutText = self.items.return_item(weather[0].get('second_text'))()
+
+            # forecast day 1
+            tForecast1 = self.items.return_item(weather[1].get('day'))()
+            tF1Icon = Icons.GetIcon(self.items.return_item(weather[1].get('icon'))())
+            tForecast1Val = self.items.return_item(weather[1].get('text'))()
+
+            # forecast day 2
+            tForecast2 = self.items.return_item(weather[2].get('day'))()
+            tF2Icon = Icons.GetIcon(self.items.return_item(weather[2].get('icon'))())
+            tForecast2Val = self.items.return_item(weather[2].get('text'))()
+
+            # forecast day 3
+            tForecast3 = self.items.return_item(weather[3].get('day'))()
+            tF3Icon = Icons.GetIcon(self.items.return_item(weather[3].get('icon'))())
+            tForecast3Val = self.items.return_item(weather[3].get('text'))()
+
+            # forecast day 4
+            tForecast4 = self.items.return_item(weather[4].get('day'))()
+            tF4Icon = Icons.GetIcon(self.items.return_item(weather[4].get('icon'))())
+            tForecast4Val = self.items.return_item(weather[4].get('text'))()
+
+            payload=f"weatherUpdate~{tMainIcon}~{tMainText}~{tForecast1}~{tF1Icon}~{tForecast1Val}~{tForecast2}~{tF2Icon}~{tForecast2Val}~{tForecast3}~{tF3Icon}~{tForecast3Val}~{tForecast4}~{tF4Icon}~{tForecast4Val}~{optionalLayoutIcon}~{optionalLayoutText}"
+            self.publish_tasmota_topic(payload=payload)
 
     def GenerateScreensaverNotify(self, value) -> str:
         self.logger.debug(f"GenerateScreensaverNotify called with item={value}")
