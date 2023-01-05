@@ -16,6 +16,26 @@ config:
   defaultOnColor: On
   defaultColor: Off
   defaultBackgroundColor: Black
+  screensaver_secondLine: Hier ist die zweite Reihe
+  weather:
+    - day: NSPanel1.Wetter.Tag0
+      icon: NSPanel1.Wetter.Tag0.Icon
+      text: NSPanel1.Wetter.Tag0.Text
+      alternativLayout: False
+      second_icon: NSPanel1.Wetter.Tag0.SecondIcon # only displayed if alternativLayout is True
+      second_text: NSPanel1.Wetter.Tag0.SecondText # only displayed if alternativLayout is True
+    - day: NSPanel1.Wetter.Tag1
+      icon: NSPanel1.Wetter.Tag1.Icon
+      text: NSPanel1.Wetter.Tag1.Text
+    - day: NSPanel1.Wetter.Tag2
+      icon: NSPanel1.Wetter.Tag2.Icon
+      text: NSPanel1.Wetter.Tag2.Text
+    - day: NSPanel1.Wetter.Tag3
+      icon: NSPanel1.Wetter.Tag3.Icon
+      text: NSPanel1.Wetter.Tag3.Text
+    - day: NSPanel1.Wetter.Tag4 # only displayed if alternativLayout is False
+      icon: NSPanel1.Wetter.Tag4.Icon # only displayed if alternativLayout is False
+      text: NSPanel1.Wetter.Tag4.Text # only displayed if alternativLayout is False
 
 cards:
 #   - pageType: cardGrid
@@ -173,13 +193,3 @@ cards:
   #         icon: 'car'
   #         speed: 1 # use -1 for other direction
 
-screensaver:
-    heading: Hallo
-    text: Heute keine Termin
-    secondLine: Hier ist die zweite Reihe
-    #entity: weather.k3ll3r
-    # weatherOverrideForecast4:
-    #     entity: sensor.example_item
-    #     name: name
-    #     icon: lightbulb
-    # alternativeLayout: True
