@@ -21,7 +21,7 @@ config:
     - day: NSPanel1.Wetter.Tag0
       icon: NSPanel1.Wetter.Tag0.Icon
       text: NSPanel1.Wetter.Tag0.Text
-      alternativLayout: False
+      alternativeLayout: False
       second_icon: NSPanel1.Wetter.Tag0.SecondIcon # only displayed if alternativLayout is True
       second_text: NSPanel1.Wetter.Tag0.SecondText # only displayed if alternativLayout is True
     - day: NSPanel1.Wetter.Tag1

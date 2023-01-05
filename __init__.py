@@ -91,7 +91,7 @@ class NSPanel(MqttPlugin):
 
         # define properties
         self.current_page = 0
-        self.panel_status = {'online': False, 'online_timeout': '', 'uptime': '-', 'sensors': {}, 'relay': {}}
+        self.panel_status = {'online': False, 'online_timeout': datetime.now(), 'uptime': '-', 'sensors': {}, 'relay': {}}
         self.custom_msg_queue = queue.Queue(maxsize=50)  # Queue containing last 50 messages containing "CustomRecv"
         self.panel_items = {}
         self.panel_config_items = []
@@ -289,7 +289,7 @@ class NSPanel(MqttPlugin):
                 self._set_item_value('item_online', payload)
                 self._add_scheduler()
                 self.SendToPanel('pageType~pageStartup')
-                # set telemetry to get latest STATE and SENSOR information
+                # set telemetry to get the latest STATE and SENSOR information
                 self._set_telemetry_period(self.telemetry_period)
             else:
                 self._set_device_offline()
@@ -381,7 +381,7 @@ class NSPanel(MqttPlugin):
     # MQTT Stuff
     ################################
 
-    def publish_tasmota_topic(self, prefix: str = 'cmnd', topic: str = None, detail: str = None, payload: str = None,
+    def publish_tasmota_topic(self, prefix: str = 'cmnd', topic: str = None, detail: str = None, payload: any = None,
                               item=None, qos: int = None, retain: bool = False, bool_values: list = None) -> None:
         """
         build the topic in Tasmota style and publish to mqtt
@@ -452,7 +452,7 @@ class NSPanel(MqttPlugin):
             f"{self.tasmota_topic} is not online any more - online_timeout={self.panel_status['online_timeout']}, now={datetime.now()}")
 
         # clean data to show correct status
-        self.panel_status['online_timeout'] = '-'
+        self.panel_status['online_timeout'] = datetime.now()
         self.panel_status['online'] = False
         self.panel_status['uptime'] = '-'
         self.panel_status['wifi_signal'] = 0
@@ -798,7 +798,7 @@ class NSPanel(MqttPlugin):
         bar = rgb_dec565(getattr(Colors, 'White'))
         tMRIcon = rgb_dec565(getattr(Colors, 'White'))
         tMR = rgb_dec565(getattr(Colors, 'White'))
-        tTimeAdd = rgb_dec565(getattr(Colors, 'Red'))
+        tTimeAdd = rgb_dec565(getattr(Colors, 'White'))
         self.publish_tasmota_topic(
             payload=f"color~{background}~{timestr}~{timeAPPM}~{date}~{tMainIcon}~{tMainText}~{tForecast1}~{tForecast2}~{tForecast3}~{tForecast4}~{tF1Icon}~{tF2Icon}~{tF3Icon}~{tF4Icon}~{tForecast1Val}~{tForecast2Val}~{tForecast3Val}~{tForecast4Val}~{bar}~{tMRIcon}~{tMR}~{tTimeAdd}")
 
@@ -823,7 +823,7 @@ class NSPanel(MqttPlugin):
             tMainText = self.items.return_item(weather[0].get('text'))()
             optionalLayoutIcon = ""
             optionalLayoutText = ""
-            if weather[0].get('alternativLayout', False):
+            if weather[0].get('alternativeLayout', False):
                 optionalLayoutItemValue = self.items.return_item(weather[0].get('second_icon'))()
                 optionalLayoutIcon = Icons.GetIcon(optionalLayoutItemValue)
                 if not optionalLayoutIcon:
@@ -851,10 +851,10 @@ class NSPanel(MqttPlugin):
             tF4Icon = Icons.GetIcon(self.items.return_item(weather[4].get('icon'))())
             tForecast4Val = self.items.return_item(weather[4].get('text'))()
 
-            payload=f"weatherUpdate~{tMainIcon}~{tMainText}~{tForecast1}~{tF1Icon}~{tForecast1Val}~{tForecast2}~{tF2Icon}~{tForecast2Val}~{tForecast3}~{tF3Icon}~{tForecast3Val}~{tForecast4}~{tF4Icon}~{tForecast4Val}~{optionalLayoutIcon}~{optionalLayoutText}"
+            payload = f"weatherUpdate~{tMainIcon}~{tMainText}~{tForecast1}~{tF1Icon}~{tForecast1Val}~{tForecast2}~{tF2Icon}~{tForecast2Val}~{tForecast3}~{tF3Icon}~{tForecast3Val}~{tForecast4}~{tF4Icon}~{tForecast4Val}~{optionalLayoutIcon}~{optionalLayoutText}"
             self.publish_tasmota_topic(payload=payload)
 
-    def GenerateScreensaverNotify(self, value) -> str:
+    def GenerateScreensaverNotify(self, value) -> list:
         self.logger.debug(f"GenerateScreensaverNotify called with item={value}")
 
         if not self.screensaverEnabled:
@@ -1665,18 +1665,18 @@ class NSPanel(MqttPlugin):
         if series_list:
             max_value = max(map(lambda x: x[1], series_list))
 
-        for idx, element in enumerate(series_list):
-            value = element[1]
-            if value < 0:
-                self.logger.warning(f"page={page_content['pageType']} does actually not support negativ values")
-            value = round(value / max_value * 10)
+            for idx, element in enumerate(series_list):
+                value = element[1]
+                if value < 0:
+                    self.logger.warning(f"page={page_content['pageType']} does actually not support negativ values")
+                value = round(value / max_value * 10)
 
-            xAxisLabel = ""
-            if idx % stepwidth_xAxis == 0 or idx == (nr_of_elements - 1):
-                timestamp = int(element[0] / 1000)
-                date_time = datetime.fromtimestamp(timestamp)
-                xAxisLabel = "^" + date_time.strftime("%H:%M")
-            pageData = f"{pageData}~{value}{xAxisLabel}"
+                xAxisLabel = ""
+                if idx % stepwidth_xAxis == 0 or idx == (nr_of_elements - 1):
+                    timestamp = int(element[0] / 1000)
+                    date_time = datetime.fromtimestamp(timestamp)
+                    xAxisLabel = "^" + date_time.strftime("%H:%M")
+                pageData = f"{pageData}~{value}{xAxisLabel}"
 
         out_msgs.append(pageData)
 
