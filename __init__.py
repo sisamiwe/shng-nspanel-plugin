@@ -665,7 +665,7 @@ class NSPanel(MqttPlugin):
         self.publish_tasmota_topic(payload=f"time~{time.strftime('%H:%M', time.localtime())}~{secondLine}")
 
     def send_current_date(self):
-        self.publish_tasmota_topic(payload=f"date~{time.strftime('%A, %d.%B %Y', time.localtime())}")
+        self.publish_tasmota_topic(payload=f"date~{time.strftime('%A, %d. %B %Y', time.localtime())}")
 
     def send_screensavertimeout(self):
         screensavertimeout = self.panel_config.get('config', {}).get('screensaver_timeout', 10)
@@ -972,22 +972,24 @@ class NSPanel(MqttPlugin):
 
         elif buttonAction == 'button':
             self.logger.debug(f"button called with pageName={pageName}")
-            searching = words[2]
-            if searching == 'bHome':
+            if pageName == '':
+                self.logger.warning('no pageName given')
+
+            elif pageName == 'bHome':
                 self.current_page = 0
                 self.GeneratePage(self.current_page)
 
-            elif searching == 'bNext':
+            elif pageName == 'bNext':
                 self._next_page()
                 self.GeneratePage(self.current_page)
 
-            elif searching == 'bPrev':
+            elif pageName == 'bPrev':
                 self._previous_page()
                 self.GeneratePage(self.current_page)
 
             else:
                 entities = self.panel_config['cards'][self.current_page]['entities']
-                entity = next((entity for entity in entities if entity["entity"] == searching), None)
+                entity = next((entity for entity in entities if entity["entity"] == pageName), None)
                 # Handle different types
                 # popupLight - popupShutter - popupThermo
                 if entity['type'][:5] == 'popup':
@@ -1228,32 +1230,19 @@ class NSPanel(MqttPlugin):
         else:
             self.logger.warning(f"unknown buttonAction {buttonAction}")
 
-    def GeneratePopupNotify(self, value) -> list:
-        self.logger.debug(f"GeneratePopupNotify called with item={value}")
-        content = {
-            'heading': "",
-            'text': "",
-            'buttonLeft': "",
-            'buttonRight': "",
-            'timeout': 120,
-            'size': 0,
-            'icon': "",
-            'iconColor': 'White',
-        }
+    def GeneratePopupNotify(self, content) -> list:
+        self.logger.debug(f"GeneratePopupNotify called with content={content}")
         # TODO split colors for different elements?
         color = rgb_dec565(getattr(Colors, self.panel_config.get('defaultOnColor', "White")))
 
-        for variable, value in value.items():
-            content[variable] = value
-
-        heading = content['heading']
-        text = content['text']
-        buttonLeft = content['buttonLeft']
-        buttonRight = content['buttonRight']
-        timeout = content['timeout']
-        size = content['size']
-        icon = content['icon']
-        iconColor = content['iconColor']
+        heading = content.get('heading', '')
+        text = content.get('text', '')
+        buttonLeft = content.get('buttonLeft', '')
+        buttonRight = content.get('buttonRight', '')
+        timeout = content.get('timeout', 120)
+        size = content.get('size', 0)
+        icon = Icons.GetIcon(content.get('icon', ''))
+        iconColor = rgb_dec565(getattr(Colors, content.get('iconColor', 'White')))
         out_msgs = list()
         out_msgs.append('pageType~popupNotify')
         out_msgs.append(
@@ -1672,7 +1661,7 @@ class NSPanel(MqttPlugin):
         stepwidth_xAxis = round(nr_of_elements / (nr_of_xAxis_labels - 1))
 
         heading = page_content.get('heading', 'Chart')
-        color = rgb_dec565(getattr(Colors, page_content.get('Color', 'Green')))
+        color = rgb_dec565(getattr(Colors, page_content.get('Color', 'White')))
         yAxisLabel = page_content.get('yAxisLabel', '')
         yAxisTick = '5:10'
 

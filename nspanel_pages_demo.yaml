@@ -131,9 +131,9 @@ cards:
 
   - pageType: cardChart
     heading: CPU Load
-    Color: 'Red'
+    Color: Red
     item: NSPanel1.chart
-    yAxisLabel: 'scaled to maximum'
+    yAxisLabel: scaled to maximum
 
   - pageType: cardAlarm
     entity: KeyPad

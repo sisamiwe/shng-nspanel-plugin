@@ -6,7 +6,7 @@
 {% set update_interval = 5000 %}
 
 <!--
-	Additional script tag for plugin specific javascript code go into this block
+    Additional script tag for plugin specific javascript code go into this block
 -->
 {% block pluginscripts %}
 <script>
@@ -28,165 +28,165 @@
       resize = false;
       console.log("Using default values for page length " + webif_pagelength + ", pageResize: " + resize);
     }
-		try {
+        try {
       table = $('#maintable').DataTable( {
         pageLength: webif_pagelength,
         pageResize: resize});
-		}
-		catch (e) {
-			console.warn("Datatable JS not loaded, showing standard table without reorder option " +e);
+        }
+        catch (e) {
+            console.warn("Datatable JS not loaded, showing standard table without reorder option " +e);
     }
 
   });
 </script>
 <script>
-	function handleUpdatedData(response, dataSet=null) {
-		if (dataSet === 'devices_info' || dataSet === null) {
-			var objResponse = JSON.parse(response);
-			myProto = document.getElementById(dataSet);
-			for (var device in objResponse) {
-				<!--
-				shngInsertText (device+'_source', objResponse[device]['source'], 'maintable', 10));
-				shngInsertText (device+'_powerState', objResponse[device]['powerState'], 'maintable', 10));
-				-->
-			}
-		}
-	}
+    function handleUpdatedData(response, dataSet=null) {
+        if (dataSet === 'devices_info' || dataSet === null) {
+            var objResponse = JSON.parse(response);
+            myProto = document.getElementById(dataSet);
+            for (var device in objResponse) {
+                <!--
+                shngInsertText (device+'_source', objResponse[device]['source'], 'maintable', 10));
+                shngInsertText (device+'_powerState', objResponse[device]['powerState'], 'maintable', 10));
+                -->
+            }
+        }
+    }
 </script>
 {% endblock pluginscripts %}
 
 
 {% block headtable %}
 <table class="table table-striped table-hover">
-	<tbody>
-		<tr>
-			<td class="py-1"><strong>Prompt 1</strong></td>
-			<td class="py-1">{% if 1 == 2 %}{{ _('Ja') }}{% else %}{{ _('Nein') }}{% endif %}</td>
-			<td class="py-1" width="50px"></td>
-			<td class="py-1"><strong>Prompt 4</strong></td>
-			<td class="py-1">{{ _('Wert 4') }}</td>
-			<td class="py-1" width="50px"></td>
-		</tr>
-		<tr>
-			<td class="py-1"><strong>Prompt 2</strong></td>
-			<td class="py-1">{{ _('Wert 2') }}</td>
-			<td></td>
-			<td class="py-1"><strong>Prompt 5</strong></td>
-			<td class="py-1">-</td>
-			<td></td>
-		</tr>
-		<tr>
-			<td class="py-1"><strong>Prompt 3</strong></td>
-			<td class="py-1">-</td>
-			<td></td>
-			<td class="py-1"><strong>Prompt 6</strong></td>
-			<td class="py-1">-</td>
-			<td></td>
-		</tr>
-	</tbody>
+    <tbody>
+        <tr>
+            <td class="py-1"><strong>Prompt 1</strong></td>
+            <td class="py-1">{% if 1 == 2 %}{{ _('Ja') }}{% else %}{{ _('Nein') }}{% endif %}</td>
+            <td class="py-1" width="50px"></td>
+            <td class="py-1"><strong>Prompt 4</strong></td>
+            <td class="py-1">{{ _('Wert 4') }}</td>
+            <td class="py-1" width="50px"></td>
+        </tr>
+        <tr>
+            <td class="py-1"><strong>Prompt 2</strong></td>
+            <td class="py-1">{{ _('Wert 2') }}</td>
+            <td></td>
+            <td class="py-1"><strong>Prompt 5</strong></td>
+            <td class="py-1">-</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td class="py-1"><strong>Prompt 3</strong></td>
+            <td class="py-1">-</td>
+            <td></td>
+            <td class="py-1"><strong>Prompt 6</strong></td>
+            <td class="py-1">-</td>
+            <td></td>
+        </tr>
+    </tbody>
 </table>
 {% endblock headtable %}
 
 
 <!--
-	Additional buttons for the web interface (if any are needed) - displayed below the headtable-section
+    Additional buttons for the web interface (if any are needed) - displayed below the headtable-section
 -->
 {% block buttons %}
 {% if 1==2 %}
-	<div>
-		<button id="btn1" class="btn btn-shng btn-sm" name="scan" onclick="shngPost('', {learn: 'on'})"><i class="fas fa-question"></i>&nbsp;&nbsp;&nbsp;{{ _('nach Devices suchen') }}&nbsp;</button>
-	</div>
+    <div>
+        <button id="btn1" class="btn btn-shng btn-sm" name="scan" onclick="shngPost('', {learn: 'on'})"><i class="fas fa-question"></i>&nbsp;&nbsp;&nbsp;{{ _('nach Devices suchen') }}&nbsp;</button>
+    </div>
 {% endif %}
 {% endblock %}
 
 <!--
-	Define the number of tabs for the body of the web interface (1 - 3)
+    Define the number of tabs for the body of the web interface (1 - 3)
 -->
 {% set tabcount = 2 %}
 
 
 <!--
-	Set the tab that will be visible on start, if another tab that 1 is wanted (1 - 3)
+    Set the tab that will be visible on start, if another tab that 1 is wanted (1 - 3)
 -->
 {% if item_count==0 %}
-	{% set start_tab = 2 %}
+    {% set start_tab = 2 %}
 {% endif %}
 
 
 <!--
-	Content block for the first tab of the Webinterface
+    Content block for the first tab of the Webinterface
 -->
 {% set tab1title = "<strong>" ~ p.get_shortname() ~ " Items</strong> (" ~ item_count ~ ")" %}
 {% block bodytab1 %}
 <div class="container-fluid m-2 table-resize">
-	<table id="maintable">
-		<thead>
-		<tr>
-      		<th></th>
-			<th>Item</th>
-			<th>Item Path</th>
-			<th>Item Value</th>
-			<th>Last Update</th>
-			<th>Last Change</th>
-		</tr>
-		</thead>
-		{% for item in items %}
-			<tr>
-          		<td></td>
-				<td class="py-1">{{ item._path }}</td>
-				<td class="py-1">{{ item._type }}</td>
-				<td id="{{ item.id() }}_value" class="py-1">{{ item() }}</td>
-				<td id="{{ item.id() }}_last_update" class="py-1">{{ item.last_update().strftime('%d.%m.%Y %H:%M:%S') }}</td>
-				<td id="{{ item.id() }}_last_change" class="py-1">{{ item.last_change().strftime('%d.%m.%Y %H:%M:%S') }}</td>
-			</tr>
-		{% endfor %}
-	</table>
+    <table id="maintable">
+        <thead>
+        <tr>
+              <th></th>
+            <th>Item</th>
+            <th>Item Path</th>
+            <th>Item Value</th>
+            <th>Last Update</th>
+            <th>Last Change</th>
+        </tr>
+        </thead>
+        {% for item in items %}
+            <tr>
+                  <td></td>
+                <td class="py-1">{{ item._path }}</td>
+                <td class="py-1">{{ item._type }}</td>
+                <td id="{{ item.id() }}_value" class="py-1">{{ item() }}</td>
+                <td id="{{ item.id() }}_last_update" class="py-1">{{ item.last_update().strftime('%d.%m.%Y %H:%M:%S') }}</td>
+                <td id="{{ item.id() }}_last_change" class="py-1">{{ item.last_change().strftime('%d.%m.%Y %H:%M:%S') }}</td>
+            </tr>
+        {% endfor %}
+    </table>
 </div>
 {% endblock bodytab1 %}
 
 
 <!--
-	Content block for the second tab of the Webinterface
+    Content block for the second tab of the Webinterface
 -->
 {% set tab2title = "<strong>" ~ p.get_shortname() ~ " Gerät</strong> " %}
 {% block bodytab2 %}
 <div class="container-fluid m-2 table-resize">
-	<table id="">
-		<thead>
-			<tr>
-			    <th></th>
-			    <th>Name</th>
-			    <th>Content</th>
-			</tr>
-		</thead>
-		<tbody>
-			<tr>
-          		<td></td>
-				<td class="py-1">panel_config</td>
-				<td class="py-1">{{ p.panel_config }}</td>
-			</tr>
-			<tr>
-          		<td></td>
-				<td class="py-1">panel_status</td>
-				<td class="py-1">{{ p.panel_status }}</td>
-			</tr>
-			<tr>
-          		<td></td>
-				<td class="py-1">panel_items</td>
-				<td class="py-1">{{ p.panel_items }}</td>
-			</tr>
-			<tr>
-          		<td></td>
-				<td class="py-1">panel_version / panel_model</td>
-				<td class="py-1">{{ p.panel_version }} / {{ p.panel_model }}</td>
-			</tr>
-			<tr>
-          		<td></td>
-				<td class="py-1">CustomRecv Msg Queue</td>
-				<td class="py-1">{{ custom_msg_list }}</td>
-			</tr>
-		</tbody>
-	</table>
+    <table id="">
+        <thead>
+            <tr>
+                <th></th>
+                <th>Name</th>
+                <th>Content</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                  <td></td>
+                <td class="py-1">panel_config</td>
+                <td class="py-1">{{ p.panel_config }}</td>
+            </tr>
+            <tr>
+                  <td></td>
+                <td class="py-1">panel_status</td>
+                <td class="py-1">{{ p.panel_status }}</td>
+            </tr>
+            <tr>
+                  <td></td>
+                <td class="py-1">panel_items</td>
+                <td class="py-1">{{ p.panel_items }}</td>
+            </tr>
+            <tr>
+                  <td></td>
+                <td class="py-1">panel_version / panel_model</td>
+                <td class="py-1">{{ p.panel_version }} / {{ p.panel_model }}</td>
+            </tr>
+            <tr>
+                  <td></td>
+                <td class="py-1">CustomRecv Msg Queue</td>
+                <td class="py-1">{{ custom_msg_list }}</td>
+            </tr>
+        </tbody>
+    </table>
 </div>
 
 
@@ -194,22 +194,22 @@
 
 
 <!--
-	Content block for the third tab of the Webinterface
-	If wanted, a title for the tab can be defined as:
-		{% set tab3title = "<strong>" ~ p.get_shortname() ~ " Geräte</strong>" %}
+    Content block for the third tab of the Webinterface
+    If wanted, a title for the tab can be defined as:
+        {% set tab3title = "<strong>" ~ p.get_shortname() ~ " Geräte</strong>" %}
 
-	It has to be defined before (and outside) the block bodytab3
+    It has to be defined before (and outside) the block bodytab3
 -->
 {% block bodytab3 %}
 {% endblock bodytab3 %}
 
 
 <!--
-	Content block for the fourth tab of the Webinterface
-	If wanted, a title for the tab can be defined as:
-		{% set tab4title = "<strong>" ~ p.get_shortname() ~ " Geräte</strong>" %}
+    Content block for the fourth tab of the Webinterface
+    If wanted, a title for the tab can be defined as:
+        {% set tab4title = "<strong>" ~ p.get_shortname() ~ " Geräte</strong>" %}
 
-	It has to be defined before (and outside) the block bodytab4
+    It has to be defined before (and outside) the block bodytab4
 -->
 {% block bodytab4 %}
 {% endblock bodytab4 %}
