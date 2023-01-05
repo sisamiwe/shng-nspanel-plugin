@@ -770,8 +770,7 @@ class NSPanel(MqttPlugin):
 
     def HandleScreensaver(self):
         self.publish_tasmota_topic(payload="pageType~screensaver")
-        self.HandleScreensaverIconUpdate()
-        #self.HandleScreensaverWeatherUpdate()  # Geht nur wenn NOTIFY leer wäre! Wird in Nextion so geregelt.       
+        self.HandleScreensaverWeatherUpdate()  # Geht nur wenn NOTIFY leer wäre! Wird in Nextion so geregelt.
         self.HandleScreensaverColors()  # Geht nur wenn NOTIFY leer wäre! Wird in Nextion so geregelt.
 
     def HandleScreensaverColors(self):
@@ -802,16 +801,20 @@ class NSPanel(MqttPlugin):
         self.publish_tasmota_topic(
             payload=f"color~{background}~{timestr}~{timeAPPM}~{date}~{tMainIcon}~{tMainText}~{tForecast1}~{tForecast2}~{tForecast3}~{tForecast4}~{tF1Icon}~{tF2Icon}~{tF3Icon}~{tF4Icon}~{tForecast1Val}~{tForecast2Val}~{tForecast3Val}~{tForecast4Val}~{bar}~{tMRIcon}~{tMR}~{tTimeAdd}")
 
-    def HandleScreensaverIconUpdate(self):
-        self.logger.info('Function HandleScreensaverIconUpdate to be implemented')
+    def get_status_icons(self) -> str:
+        self.logger.debug("get_status_icons called to be implemented")
         icon1 = Icons.GetIcon('wifi')
         icon2 = Icons.GetIcon('wifi-alert')
         icon1Color = rgb_dec565(getattr(Colors, 'White'))
         icon2Color = rgb_dec565(getattr(Colors, 'White'))
         icon1Font = 1
         icon2Font = 1
-        self.publish_tasmota_topic(
-            payload=f"statusUpdate~{icon1}~{icon1Color}~{icon2}~{icon2Color}~{icon1Font}~{icon2Font}")    
+        return f"{icon1}~{icon1Color}~{icon2}~{icon2Color}~{icon1Font}~{icon2Font}"
+
+    def HandleScreensaverIconUpdate(self):
+        self.logger.info('Function HandleScreensaverIconUpdate')
+        status_icons = self.get_status_icons()
+        self.publish_tasmota_topic(payload=f"statusUpdate~{status_icons}")
 
     def HandleScreensaverWeatherUpdate(self):
         self.logger.info('Function HandleScreensaverWeatherUpdate')
@@ -851,7 +854,8 @@ class NSPanel(MqttPlugin):
             tF4Icon = Icons.GetIcon(self.items.return_item(weather[4].get('icon'))())
             tForecast4Val = self.items.return_item(weather[4].get('text'))()
 
-            payload = f"weatherUpdate~{tMainIcon}~{tMainText}~{tForecast1}~{tF1Icon}~{tForecast1Val}~{tForecast2}~{tF2Icon}~{tForecast2Val}~{tForecast3}~{tF3Icon}~{tForecast3Val}~{tForecast4}~{tF4Icon}~{tForecast4Val}~{optionalLayoutIcon}~{optionalLayoutText}"
+            status_icons = self.get_status_icons()
+            payload = f"weatherUpdate~{tMainIcon}~{tMainText}~{tForecast1}~{tF1Icon}~{tForecast1Val}~{tForecast2}~{tF2Icon}~{tForecast2Val}~{tForecast3}~{tF3Icon}~{tForecast3Val}~{tForecast4}~{tF4Icon}~{tForecast4Val}~{optionalLayoutIcon}~{optionalLayoutText}~{status_icons}"
             self.publish_tasmota_topic(payload=payload)
 
     def GenerateScreensaverNotify(self, value) -> list:
