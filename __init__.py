@@ -91,7 +91,7 @@ class NSPanel(MqttPlugin):
 
         # define properties
         self.current_page = 0
-        self.panel_status = {'online': False, 'online_timeout': datetime.now(), 'uptime': '-', 'sensors': {}, 'relay': {}, 'screensaverActive': False}
+        self.panel_status = {'online': False, 'online_timeout': datetime.now(), 'uptime': '-', 'sensors': {}, 'relay': {}, 'screensaver_active': False}
         self.custom_msg_queue = queue.Queue(maxsize=50)  # Queue containing last 50 messages containing "CustomRecv"
         self.panel_items = {}
         self.panel_config_items = []
@@ -733,20 +733,15 @@ class NSPanel(MqttPlugin):
         words = content_list
 
         if typ == 'event':
-            self.panel_status['screensaver_active'] = False
             if method == 'startup':
-                self.panel_status['screensaver_active'] = True
                 self.panel_version = words[2]
                 self.panel_model = words[3]
                 self.HandleStartupProcess()
-                self.current_page = 0
                 self.HandleScreensaver()
 
             elif method == 'sleepReached':
                 # event,sleepReached,cardEntities
                 self.useMediaEvents = False
-                self.panel_status['screensaver_active'] = True
-                self.current_page = 0
                 self.HandleScreensaver()
 
             elif method == 'pageOpenDetail':
@@ -773,6 +768,8 @@ class NSPanel(MqttPlugin):
         self.send_panel_brightness()
 
     def HandleScreensaver(self):
+        self.panel_status['screensaver_active'] = True
+        self.current_page = 0
         self.publish_tasmota_topic(payload="pageType~screensaver")
         self.HandleScreensaverWeatherUpdate()  # Geht nur wenn NOTIFY leer wäre! Wird in Nextion so geregelt.
         self.HandleScreensaverColors()  # Geht nur wenn NOTIFY leer wäre! Wird in Nextion so geregelt.
@@ -911,7 +908,10 @@ class NSPanel(MqttPlugin):
             self.GeneratePage(pageName[8:len(pageName)])
 
         if buttonAction == 'bExit':
-            self.GeneratePage(self.current_page)
+            if pageName == 'popupNotify' and self.panel_status['screensaver_active']:
+                self.HandleScreensaver()
+            else:
+                self.GeneratePage(self.current_page)
 
         elif buttonAction == 'OnOff':
             # TODO don't use direct items
@@ -1253,6 +1253,7 @@ class NSPanel(MqttPlugin):
 
         self.logger.debug(f"GeneratePage called with page={page}")
 
+        self.panel_status['screensaver_active'] = False
         page_content = self.panel_config['cards'][page]
 
         if page_content['pageType'] == 'cardEntities':
