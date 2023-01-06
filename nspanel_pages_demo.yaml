@@ -12,9 +12,9 @@ config:
     - time: "23:00:00"
       value: 0
   update_mode: auto-notify
-  defaultOffColor: Off
-  defaultOnColor: On
-  defaultColor: Off
+  defaultOffColor: 'Off'
+  defaultOnColor: 'On'
+  defaultColor: 'Off'
   defaultBackgroundColor: Black
   screensaver:
     statusIconLeft: NSPanel1.screensaver.statusIconLeft
@@ -41,6 +41,61 @@ config:
       text: NSPanel1.Wetter.Tag4.Text # only displayed if alternativeLayout is False
 
 cards:
+  - pageType: cardEntities
+    heading: cardEntities Demo1
+    entities:
+      - entity: page0_id0
+        type: light
+        item: NSPanel1.Licht
+        iconId: lightbulb
+        displayNameEntity: Licht
+        onValue: 100
+        iconColor: Red
+      - entity: page0_id1
+        type: shutter
+        item: NSPanel1.Rolladen.move
+        item_stop: NSPanel1.Rolladen.stop # TODO use item
+        iconId: window-shutter
+        displayNameEntity: Rolladen
+      - entity: page0_id2
+        type: delete
+        item: 
+        iconId: 
+        displayNameEntity: Steckdose
+        optionalValue: 1
+      - entity: page0_id3
+        type: text
+        item: NSPanel1.Text
+        iconId: text
+        displayNameEntity: Text
+        optionalValue: optional # TODO display text of item instead of static text
+  - pageType: cardEntities
+    heading: cardEntities Demo2
+    entities:
+      - entity: page1_id0
+        type: button
+        item: NSPanel1.Button
+        iconId: gesture-tap
+        displayNameEntity: Button
+        optionalValue: Mach was
+      - entity: page1_id1
+        type: switch
+        item: NSPanel1.Schalter
+        iconId: electric-switch
+        displayNameEntity: Schalter
+      - entity: page1_id2
+        type: number
+        item: NSPanel1.Nummer
+        iconId: brightness-percent
+        displayNameEntity: Bereich
+      - entity: page1_id3
+        type: input_sel
+        item: NSPanel1.Auswahl
+        iconId: format-list-bulleted
+        displayNameEntity: Auswahl
+        options: Szene1?Szene2?Szene3?Szene4?Szene5
+
+
 #   - pageType: cardGrid
 #     heading: Arbeitszimmer
 #     entities:

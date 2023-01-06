@@ -995,7 +995,7 @@ class NSPanel(MqttPlugin):
                 if entity['type'][:5] == 'popup':
                     popup_type = entity['type']
                     heading = entity['displayNameEntity']
-                    iconId = Icons.GetIcon(entity['iconId'])
+                    iconId = Icons.GetIcon(entity.get('iconId', ''))
                     self.SendToPanel(f"pageType~{popup_type}~{heading}~{entity['entity']}~{iconId}")
                     # popupTimer appears without interaction
                 # button / light / switch / text / etc.
@@ -1005,6 +1005,9 @@ class NSPanel(MqttPlugin):
                     if item is not None:
                         if entity['type'] == 'text':
                             self.logger.debug(f"item={item.id()} will get no update because it's text")
+                        elif entity['type'] == 'input_sel':
+                            # Force update of item
+                            item(item(), self.get_shortname())
                         else:
                             value = item()
                             value = entity.get('offValue', 0) if value else entity.get('onValue', 1)
@@ -1197,6 +1200,19 @@ class NSPanel(MqttPlugin):
 
         elif buttonAction[:6] == 'timer-':
             self.logger.debug(f"timer custom command to be implemented")
+
+        elif buttonAction[:5] == 'mode-':
+            action = buttonAction[5:] # unused
+            parameter = words[4]
+            self.logger.debug(f"mode called with pageName={pageName}, action={action} and parameter={parameter}")
+            entities = self.panel_config['cards'][self.current_page]['entities']
+            entity = next((entity for entity in entities if entity["entity"] == pageName), None)
+            options = entity['options']
+            option_list = options.split("?")
+            item_name = entity['item']
+            item = self.items.return_item(item_name)
+            item(option_list[int(parameter)], self.get_shortname())
+            self.GeneratePage(self.current_page)
 
         elif buttonAction[:6] == 'media-':
             action = buttonAction[6:]
@@ -1731,31 +1747,29 @@ class NSPanel(MqttPlugin):
             if entity['type'] in ['switch', 'light']:
                 value = int(value)
 
-            iconid = Icons.GetIcon(entity['iconId'])
+            iconid = Icons.GetIcon(entity.get('iconId',''))
             if iconid == '':
-                iconid = entity['iconId']
+                iconid = entity.get('iconId', '')
 
+            iconColor = entity.get('iconColor', 'White')
             if page_content['pageType'] == 'cardGrid':
-                if value:
-                    iconColor = rgb_dec565(
-                        getattr(Colors, entity.get('onColor', self.panel_config['config']['defaultOnColor'])))
-                else:
-                    iconColor = rgb_dec565(
-                        getattr(Colors, entity.get('offColor', self.panel_config['config']['defaultOffColor'])))
-
-            else:
-                iconColor = entity.get('iconColor')
-
-            # define displayNameEntity
-            displayNameEntity = entity.get('displayNameEntity')
-
-            # handle cardGrid with text
-            if page_content['pageType'] == 'cardGrid':
+                self.logger.debug(f"123")
                 if entity['type'] == 'text':
-                    iconColor = rgb_dec565(
-                        getattr(Colors, entity.get('Color', self.panel_config['config']['defaultColor'])))
                     iconid = str(value)[:4]  # max 4 characters
+                elif value:
+                    iconColor = entity.get('onColor', self.panel_config['config'].get('defaultOnColor', 'On'))
+                else:
+                    iconColor = entity.get('offColor', self.panel_config['config'].get('defaultOffColor', 'Off'))
 
+            elif page_content['pageType'] == 'cardEntities':
+                if entity['type'] == 'number':
+                    min_value = entity.get('min_value', 0)
+                    max_value = entity.get('max_value', 100)
+                    value = f"{value}|{min_value}|{max_value}"
+
+            displayNameEntity = entity.get('displayNameEntity', '')
+
+            iconColor = rgb_dec565(getattr(Colors, str(iconColor)))
             pageData = (
                 f"{pageData}~"
                 f"{entity['type']}~"
@@ -1816,7 +1830,7 @@ class NSPanel(MqttPlugin):
         sliderPos = 50
         secondrow = 'Zweite Reihe'
         textPosition = 'Position'
-        icon1 = 1
+        icon1 = '' # leave empty
         iconUp = 2
         iconStop = 3
         iconDown = 4
@@ -1847,15 +1861,25 @@ class NSPanel(MqttPlugin):
             f"entityUpdateDetail~{entity}~{icon_id}~{icon_color}~{heading}~{mode}~mode1~mode1?mode2?mode3~{heading}~{mode}~mode1~mode1?mode2?mode3~{heading}~{mode}~mode1~mode1?mode2?mode3~")
         return out_msgs
 
-    def GenerateDetailInSel(self, entity) -> list:
-        self.logger.debug(f"GenerateDetailInSel called with entity={entity} to be implemented")
-        icon_id = 1
-        icon_color = 65535
-        input_sel = 'Input Select'
-        state = 'State'
-        options = 'option1?option2?option3'
+    def GenerateDetailInSel(self, pagename) -> list:
+        self.logger.debug(f"GenerateDetailInSel called with entity={pagename}")
+        entities = self.panel_config['cards'][self.current_page]['entities']
+        entity = next((entity for entity in entities if entity.get('entity', '') == pagename), None)
+        entityid = entity.get('entity', '')
+        # iconId = entity.get('iconId', '') # not used
+        iconColor = entity.get('iconColor', 'White')
+        modeType = '' # not used
+        state = ''
+        itemName = entity.get('item', None)
+        item = self.items.return_item(itemName)
+        if item is not None:
+            state = item()
+            self.logger.debug(f"item={item} itemValue={state}")
+        options = entity.get('options', '')
+
+        iconColor = rgb_dec565(getattr(Colors, iconColor))
         out_msgs = list()
-        out_msgs.append(f"entityUpdateDetail2~{entity}~{icon_id}~{icon_color}~{input_sel}~{state}~{options}")
+        out_msgs.append(f"entityUpdateDetail2~{entityid}~~{iconColor}~{modeType}~{state}~{options}")
         return out_msgs
 
     def GenerateDetailTimer(self, pagename) -> list:

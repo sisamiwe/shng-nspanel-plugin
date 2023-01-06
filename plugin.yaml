@@ -250,6 +250,34 @@ item_structs:
                     type: str
                     initial_value: -17 °C
 
+        Licht:
+            type: bool
+
+        Rolladen:
+            move:
+                type: bool
+                enforce_updates: true
+            stop:
+                type: bool
+                enforce_updates: true
+
+        Text:
+            type: bool
+
+        Button:
+            type: str
+
+        Schalter:
+            type: bool
+
+        Nummer:
+            type: num
+
+        Auswahl:
+            type: str
+            enforce_updates: true
+            initial_value: 'Szene1'
+
     simulation:
         name: Simulation eines NSPanels
 
