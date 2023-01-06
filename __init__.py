@@ -919,9 +919,11 @@ class NSPanel(MqttPlugin):
                 self.GeneratePage(self.current_page)
 
         elif buttonAction == 'OnOff':
-            # TODO don't use direct items
             value = int(words[4])
-            item = self.items.return_item(pageName)
+            entities = self.panel_config['cards'][self.current_page]['entities']
+            entity = next((entity for entity in entities if entity["entity"] == pageName), None)
+            item_name = entity['item']
+            item = self.items.return_item(item_name)
             if item is not None:
                 self.logger.debug(f"item={item.id()} will be set to new value={value}")
                 item(value, self.get_shortname())
@@ -1044,34 +1046,38 @@ class NSPanel(MqttPlugin):
         elif buttonAction == 'up':
             # shutter moving until upper position
             value = 0
-            item = self.items.return_item(words[2])
+            entities = self.panel_config['cards'][self.current_page]['entities']
+            entity = next((entity for entity in entities if entity["entity"] == pageName), None)
+            item_name = entity['item']
+            item = self.items.return_item(item_name)
 
             if item is not None:
                 self.logger.debug(f"item={item.id()} will be set to new value={value}")
                 item(value, self.get_shortname())
-            self.GeneratePage(self.current_page)
 
         elif buttonAction == 'down':
             # shutter moving down until down position
             value = 255
-            item = self.items.return_item(words[2])
-            self.logger.debug(item)
+            entities = self.panel_config['cards'][self.current_page]['entities']
+            entity = next((entity for entity in entities if entity["entity"] == pageName), None)
+            item_name = entity['item']
+            item = self.items.return_item(item_name)
 
             if item is not None:
                 self.logger.debug(f"item={item.id()} will be set to new value={value}")
                 item(value, self.get_shortname())
-            self.GeneratePage(self.current_page)
 
         elif buttonAction == 'stop':
             # shutter stops
             value = 1
-            item = self.items.return_item(
-                "EG.Arbeiten.Rollladen.stop")  # Das ITEM muss noch mit Config verknüpft werden
+            entities = self.panel_config['cards'][self.current_page]['entities']
+            entity = next((entity for entity in entities if entity["entity"] == pageName), None)
+            item_name = entity['item_stop']
+            item = self.items.return_item(item_name)
 
             if item is not None:
                 self.logger.debug(f"item={item.id()} will be set to new value={value}")
                 item(value, self.get_shortname())
-            self.GeneratePage(self.current_page)
 
         # Alarmpage Button Handle
         elif buttonAction == 'Alarm.Modus1':  # Anwesend
@@ -1774,6 +1780,8 @@ class NSPanel(MqttPlugin):
                     min_value = entity.get('min_value', 0)
                     max_value = entity.get('max_value', 100)
                     value = f"{value}|{min_value}|{max_value}"
+                elif entity['type'] == 'button':
+                    value = entity.get('optionalValue', 'Press')
 
             displayNameEntity = entity.get('displayNameEntity', '')
 

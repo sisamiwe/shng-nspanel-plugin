@@ -254,8 +254,8 @@ item_structs:
             type: bool
 
         Rolladen:
-            move:
-                type: bool
+            pos:
+                type: num
                 enforce_updates: true
             stop:
                 type: bool
@@ -266,7 +266,8 @@ item_structs:
             initial_value: '33 %'
 
         Button:
-            type: str
+            type: bool
+            enforce_updates: true
 
         Schalter:
             type: bool

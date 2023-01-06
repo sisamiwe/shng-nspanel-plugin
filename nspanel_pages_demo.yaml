@@ -42,7 +42,7 @@ config:
 
 cards:
   - pageType: cardEntities
-    heading: cardEntities Demo1
+    heading: cardEntities Demo 1
     entities:
       - entity: page0_id0
         type: light
@@ -53,7 +53,7 @@ cards:
         iconColor: Red
       - entity: page0_id1
         type: shutter
-        item: NSPanel1.Rolladen.move
+        item: NSPanel1.Rolladen.pos
         item_stop: NSPanel1.Rolladen.stop # TODO use item
         iconId: window-shutter
         displayNameEntity: Rolladen
@@ -65,7 +65,7 @@ cards:
         iconId: text
         displayNameEntity: Text
   - pageType: cardEntities
-    heading: cardEntities Demo2
+    heading: cardEntities Demo 2
     entities:
       - entity: page1_id0
         type: button
@@ -73,6 +73,8 @@ cards:
         iconId: gesture-tap
         displayNameEntity: Button
         optionalValue: Mach was
+        onValue: True
+        offValue: True
       - entity: page1_id1
         type: switch
         item: NSPanel1.Schalter
@@ -124,91 +126,6 @@ cards:
         item: NSPanel1.timer
         iconId: timer
         displayNameEntity: Timer
-
-#   - pageType: cardGrid
-#     heading: Arbeitszimmer
-#     entities:
-#       - entity: timer_id
-#         type: timer # timerPopup starts automatically without calling pageType~popupTimer
-#         item: MyTimer
-#         iconId: timer
-#         displayNameEntity: Timer
-#       - entity: licht1_id
-#         type: popupLight
-#         iconId: lightbulb-fluorescent-tube-outline
-#         displayNameEntity: Stern
-#         item_onoff: Licht1.Unten.OnOff
-#         item_brightness: Licht1.Brightness
-#         min_brightness: 1
-#         max_brightness: 255
-#         item_temperature: Licht1.Temperature
-#         min_temperature: 0
-#         max_temperature: 255
-#         item_color: Licht1.Color
-  #     - entity: DEF
-  #       type: switch
-  #       item: EG.Arbeiten.EDV
-  #       iconId: power-socket-de
-  #       iconColor: 17299
-  #       displayNameEntity: Steckdose EDV
-  #       optionalValue: 0
-  #     - entity: GHJ
-  #       type: text
-  #       item: EG.Arbeiten.Heizung.ist
-  #       iconId: temperature-celsius
-  #       iconColor: 17299
-  #       displayNameEntity: Temperatur
-  #       optionalValue: 22
-  #     - entity: KLM
-  #       type: shutter
-  #       item: EG.Arbeiten.Rollladen.pos
-  #       iconId: window-shutter
-  #       iconColor: 17299
-  #       displayNameEntity: Rolladen
-  #       optionalValue: 1
-
-
-  # - pageType: cardGrid
-  #   heading: Arbeitszimmer
-  #   entities:
-  #     - entity: B1
-  #       type: light
-  #       item: OG.Arbeit.Licht1
-  #       iconId: lightbulb
-  #       onColor: 65222
-  #       offColor: 17299
-  #       displayNameEntity: Licht
-  #       optionalValue: 0
-  #     - entity: B2
-  #       type: light
-  #       item: KG.Technik.Steckdose2
-  #       iconId: star-outline
-  #       onColor: 65222
-  #       offColor: 17299
-  #       displayNameEntity: Stern
-  #       optionalValue: 0
-  #     - entity: B3
-  #       type: text
-  #       item: OG.Arbeit.Temperatur
-  #       iconId: 20
-  #       onColor: 65222
-  #       offColor: 15299
-  #       displayNameEntity: Temperatur
-  #     - entity: B4
-  #       type: switch
-  #       item: OG.Arbeit.Steckdose1
-  #       iconId: power-socket-de
-  #       onColor: 65222
-  #       offColor: 17299
-  #       displayNameEntity: Steckdose
-  #     - entity: B5
-  #       type: switch
-  #       item: OG.Arbeit.Steckdose2
-  #       iconId: power-socket-de
-  #       onColor: 65222
-  #       offColor: 17299
-  #       displayNameEntity: Steckdose
-
  
     # pageType: cardMedia
     # entity: MediaPlayer
