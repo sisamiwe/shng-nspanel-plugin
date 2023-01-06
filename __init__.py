@@ -1019,6 +1019,10 @@ class NSPanel(MqttPlugin):
                             self.logger.debug(f"item={item.id()} will be set to new value={value}")
                             item(value, self.get_shortname())
 
+                        # Reload Page with new item value
+                        # perhaps a complete reload with self.GeneratePage(self.current_page) is necessary in other cases
+                        self.SendToPanel(self.GeneratePageElements(self.current_page))
+
         elif buttonAction == 'tempUpd':
             value = int(words[4]) / 10
             page_content = self.panel_config['cards'][self.current_page]
@@ -1747,7 +1751,7 @@ class NSPanel(MqttPlugin):
             if idx > maxItems:
                 break
 
-            item = self.items.return_item(entity['item'])
+            item = self.items.return_item(entity.get('item', None))
             value = item() if item else entity.get('optionalValue', 0)
             if entity['type'] in ['switch', 'light']:
                 value = int(value)
@@ -1758,7 +1762,6 @@ class NSPanel(MqttPlugin):
 
             iconColor = entity.get('iconColor', 'White')
             if page_content['pageType'] == 'cardGrid':
-                self.logger.debug(f"123")
                 if entity['type'] == 'text':
                     iconid = str(value)[:4]  # max 4 characters
                 elif value:
@@ -1899,15 +1902,17 @@ class NSPanel(MqttPlugin):
         buttoncenter = entity.get('buttoncenter', '')  # cancel
         buttonright = entity.get('buttonright', '')  # finish
         item = self.items.return_item(entity.get('item', None))
+        value = 0
         if item is not None:
             value = item()
-            seconds = item() % 60
-            minutes = int((value - seconds) / 60)
-            out_msgs = list()
-            # first entity is used to identify the correct page, the second is used for the button event
-            out_msgs.append(
-                f"entityUpdateDetail~{entity['entity']}~~65535~{entity['entity']}~{minutes}~{seconds}~{editable}~{actionleft}~{actioncenter}~{actionright}~{buttonleft}~{buttoncenter}~{buttonright}")
-            return out_msgs
+
+        seconds = item() % 60
+        minutes = int((value - seconds) / 60)
+        out_msgs = list()
+        # first entity is used to identify the correct page, the second is used for the button event
+        out_msgs.append(
+            f"entityUpdateDetail~{entity['entity']}~~65535~{entity['entity']}~{minutes}~{seconds}~{editable}~{actionleft}~{actioncenter}~{actionright}~{buttonleft}~{buttoncenter}~{buttonright}")
+        return out_msgs
 
     def SendToPanel(self, payload):
         self.logger.debug(f"SendToPanel called with payload={payload}")

@@ -262,7 +262,8 @@ item_structs:
                 enforce_updates: true
 
         Text:
-            type: bool
+            type: str
+            initial_value: '33 %'
 
         Button:
             type: str

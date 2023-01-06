@@ -59,16 +59,11 @@ cards:
         displayNameEntity: Rolladen
       - entity: page0_id2
         type: delete
-        item: 
-        iconId: 
-        displayNameEntity: Steckdose
-        optionalValue: 1
       - entity: page0_id3
         type: text
         item: NSPanel1.Text
         iconId: text
         displayNameEntity: Text
-        optionalValue: optional # TODO display text of item instead of static text
   - pageType: cardEntities
     heading: cardEntities Demo2
     entities:
@@ -95,6 +90,40 @@ cards:
         displayNameEntity: Auswahl
         options: Szene1?Szene2?Szene3?Szene4?Szene5
 
+  - pageType: cardGrid
+    heading: cardGrid Demo
+    entities:
+      - entity: page2_id0
+        type: light # button/switch/number behave exacty same
+        item: NSPanel1.Licht
+        iconId: lightbulb
+        displayNameEntity: Licht
+        onColor: Red
+        offColor: Green
+      - entity: page2_id1
+        type: shutter
+        item: NSPanel1.Rolladen.move
+        item_stop: NSPanel1.Rolladen.stop # TODO use item
+        iconId: window-shutter
+        displayNameEntity: Rolladen
+      - entity: page2_id2
+        type: delete # means display no element
+      - entity: page2_id3
+        type: text
+        item: NSPanel1.Text
+        iconId: text
+        displayNameEntity: Text
+      - entity: page2_id4
+        type: input_sel
+        item: NSPanel1.Auswahl
+        iconId: format-list-bulleted
+        displayNameEntity: Auswahl
+        options: Szene1?Szene2?Szene3?Szene4?Szene5
+      - entity: page2_id5
+        type: timer
+        item: NSPanel1.timer
+        iconId: timer
+        displayNameEntity: Timer
 
 #   - pageType: cardGrid
 #     heading: Arbeitszimmer
