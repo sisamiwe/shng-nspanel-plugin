@@ -54,7 +54,7 @@ cards:
       - entity: page0_id1
         type: shutter
         item: NSPanel1.Rolladen.pos
-        item_stop: NSPanel1.Rolladen.stop # TODO use item
+        item_stop: NSPanel1.Rolladen.stop
         iconId: window-shutter
         displayNameEntity: Rolladen
       - entity: page0_id2
@@ -93,10 +93,10 @@ cards:
         options: Szene1?Szene2?Szene3?Szene4?Szene5
 
   - pageType: cardGrid
-    heading: cardGrid Demo
+    heading: cardGrid Demo 1
     entities:
       - entity: page2_id0
-        type: light # button/switch/number behave exacty same
+        type: light # button/switch/number behave exactly same
         item: NSPanel1.Licht
         iconId: lightbulb
         displayNameEntity: Licht
@@ -105,7 +105,7 @@ cards:
       - entity: page2_id1
         type: shutter
         item: NSPanel1.Rolladen.move
-        item_stop: NSPanel1.Rolladen.stop # TODO use item
+        item_stop: NSPanel1.Rolladen.stop
         iconId: window-shutter
         displayNameEntity: Rolladen
       - entity: page2_id2
@@ -126,74 +126,123 @@ cards:
         item: NSPanel1.timer
         iconId: timer
         displayNameEntity: Timer
- 
-    # pageType: cardMedia
-    # entity: MediaPlayer
 
-  - pageType: cardChart
-    heading: CPU Load
-    Color: Red
-    item: NSPanel1.chart
-    yAxisLabel: scaled to maximum
+  - pageType: cardGrid
+    heading: cardGrid Demo 2
+    entities:
+      - entity: page3_id0
+        type: popupLight
+        iconId: brightness-5
+        displayNameEntity: Licht Dim
+        item: NSPanel1.Licht
+        item_brightness: NSPanel1.Licht.Helligkeit
+        min_brightness: 1
+        max_brightness: 255
+      - entity: page3_id1
+        type: popupLight
+        iconId: gradient-horizontal
+        displayNameEntity: Licht TW
+        item: NSPanel1.Licht
+        item_brightness: NSPanel1.Licht.Helligkeit
+        min_brightness: 1
+        max_brightness: 255
+        item_temperature: NSPanel1.Licht.Farbtemperatur
+        min_temperature: 0
+        max_temperature: 255
+      - entity: page3_id2
+        type: popupLight
+        iconId: palette
+        displayNameEntity: Licht RGB
+        item: NSPanel1.Licht
+        item_color: NSPanel1.Licht.Farbe
+      - entity: page3_id3
+        type: popupLight
+        iconId: lightbulb-on-50
+        displayNameEntity: Licht TW+RGB
+        item: NSPanel1.Licht
+        item_brightness: NSPanel1.Licht.Helligkeit
+        min_brightness: 1
+        max_brightness: 255
+        item_temperature: NSPanel1.Licht.Farbtemperatur
+        min_temperature: 0
+        max_temperature: 255
+        item_color: NSPanel1.Licht.Farbe
+      - entity: page3_id4
+        type: popupShutter
+        iconId: window-shutter-settings
+        displayNameEntity: Jalousie
+ 
+  - pageType: cardMedia
+    entity: page4
+    heading: cardMedia Demo
+    # TODO
+
+  - pageType: cardThermo
+    entity: page5
+    heading: cardThermo Demo
+    items:
+        item_temp_current: NSPanel1.Heizung.Istwert # an item for the actual temperature
+        item_temp_set:     NSPanel1.Heizung.Sollwert # an item for the set temperature
+        item_mode:         NSPanel1.Heizung.Betriebsart # an item for comfort / standby (3x bit or 1x byte, optional) RTR Betriebsmodus (1-4)
+        item_night:         # an item for night (3x bit or 1x byte, optional)
+        item_frost:         # an item for frost (3x bit or 1x byte, optional)
+        item_state:         # an item for the current state of the actuator (optional) RTR Betriebszustand -> raumtemp.eg.wohnen.rtr.reglerstatus.allgemein
+        item_text:          # an item for additional text, (optional)
+        minSetValue: 5     # min Value which can be set (decimal degrees)
+        maxSetValue: 30    # max Value which can be set (decimal degrees)
+        stepSetValue: 0.5    # step for Value which can be set (decimal degrees)
+        popupThermoMode1: false
 
   - pageType: cardAlarm
-    entity: KeyPad
+    entity: page6
     items:
         arm1: "Anwesend"
         arm2: "Abwesend"
         arm3: "Urlaub"
         arm4: "Gäste"
         Password: "1234"
-        arm1ActionName: Alarm.Modus1
-        arm2ActionName: Alarm.Modus2
-        arm3ActionName: Alarm.Modus3
-        arm4ActionName: Alarm.Modus4  
-          
+        arm1ActionName: NSPanel1.Alarm.Modus1
+        arm2ActionName: NSPanel1.Alarm.Modus2
+        arm3ActionName: NSPanel1.Alarm.Modus3
+        arm4ActionName: NSPanel1.Alarm.Modus4
 
-  #- pageType: cardQR
-  #  heading: "Gäste WLAN"
-  #  iconColor: "Red"
-  #  hidePassword: false
-  #  items:
-  #      SSID: wlan.SSID
-  #      Password: wlan.PW
+  - pageType: cardQR
+    entity: page7
+    heading: cardQR Demo
+    iconColor: White
+    hidePassword: false
+    items:
+        SSID: NSPanel1.wlan.SSID
+        Password: NSPanel1.wlan.PW
 
+  - pageType: cardPower
+    entity: page8
+    heading: cardPower Demo
+    itemHome: NSPanel1.Power.Home # item
+    iconHome: 'battery-charging-60'
+    colorHome: 'Green' # otherwise default is used
+    entities:
+        - entity: LeftTop # empty element are not displayed
+        - entity: LeftMiddle
+          item: NSPanel1.Power.Links # item
+          icon: 'solar-power-variant'
+          speed: 0 # TODO: use item to change speed?
+        - entity: LeftBottom
+        - entity: RightTop
+        - entity: RightMiddle
+          item: NSPanel1.Power.Rechts1
+          icon: 'car'
+          color: 'Green'
+          speed: 2 # use -1 for other direction
+        - entity: RightBottom
+          item: NSPanel1.Power.Rechts2
+          icon: 'car'
+          color: 'Red'
+          speed: -1
 
-  # - pageType: cardThermo
-  #   entity: Klima2
-  #   heading: Büro Thermostat
-  #   useColor: true
-  #   subPage: false
-  #   parent: undefined
-  #   items:
-  #       item_temp_current: EG.Arbeiten.Heizung.ist # an item for the actual temperature
-  #       item_temp_set:     EG.Arbeiten.Heizung.soll # an item for the set temperature
-  #       item_mode:         EG.Arbeiten.Heizung.mode # an item for comfort / standby (3x bit or 1x byte, optional) RTR Betriebsmodus (1-4)
-  #       item_night:         # an item for night (3x bit or 1x byte, optional)
-  #       item_frost:         # an item for frost (3x bit or 1x byte, optional)
-  #       item_state:         # an item for the current state of the actuator (optional) RTR Betriebszustand -> raumtemp.eg.wohnen.rtr.reglerstatus.allgemein
-  #       item_text:          # an item for additional text, (optional)
-  #       minSetValue: 50     # min Value which can be set (decimal degrees)
-  #       maxSetValue: 300    # max Value which can be set (decimal degrees)
-  #       stepSetValue: 50    # step for Value which can be set (decimal degrees)
-  #       popupThermoMode1: false
-
-  # - pageType: cardPower
-  #   heading: Batteriespeicher
-  #   itemHome: Batterie # item
-  #   iconHome: 'battery-charging-60'
-  #   colorHome: 'Red' # otherwise default is used
-  #   entities:
-  #       - entity: LeftTop # an empty element is not displayed
-  #       - entity: LeftMiddle
-  #         item: Solarertrag # item
-  #         icon: 'solar-power-variant'
-  #         color: 'Green'
-  #         speed: 1 # TODO: use item to change speed?
-  #       - entity: LeftBottom
-  #       - entity: RightTop
-  #       - entity: RightMiddle
-  #         item: Auto
-  #         icon: 'car'
-  #         speed: 1 # use -1 for other direction
-
+  - pageType: cardChart
+    entity: page9
+    heading: cardChart Demo
+    Color: Red
+    item: NSPanel1.chart
+    yAxisLabel: scaled to maximum

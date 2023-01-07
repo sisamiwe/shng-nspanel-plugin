@@ -922,21 +922,12 @@ class NSPanel(MqttPlugin):
             value = int(words[4])
             entities = self.panel_config['cards'][self.current_page]['entities']
             entity = next((entity for entity in entities if entity["entity"] == pageName), None)
-            item_name = entity['item']
+            item_name = entity.get('item', '')
             item = self.items.return_item(item_name)
             if item is not None:
+                value = entity.get('onValue', 1) if value else entity.get('offValue', 0)
                 self.logger.debug(f"item={item.id()} will be set to new value={value}")
                 item(value, self.get_shortname())
-            # get item from entity
-            else:
-                entities = self.panel_config['cards'][self.current_page]['entities']
-                entity = next((entity for entity in entities if entity["entity"] == pageName), None)
-                item_name = entity.get('item_onoff', '')
-                item = self.items.return_item(item_name)
-                if item is not None:
-                    value = entity.get('onValue', 1) if value else entity.get('offValue', 0)
-                    self.logger.debug(f"item={item.id()} will be set to new value={value}")
-                    item(value, self.get_shortname())
 
         elif buttonAction == 'brightnessSlider':
             value = int(words[4])
@@ -1368,6 +1359,7 @@ class NSPanel(MqttPlugin):
 
         mode = self.items.return_item(items.get('item_mode', None))()
         if mode is not None:
+            mode = mode if (0 < mode < 5) else 1
             modes = {1: ('Komfort', Icons.GetIcon('alpha-a-circle'), (rgb_dec565(Colors.On), 33840, 33840, 33840),
                          (1, 0, 0, 0)),
                      2: ('Standby', Icons.GetIcon('power-standby'), (33840, rgb_dec565(Colors.On), 33840, 33840),
@@ -1804,11 +1796,11 @@ class NSPanel(MqttPlugin):
         entity = next((entity for entity in entities if entity["entity"] == pagename), None)
         icon_color = rgb_dec565(getattr(Colors, self.panel_config.get('defaultColor', "White")))
         # switch
-        item_onoff = self.items.return_item(entity.get('item_onoff', None))
-        if item_onoff is None:
+        item = self.items.return_item(entity.get('item', ''))
+        if item is None:
             switch_val = 0
         else:
-            switch_val = 1 if item_onoff() else 0
+            switch_val = 1 if item() else 0
         # brightness
         item_brightness = self.items.return_item(entity.get('item_brightness', None))
         if item_brightness is None:

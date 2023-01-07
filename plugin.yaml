@@ -252,6 +252,13 @@ item_structs:
 
         Licht:
             type: bool
+            
+            Helligkeit:
+                type: num
+            Farbtemperatur:
+                type: num
+            Farbe:
+                type: num
 
         Rolladen:
             pos:
@@ -260,6 +267,48 @@ item_structs:
             stop:
                 type: bool
                 enforce_updates: true
+
+        Heizung:
+            Istwert:
+                type: num
+                initial_value: 20.4
+            Sollwert:
+                type: num
+                initial_value: 21
+            Betriebsart:
+                type: num
+
+        Alarm:
+            Modus1:
+                type: bool
+            Modus2:
+                type: bool
+            Modus3:
+                type: bool
+            Modus4:
+                type: bool
+
+        wlan:
+            SSID:
+                type: str
+                initial_value: 'MeineSSID'
+            PW:
+                type: str
+                initial_value: 'MeinPW'
+
+        Power:
+            Home:
+                type: str
+                initial_value: '60 %'
+            Links:
+                type: str
+                initial_value: '0.4 kW'
+            Rechts1:
+                type: str
+                initial_value: '-0.5 kW'
+            Rechts2:
+                type: str
+                initial_value: '0.1 kW'
 
         Text:
             type: str
