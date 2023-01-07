@@ -763,8 +763,6 @@ class NSPanel(MqttPlugin):
             elif method == 'button2':
                 self.HandleHardwareButton(method)
 
-            self._set_item_value('item_screensaver_active', self.panel_status['screensaver_active'])
-
     def HandleStartupProcess(self):
         self.logger.debug("HandleStartupProcess called")
         self.send_current_time()
@@ -774,6 +772,7 @@ class NSPanel(MqttPlugin):
 
     def HandleScreensaver(self):
         self.panel_status['screensaver_active'] = True
+        self._set_item_value('item_screensaver_active', self.panel_status['screensaver_active'])
         self.current_page = 0
         self.publish_tasmota_topic(payload="pageType~screensaver")
         self.HandleScreensaverWeatherUpdate()  # Geht nur wenn NOTIFY leer wäre! Wird in Nextion so geregelt.
@@ -929,6 +928,29 @@ class NSPanel(MqttPlugin):
                 self.logger.debug(f"item={item.id()} will be set to new value={value}")
                 item(value, self.get_shortname())
 
+        elif buttonAction == 'number-set' or buttonAction == 'positionSlider' or buttonAction == 'tiltSlider':
+            self.logger.debug(f"{buttonAction} called with with pageName={pageName}")
+            value = int(words[4])
+            entities = self.panel_config['cards'][self.current_page]['entities']
+            entity = next((entity for entity in entities if entity["entity"] == pageName), None)
+            itemconfigname = 'item'
+            scaled_value = value # no scaling for number-set
+            if buttonAction == 'positionSlider':
+                itemconfigname = 'item_pos'
+                min_value = entity.get('min_pos', 0)
+                max_value = entity.get('max_pos', 100)
+                scaled_value = scale(value, (0, 100), (min_value, max_value))
+            elif buttonAction == 'tiltSlider':
+                itemconfigname = 'item_tilt'
+                min_value = entity.get('min_tilt', 0)
+                max_value = entity.get('max_tilt', 100)
+                scaled_value = scale(value, (0, 100), (min_value, max_value))
+
+            item = self.items.return_item(entity.get(itemconfigname, None))
+            if item is not None:
+                self.logger.debug(f"item={item.id()} will be set to new scaled_value={scaled_value}")
+                item(scaled_value, self.get_shortname())
+
         elif buttonAction == 'brightnessSlider':
             value = int(words[4])
             self.logger.debug(f"brightnessSlider called with pageName={pageName}")
@@ -1036,9 +1058,9 @@ class NSPanel(MqttPlugin):
         # Moving shutter for Up and Down moves
         elif buttonAction == 'up':
             # shutter moving until upper position
-            value = 0
             entities = self.panel_config['cards'][self.current_page]['entities']
             entity = next((entity for entity in entities if entity["entity"] == pageName), None)
+            value = entity.get('upValue', 0)
             item_name = entity['item']
             item = self.items.return_item(item_name)
 
@@ -1048,9 +1070,9 @@ class NSPanel(MqttPlugin):
 
         elif buttonAction == 'down':
             # shutter moving down until down position
-            value = 255
             entities = self.panel_config['cards'][self.current_page]['entities']
             entity = next((entity for entity in entities if entity["entity"] == pageName), None)
+            value = entity.get('downValue', 1)
             item_name = entity['item']
             item = self.items.return_item(item_name)
 
@@ -1238,16 +1260,16 @@ class NSPanel(MqttPlugin):
             self.logger.debug(f"volumeSlider to be implemented")
 
         elif buttonAction == 'swipeLeft':
-            self.logger.debug(f"swipedLeft on screensaver to be implemented")
+            self.logger.debug(f"swipedLeft to be implemented")
 
         elif buttonAction == 'swipeRight':
-            self.logger.debug(f"swipedRight on screensaver to be implemented")
+            self.logger.debug(f"swipedRight to be implemented")
 
         elif buttonAction == 'swipeDown':
-            self.logger.debug(f"swipedDown on screensaver to be implemented")
+            self.logger.debug(f"swipedDown to be implemented")
 
         elif buttonAction == 'swipeUp':
-            self.logger.debug(f"swipedUp on screensaver to be implemented")
+            self.logger.debug(f"swipedUp to be implemented")
 
         else:
             self.logger.warning(f"unknown buttonAction {buttonAction}")
@@ -1276,6 +1298,7 @@ class NSPanel(MqttPlugin):
         self.logger.debug(f"GeneratePage called with page={page}")
 
         self.panel_status['screensaver_active'] = False
+        self._set_item_value('item_screensaver_active', self.panel_status['screensaver_active'])
         page_content = self.panel_config['cards'][page]
 
         if page_content['pageType'] == 'cardEntities':
@@ -1833,11 +1856,21 @@ class NSPanel(MqttPlugin):
             f"entityUpdateDetail~{entity['entity']}~~{icon_color}~{switch_val}~{brightness}~{temperature}~{color}~{color_translation}~{color_temp_translation}~{brightness_translation}~{effect_supported}")
         return out_msgs
 
-    def GenerateDetailShutter(self, entity) -> list:
-        self.logger.debug(f"GenerateDetailShutter called with entity={entity} to be implemented")
-        sliderPos = 50
-        secondrow = 'Zweite Reihe'
-        textPosition = 'Position'
+    def GenerateDetailShutter(self, pagename) -> list:
+        self.logger.debug(f"GenerateDetailShutter called with entity={pagename} to be implemented")
+        entities = self.panel_config['cards'][self.current_page]['entities']
+        entity = next((entity for entity in entities if entity.get('entity', '') == pagename), None)
+        # iconId = entity.get('iconId', '') # not used
+        itemname_pos = entity.get('item_pos', None)
+        item_pos = self.items.return_item(itemname_pos)
+        if item_pos is not None:
+            sliderPos = scale(item_pos(),
+                               (entity.get('min_pos', "0"), entity.get('max_pos', "100")), (0, 100))
+            textPosition = entity.get('textPosition', 'Position')
+        else:
+            sliderPos = 'disable'
+            textPosition = ''
+        secondrow = entity.get('secondrow', 'Zweite Reihe')
         icon1 = '' # leave empty
         iconUp = 2
         iconStop = 3
@@ -1845,35 +1878,41 @@ class NSPanel(MqttPlugin):
         iconUpStatus = 5
         iconStopStatus = 6
         iconDownStatus = 7
-        textTilt = 'Lamellen'
         iconTiltLeft = 8
         iconTiltStop = 9
         iconTiltRight = 10
         iconTiltLeftStatus = 11
         iconTiltStopStatus = 12
         iconTiltRightStatus = 13
-        tiltPos = 50
+        itemname_tilt = entity.get('item_tilt', None)
+        item_tilt = self.items.return_item(itemname_tilt)
+        if item_tilt is not None:
+            textTilt = entity.get('textTilt', 'Lamellen')
+            tiltPos = scale(item_tilt(),
+                               (entity.get('min_tilt', "0"), entity.get('max_tilt', "100")), (0, 100))
+        else:
+            textTilt = ''
+            tiltPos = 'disable'
         out_msgs = list()
         out_msgs.append(
-            f"entityUpdateDetail~{entity}~{sliderPos}~{secondrow}~{textPosition}~{icon1}~{iconUp}~{iconStop}~{iconDown}~{iconUpStatus}~{iconStopStatus}~{iconDownStatus}~{textTilt}~{iconTiltLeft}~{iconTiltStop}~{iconTiltRight}~{iconTiltLeftStatus}~{iconTiltStopStatus}~{iconTiltRightStatus}~{tiltPos}")
+            f"entityUpdateDetail~{pagename}~{sliderPos}~{secondrow}~{textPosition}~{icon1}~{iconUp}~{iconStop}~{iconDown}~{iconUpStatus}~{iconStopStatus}~{iconDownStatus}~{textTilt}~{iconTiltLeft}~{iconTiltStop}~{iconTiltRight}~{iconTiltLeftStatus}~{iconTiltStopStatus}~{iconTiltRightStatus}~{tiltPos}")
         return out_msgs
 
-    def GenerateDetailThermo(self, entity) -> list:
-        self.logger.debug(f"GenerateDetailThermo called with entity={entity} to be implemented")
+    def GenerateDetailThermo(self, pagename) -> list:
+        self.logger.debug(f"GenerateDetailThermo called with entity={pagename} to be implemented")
         icon_id = 1
         icon_color = 65535
         heading = "Detail Thermo"
         mode = 'Mode'
         out_msgs = list()
         out_msgs.append(
-            f"entityUpdateDetail~{entity}~{icon_id}~{icon_color}~{heading}~{mode}~mode1~mode1?mode2?mode3~{heading}~{mode}~mode1~mode1?mode2?mode3~{heading}~{mode}~mode1~mode1?mode2?mode3~")
+            f"entityUpdateDetail~{pagename}~{icon_id}~{icon_color}~{heading}~{mode}~mode1~mode1?mode2?mode3~{heading}~{mode}~mode1~mode1?mode2?mode3~{heading}~{mode}~mode1~mode1?mode2?mode3~")
         return out_msgs
 
     def GenerateDetailInSel(self, pagename) -> list:
         self.logger.debug(f"GenerateDetailInSel called with entity={pagename}")
         entities = self.panel_config['cards'][self.current_page]['entities']
         entity = next((entity for entity in entities if entity.get('entity', '') == pagename), None)
-        entityid = entity.get('entity', '')
         # iconId = entity.get('iconId', '') # not used
         iconColor = entity.get('iconColor', 'White')
         modeType = '' # not used
@@ -1887,7 +1926,7 @@ class NSPanel(MqttPlugin):
 
         iconColor = rgb_dec565(getattr(Colors, iconColor))
         out_msgs = list()
-        out_msgs.append(f"entityUpdateDetail2~{entityid}~~{iconColor}~{modeType}~{state}~{options}")
+        out_msgs.append(f"entityUpdateDetail2~{pagename}~~{iconColor}~{modeType}~{state}~{options}")
         return out_msgs
 
     def GenerateDetailTimer(self, pagename) -> list:
@@ -1911,7 +1950,7 @@ class NSPanel(MqttPlugin):
         out_msgs = list()
         # first entity is used to identify the correct page, the second is used for the button event
         out_msgs.append(
-            f"entityUpdateDetail~{entity['entity']}~~65535~{entity['entity']}~{minutes}~{seconds}~{editable}~{actionleft}~{actioncenter}~{actionright}~{buttonleft}~{buttoncenter}~{buttonright}")
+            f"entityUpdateDetail~{pagename}~~65535~{pagename}~{minutes}~{seconds}~{editable}~{actionleft}~{actioncenter}~{actionright}~{buttonleft}~{buttoncenter}~{buttonright}")
         return out_msgs
 
     def SendToPanel(self, payload):

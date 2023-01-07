@@ -45,25 +45,36 @@ cards:
     heading: cardEntities Demo 1
     entities:
       - entity: page0_id0
-        type: light
+        type: light # or switch
         item: NSPanel1.Licht
         iconId: lightbulb
         displayNameEntity: Licht
         onValue: 100
         iconColor: Red
       - entity: page0_id1
+        type: switch # TODO replace with fan
+        item: NSPanel1.Schalter
+        iconId: electric-switch
+        displayNameEntity: Schalter
+      - entity: page0_id2
         type: shutter
-        item: NSPanel1.Rolladen.pos
+        item: NSPanel1.Rolladen.move
         item_stop: NSPanel1.Rolladen.stop
+        item_pos: NSPanel1.Rolladen.pos
         iconId: window-shutter
         displayNameEntity: Rolladen
-      - entity: page0_id2
-        type: delete
       - entity: page0_id3
-        type: text
-        item: NSPanel1.Text
-        iconId: text
-        displayNameEntity: Text
+        type: shutter
+        item: NSPanel1.Rolladen.move
+        item_stop: NSPanel1.Rolladen.stop
+        item_pos: NSPanel1.Rolladen.pos
+        item_tilt: NSPanel1.Rolladen.tilt
+        min_pos: 0
+        max_pos: 255
+        min_tilt: 0
+        max_tilt: 255
+        iconId: window-shutter
+        displayNameEntity: Jalousie
   - pageType: cardEntities
     heading: cardEntities Demo 2
     entities:
@@ -75,14 +86,11 @@ cards:
         optionalValue: Mach was
         onValue: True
         offValue: True
-      - entity: page1_id1
-        type: switch
-        item: NSPanel1.Schalter
-        iconId: electric-switch
-        displayNameEntity: Schalter
       - entity: page1_id2
         type: number
         item: NSPanel1.Nummer
+        min_value: 1
+        max_value: 9
         iconId: brightness-percent
         displayNameEntity: Bereich
       - entity: page1_id3
@@ -91,6 +99,11 @@ cards:
         iconId: format-list-bulleted
         displayNameEntity: Auswahl
         options: Szene1?Szene2?Szene3?Szene4?Szene5
+      - entity: page1_id4
+        type: text
+        item: NSPanel1.Text
+        iconId: text
+        displayNameEntity: Text
 
   - pageType: cardGrid
     heading: cardGrid Demo 1
@@ -103,34 +116,6 @@ cards:
         onColor: Red
         offColor: Green
       - entity: page2_id1
-        type: shutter
-        item: NSPanel1.Rolladen.move
-        item_stop: NSPanel1.Rolladen.stop
-        iconId: window-shutter
-        displayNameEntity: Rolladen
-      - entity: page2_id2
-        type: delete # means display no element
-      - entity: page2_id3
-        type: text
-        item: NSPanel1.Text
-        iconId: text
-        displayNameEntity: Text
-      - entity: page2_id4
-        type: input_sel
-        item: NSPanel1.Auswahl
-        iconId: format-list-bulleted
-        displayNameEntity: Auswahl
-        options: Szene1?Szene2?Szene3?Szene4?Szene5
-      - entity: page2_id5
-        type: timer
-        item: NSPanel1.timer
-        iconId: timer
-        displayNameEntity: Timer
-
-  - pageType: cardGrid
-    heading: cardGrid Demo 2
-    entities:
-      - entity: page3_id0
         type: popupLight
         iconId: brightness-5
         displayNameEntity: Licht Dim
@@ -138,7 +123,7 @@ cards:
         item_brightness: NSPanel1.Licht.Helligkeit
         min_brightness: 1
         max_brightness: 255
-      - entity: page3_id1
+      - entity: page2_id2
         type: popupLight
         iconId: gradient-horizontal
         displayNameEntity: Licht TW
@@ -149,13 +134,15 @@ cards:
         item_temperature: NSPanel1.Licht.Farbtemperatur
         min_temperature: 0
         max_temperature: 255
-      - entity: page3_id2
+      - entity: page2_id3
         type: popupLight
         iconId: palette
         displayNameEntity: Licht RGB
         item: NSPanel1.Licht
         item_color: NSPanel1.Licht.Farbe
-      - entity: page3_id3
+      - entity: page2_id4
+        type: delete # means display no element
+      - entity: page2_id5
         type: popupLight
         iconId: lightbulb-on-50
         displayNameEntity: Licht TW+RGB
@@ -167,10 +154,41 @@ cards:
         min_temperature: 0
         max_temperature: 255
         item_color: NSPanel1.Licht.Farbe
+
+  - pageType: cardGrid
+    heading: cardGrid Demo 2
+    entities:
+      - entity: page3_id0
+        type: shutter
+        item: NSPanel1.Rolladen.move
+        item_stop: NSPanel1.Rolladen.stop
+        item_pos: NSPanel1.Rolladen.pos
+        iconId: window-shutter
+        displayNameEntity: Rolladen
+      - entity: page3_id1
+        type: text
+        item: NSPanel1.Text
+        iconId: text
+        displayNameEntity: Text
+      - entity: page3_id2
+        type: input_sel
+        item: NSPanel1.Auswahl
+        iconId: format-list-bulleted
+        displayNameEntity: Auswahl
+        options: Szene1?Szene2?Szene3?Szene4?Szene5
       - entity: page3_id4
         type: popupShutter
+        item: NSPanel1.Rolladen.move
+        item_stop: NSPanel1.Rolladen.stop
+        item_pos: NSPanel1.Rolladen.pos
+        item_tilt: NSPanel1.Rolladen.tilt
         iconId: window-shutter-settings
         displayNameEntity: Jalousie
+      - entity: page3_id5
+        type: timer
+        item: NSPanel1.timer
+        iconId: timer
+        displayNameEntity: Timer
  
   - pageType: cardMedia
     entity: page4

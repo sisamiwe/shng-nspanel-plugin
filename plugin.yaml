@@ -261,11 +261,17 @@ item_structs:
                 type: num
 
         Rolladen:
-            pos:
-                type: num
+            move:
+                type: bool
                 enforce_updates: true
             stop:
                 type: bool
+                enforce_updates: true
+            pos:
+                type: num
+                enforce_updates: true
+            tilt:
+                type: num
                 enforce_updates: true
 
         Heizung:
