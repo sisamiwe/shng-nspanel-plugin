@@ -945,6 +945,9 @@ class NSPanel(MqttPlugin):
                 min_value = entity.get('min_tilt', 0)
                 max_value = entity.get('max_tilt', 100)
                 scaled_value = scale(value, (0, 100), (min_value, max_value))
+            elif entity.get('type') == 'fan' and buttonAction == 'number-set':
+                itemconfigname = 'item_speed'
+                scaled_value = value * entity.get("percentage_step", 25)
 
             item = self.items.return_item(entity.get(itemconfigname, None))
             if item is not None:
@@ -1229,6 +1232,20 @@ class NSPanel(MqttPlugin):
         elif buttonAction[:6] == 'timer-':
             self.logger.debug(f"timer custom command to be implemented")
 
+        elif buttonAction == 'mode-preset_modes':
+            action = buttonAction[5:] # unused
+            parameter = words[4]
+            self.logger.debug(f"mode-preset_modes called with pageName={pageName}, action={action} and parameter={parameter}")
+            entities = self.panel_config['cards'][self.current_page]['entities']
+            entity = next((entity for entity in entities if entity["entity"] == pageName), None)
+            preset_modes = entity['preset_modes']
+            item_name = entity['item_preset']
+            item = self.items.return_item(item_name)
+            value = preset_modes[int(parameter)]
+            self.logger.warning(f"{preset_modes} -> {parameter} -> {value}]")
+            item(value, self.get_shortname())
+            self.SendToPanel(self.GenerateDetailFan(pageName))
+
         elif buttonAction[:5] == 'mode-':
             action = buttonAction[5:] # unused
             parameter = words[4]
@@ -1338,6 +1355,8 @@ class NSPanel(MqttPlugin):
             self.SendToPanel(self.GenerateDetailInSel(entity))
         elif page == 'popupTimer':
             self.SendToPanel(self.GenerateDetailTimer(entity))
+        elif page == 'popupFan':
+            self.SendToPanel(self.GenerateDetailFan(entity))
         else:
             self.logger.warning(f"unknown detail page {page}")
 
@@ -1951,6 +1970,40 @@ class NSPanel(MqttPlugin):
         # first entity is used to identify the correct page, the second is used for the button event
         out_msgs.append(
             f"entityUpdateDetail~{pagename}~~65535~{pagename}~{minutes}~{seconds}~{editable}~{actionleft}~{actioncenter}~{actionright}~{buttonleft}~{buttoncenter}~{buttonright}")
+        return out_msgs
+
+    def GenerateDetailFan(self, pagename) -> list:
+        self.logger.debug(f"GenerateDetailFan called with entity={pagename}")
+        entities = self.panel_config['cards'][self.current_page]['entities']
+        entity = next((entity for entity in entities if entity.get('entity', '') == pagename), None)
+        item = self.items.return_item(entity.get('item', None))
+        switch_val = 1 if item() else 0
+        icon_color = entity.get('color', 65535)
+        item_speed = self.items.return_item(entity.get('item_speed', None))
+        speed = item_speed()
+        percentage_step = entity.get("percentage_step", 25)
+        speedMax = 100
+        if percentage_step is None:
+            speed = "disable"
+        else:
+            if speed is None:
+                speed = 0
+            speed = round(speed/percentage_step)
+            speedMax = int(100/percentage_step)
+
+        speed_translation = "Geschwindigkeit"
+
+        item_preset = self.items.return_item(entity.get('item_preset', None))
+        preset_mode = item_preset()
+        preset_modes = entity.get("preset_modes", [])
+        if preset_modes is not None:
+            preset_modes = "?".join(preset_modes)
+        else:
+            preset_modes = ""
+
+        out_msgs = list()
+        out_msgs.append(
+            f"entityUpdateDetail~{pagename}~~{icon_color}~{switch_val}~{speed}~{speedMax}~{speed_translation}~{preset_mode}~{preset_modes}")
         return out_msgs
 
     def SendToPanel(self, payload):
