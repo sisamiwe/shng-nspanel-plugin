@@ -1646,6 +1646,7 @@ class NSPanel(MqttPlugin):
         page_content = self.panel_config['cards'][page]
 
         entity = page_content.get('entity', 'undefined')
+        title = page_content.get('title', 'undefined')
         items = page_content.get('items', 'undefined')
         iconId = Icons.GetIcon('home')  # Icons.GetIcon(items.get('iconId', 'home'))
         iconColor = rgb_dec565(
@@ -1709,8 +1710,9 @@ class NSPanel(MqttPlugin):
         # entityUpd~*entity*~*navigation*~*arm1*~*arm1ActionName*~*arm2*~*arm2ActionName*~*arm3*~*arm3ActionName*~*arm4*~*arm4ActionName*~*icon*~*iconColor*~*numpadStatus*~*flashing*
         pageData = (
             'entityUpd~'
-            f'{entity}~'
+            f'{title}~'
             f'{self.GetNavigationString(page)}~'
+            f'{entity}~'
             f'{arm1}~'  # Statusname for modus 1
             f'{arm1ActionName}~'  # Status item for modus 1
             f'{arm2}~'  # Statusname for modus 2
@@ -1794,7 +1796,8 @@ class NSPanel(MqttPlugin):
         out_msgs = list()
         out_msgs.append('pageType~cardPower')
 
-        textHome = self.items.return_item(page_content['itemHome'])()
+        textHomeBelow = self.items.return_item(page_content['itemHomeBelow'])()
+        textHomeAbove = self.items.return_item(page_content['itemHomeAbove'])()
         iconHome = Icons.GetIcon(page_content.get('iconHome', 'home'))
         colorHome = rgb_dec565(getattr(Colors, page_content.get('colorHome', 'home')))
 
@@ -1805,7 +1808,12 @@ class NSPanel(MqttPlugin):
             f"{self.GetNavigationString(page)}~"
             f"{colorHome}~"
             f"{iconHome}~"
-            f"{textHome}~"
+            f"-~" # ignored
+            f"{textHomeBelow}~"
+            f"-~" # ignored
+            f"-~" # ignored
+            f"-~" # ignored
+            f"{textHomeAbove}~"
         )
 
         for idx, entity in enumerate(page_content['entities']):

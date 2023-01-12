@@ -213,6 +213,7 @@ cards:
 
   - pageType: cardAlarm
     entity: page7
+    title: cardAlarm Demo
     items:
         arm1: "Anwesend"
         arm2: "Abwesend"
@@ -236,7 +237,8 @@ cards:
   - pageType: cardPower
     entity: page9
     heading: cardPower Demo
-    itemHome: NSPanel1.Power.Home # item
+    itemHomeAbove: NSPanel1.Power.Home
+    itemHomeBelow: NSPanel1.Power.Home
     iconHome: 'battery-charging-60'
     colorHome: 'Green' # otherwise default is used
     entities:
