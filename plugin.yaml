@@ -53,6 +53,27 @@ parameters:
             de: 'Speicherort der Konfigurationsdatei relativ zum smarthome Ordner bspw: /usr/local/smarthome/plugins/_priv_nspanel/nspanel_pages.yaml'
             en: 'Location of Config_file relatively to smarthome directory e.g. /usr/local/smarthome/plugins/_priv_nspanel/nspanel_pages.yaml'
 
+    model:
+        type: str
+        default: 'eu'
+        valid_list:
+          - 'eu'
+          - 'us-p'
+          - 'us-l'
+        description:
+            de: Model des NSPanel
+            en: model of NSPanel
+            
+    firmware_check:
+        type: str
+        default: 'notify'
+        valid_list:
+          - 'off'
+          - 'notify'
+        description:
+            de: Prüft beim Start, ob Display-Firmware mit Plugin zusammenpasst. off = keine Prüfung, notify = Nachricht mit Möglichkeit zum Update
+            en: Checks at startup if display firmware matches to plugin. off = no check, notify = noification with possibility to update
+
     webif_pagelength:
         type: int
         valid_list:

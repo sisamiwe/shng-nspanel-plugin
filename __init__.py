@@ -26,20 +26,20 @@
 #
 #########################################################################
 
-from datetime import datetime, timedelta
-import yaml
-import queue
-import os
-import sys
 import colorsys
 import math
+import os
+import queue
+import sys
+from datetime import datetime, timedelta
 
+import yaml
+from lib.item import Items
 from lib.model.mqttplugin import MqttPlugin
-from .webif import WebInterface
+from lib.shtime import Shtime
 
 from . import nspanel_icons_colors
-from lib.item import Items
-from lib.shtime import Shtime
+from .webif import WebInterface
 
 Icons = nspanel_icons_colors.IconsSelector()
 Colors = nspanel_icons_colors.ColorThemes()
@@ -76,6 +76,8 @@ class NSPanel(MqttPlugin):
             self.telemetry_period = self.get_parameter_value('telemetry_period')
             self.config_file_location = self.get_parameter_value('config_file_location')
             self.full_topic = self.get_parameter_value('full_topic').lower()
+            self.desired_panel_model = self.get_parameter_value('model')
+            self.firmware_check = self.get_parameter_value('firmware_check')
             pass
         except KeyError as e:
             self.logger.critical(
@@ -92,15 +94,36 @@ class NSPanel(MqttPlugin):
 
         # define properties
         self.current_page = 0
-        self.panel_status = {'online': False, 'online_timeout': datetime.now(), 'uptime': '-', 'sensors': {}, 'relay': {}, 'screensaver_active': False}
+        self.panel_status = {'online': False, 'online_timeout': datetime.now(), 'uptime': '-', 'sensors': {},
+                             'relay': {}, 'screensaver_active': False}
         self.custom_msg_queue = queue.Queue(maxsize=50)  # Queue containing last 50 messages containing "CustomRecv"
         self.panel_items = {}
         self.panel_config_items = []
         self.panel_config_items_page = {}
-        self.panel_version = 0
+        self.berry_driver_version = 0
+        self.display_firmware_version = 0
         self.panel_model = ''
         self.useMediaEvents = False
         self.alive = None
+
+        # define desired versions
+        self.desired_berry_driver_version = 8
+        self.display_driver_update = True
+        self.desired_display_firmware_version = 48
+        self.desired_version = "v3.8.3"
+        self.display_display_update = True
+
+        # URLs for driver/firmware updates
+        if self.desired_panel_model == "us-l":
+            # us landscape version
+            self.desired_display_firmware_url = f"http://nspanel.pky.eu/lovelace-ui/github/nspanel-us-l-{self.desired_version}.tft"
+        elif self.desired_panel_model == "us-p":
+            # us portrait version
+            self.desired_display_firmware_url = f"http://nspanel.pky.eu/lovelace-ui/github/nspanel-us-p-{self.desired_version}.tft"
+        else:
+            # eu version
+            self.desired_display_firmware_url = f"http://nspanel.pky.eu/lovelace-ui/github/nspanel-{self.desired_version}.tft"
+        self.desired_berry_driver_url       = "https://raw.githubusercontent.com/joBr99/nspanel-lovelace-ui/main/tasmota/autoexec.be"
 
         # read panel config file
         try:
@@ -236,7 +259,8 @@ class NSPanel(MqttPlugin):
                         return
                     if value is not None:
                         relay = nspanel_attr[5:]
-                        self.publish_tasmota_topic('cmnd', self.tasmota_topic, f"POWER{relay}", value, item, bool_values=['OFF', 'ON'])
+                        self.publish_tasmota_topic('cmnd', self.tasmota_topic, f"POWER{relay}", value, item,
+                                                   bool_values=['OFF', 'ON'])
 
                 if nspanel_attr[:11] == 'screensaver':
                     self.HandleScreensaverIconUpdate()
@@ -293,6 +317,7 @@ class NSPanel(MqttPlugin):
                 self.panel_status['online'] = payload
                 self._set_item_value('item_online', payload)
                 self._add_scheduler()
+                self.publish_tasmota_topic('cmnd', self.tasmota_topic, 'GetDriverVersion', 'x')
                 self.SendToPanel('pageType~pageStartup')
                 # set telemetry to get the latest STATE and SENSOR information
                 self._set_telemetry_period(self.telemetry_period)
@@ -321,6 +346,11 @@ class NSPanel(MqttPlugin):
 
             # handle message
             if isinstance(payload, dict) and info_topic in ['STATE', 'RESULT']:
+
+                # Handling of Driver Version
+                if 'nlui_driver_version' in payload:
+                    self.logger.info(f"Received Message decoded as driver version message.")
+                    self.berry_driver_version = payload['nlui_driver_version']
 
                 # Handling of TelePeriod
                 if 'TelePeriod' in payload:
@@ -581,7 +611,7 @@ class NSPanel(MqttPlugin):
 
         self.logger.debug('Remove scheduler for online status')
         self.scheduler_remove('check_online_status')
-        
+
         self.logger.debug('Remove scheduler for weather')
         self.scheduler_remove('update_weather')
 
@@ -669,7 +699,8 @@ class NSPanel(MqttPlugin):
     def send_current_date(self):
         dateFormat = self.panel_config.get('config', {}).get('dateFormat', "%A, %-d. %B %Y")
         # replace some variables to get localized strings
-        dateFormat = dateFormat.replace('%A', self.shtime.weekday_name()) # TODO add code after merge in main repository .replace('%B', self.shtime.current_monthname())
+        dateFormat = dateFormat.replace('%A',
+                                        self.shtime.weekday_name())  # TODO add code after merge in main repository .replace('%B', self.shtime.current_monthname())
         self.publish_tasmota_topic(payload=f"date~{self.shtime.now().strftime(dateFormat)}")
 
     def send_screensavertimeout(self):
@@ -679,6 +710,9 @@ class NSPanel(MqttPlugin):
     def send_panel_brightness(self):
         brightness_screensaver = self.panel_config.get('config', {}).get('brightness_screensaver', 10)
         brightness_active = self.panel_config.get('config', {}).get('brightness_active', 100)
+        # same value for both values will break sleep timer of the firmware # comment from HA code
+        if brightness_screensaver==brightness_active:
+            brightness_screensaver = brightness_screensaver-1
         self.publish_tasmota_topic(payload=f"dimmode~{brightness_screensaver}~{brightness_active}~6371")
 
     def HandlePanelMessage(self, payload: str) -> None:
@@ -739,10 +773,84 @@ class NSPanel(MqttPlugin):
 
         if typ == 'event':
             if method == 'startup':
-                self.panel_version = words[2]
+                self.display_firmware_version = words[2]
                 self.panel_model = words[3]
-                self.HandleStartupProcess()
-                self.HandleScreensaver()
+                self.send_screensavertimeout()
+                self.send_panel_brightness()
+
+                if self.firmware_check == 'notify':
+                    # Check driver version
+                    if int(self.berry_driver_version) < self.desired_berry_driver_version:
+                        self.logger.warning(
+                            f"Update of Tasmota Driver needed! installed: {self.berry_driver_version} required: {self.desired_berry_driver_version}")
+                        if self.display_driver_update:
+                            update_message = {
+                                "entity": "driverUpdate",
+                                "heading": "Driver Update available!",
+                                "text": ("There's an update available for the Tasmota\r\n"
+                                         "Berry driver, do you want to start the update\r\n"
+                                         "now?\r\n"
+                                         "If you encounter issues after the update or\r\n"
+                                         "this message appears frequently, please check\r\n"
+                                         "the manual and repeat the installation steps\r\n"
+                                         "for the Tasmota Berry driver."
+                                         ),
+                                "buttonLeft": "Dismiss",
+                                "buttonRight": "Update",
+                                "timeout": 0,
+                            }
+                            self.SendToPanel(self.GeneratePopupNotify(update_message))
+                        self.display_driver_update = False
+
+                    # Check panel model
+                    elif self.panel_model != self.desired_panel_model:
+                        self.logger.warning(
+                            f"Update of Display Firmware needed! installed: {self.panel_model} configured: {self.desired_panel_model}")
+                        if self.display_display_update:
+                            update_message = {
+                                "entity": "displayUpdate",
+                                "heading": "Display Update available!",
+                                "text": ("The configured model does not match to the\r\n"
+                                         "installed firmware. Possible solutions:\r\n"
+                                         f"- Set model to '{self.panel_model}' in configuration\r\n"
+                                         "- Update the correct display firmware\r\n"
+                                         "If the update fails check the installation manu-\r\n"
+                                         "al and flash again over the Tasmota console\r\n"
+                                         "Be patient, the update will take a while.\r\n"
+                                         ),
+                                "buttonLeft": "Dismiss",
+                                "buttonRight": "Update",
+                                "timeout": 0,
+                            }
+                            self.SendToPanel(self.GeneratePopupNotify(update_message))
+
+                    # Check display firmware version
+                    elif int(self.display_firmware_version) < self.desired_display_firmware_version:
+                        self.logger.warning(
+                            f"Update of Display Firmware needed! installed: {self.display_firmware_version} required: {self.desired_display_firmware_version}")
+                        if self.display_display_update:
+                            update_message = {
+                                "entity": "displayUpdate",
+                                "heading": "Display Update available!",
+                                "text": ("There's a firmware update available for the\r\n"
+                                         "Nextion screen of the NSPanel. Do you want to\r\n"
+                                         "start the update now?\r\n"
+                                         "If the update fails check the installation manu-\r\n"
+                                         "al and flash again over the Tasmota console\r\n"
+                                         "Be patient, the update will take a while."
+                                         ),
+                                "buttonLeft": "Dismiss",
+                                "buttonRight": "Update",
+                                "timeout": 0,
+                            }
+                            self.SendToPanel(self.GeneratePopupNotify(update_message))
+                        self.display_display_update = False
+                    else:
+                        # Normal startup
+                        self.HandleScreensaver()
+                else:
+                    # startup without check
+                    self.HandleScreensaver()
 
             elif method == 'sleepReached':
                 # event,sleepReached,cardEntities
@@ -763,17 +871,12 @@ class NSPanel(MqttPlugin):
             elif method == 'button2':
                 self.HandleHardwareButton(method)
 
-    def HandleStartupProcess(self):
-        self.logger.debug("HandleStartupProcess called")
-        self.send_current_time()
-        self.send_current_date()
-        self.send_screensavertimeout()
-        self.send_panel_brightness()
-
     def HandleScreensaver(self):
         self.panel_status['screensaver_active'] = True
         self._set_item_value('item_screensaver_active', self.panel_status['screensaver_active'])
         self.current_page = 0
+        self.send_current_time()
+        self.send_current_date()
         self.publish_tasmota_topic(payload="pageType~screensaver")
         self.HandleScreensaverWeatherUpdate()  # Geht nur wenn NOTIFY leer wäre! Wird in Nextion so geregelt.
         self.HandleScreensaverColors()  # Geht nur wenn NOTIFY leer wäre! Wird in Nextion so geregelt.
@@ -934,7 +1037,7 @@ class NSPanel(MqttPlugin):
             entities = self.panel_config['cards'][self.current_page]['entities']
             entity = next((entity for entity in entities if entity["entity"] == pageName), None)
             itemconfigname = 'item'
-            scaled_value = value # no scaling for number-set
+            scaled_value = value  # no scaling for number-set
             if buttonAction == 'positionSlider':
                 itemconfigname = 'item_pos'
                 min_value = entity.get('min_pos', 0)
@@ -1233,9 +1336,10 @@ class NSPanel(MqttPlugin):
             self.logger.debug(f"timer custom command to be implemented")
 
         elif buttonAction == 'mode-preset_modes':
-            action = buttonAction[5:] # unused
+            action = buttonAction[5:]  # unused
             parameter = words[4]
-            self.logger.debug(f"mode-preset_modes called with pageName={pageName}, action={action} and parameter={parameter}")
+            self.logger.debug(
+                f"mode-preset_modes called with pageName={pageName}, action={action} and parameter={parameter}")
             entities = self.panel_config['cards'][self.current_page]['entities']
             entity = next((entity for entity in entities if entity["entity"] == pageName), None)
             preset_modes = entity['preset_modes']
@@ -1247,7 +1351,7 @@ class NSPanel(MqttPlugin):
             self.SendToPanel(self.GenerateDetailFan(pageName))
 
         elif buttonAction[:5] == 'mode-':
-            action = buttonAction[5:] # unused
+            action = buttonAction[5:]  # unused
             parameter = words[4]
             self.logger.debug(f"mode called with pageName={pageName}, action={action} and parameter={parameter}")
             entities = self.panel_config['cards'][self.current_page]['entities']
@@ -1276,6 +1380,22 @@ class NSPanel(MqttPlugin):
         elif buttonAction == 'volumeSlider':
             self.logger.debug(f"volumeSlider to be implemented")
 
+        elif buttonAction == 'notifyAction':
+            parameter = words[4]
+            self.logger.debug(f"notifyAction called with pageName={pageName} and parameter={parameter}")
+            if pageName == 'driverUpdate':
+                if parameter == 'yes':
+                    self.update_berry_driver(self.desired_berry_driver_url)
+                else:
+                    self.SendToPanel('exitPopup')
+            elif pageName == 'displayUpdate':
+                if parameter == 'yes':
+                    self.update_display_firmware(self.desired_display_firmware_url)
+                else:
+                    self.SendToPanel('exitPopup')
+            else:
+                self.logger.warning(f"notifyAction to be implemented")
+
         elif buttonAction == 'swipeLeft':
             self.logger.debug(f"swipedLeft to be implemented")
 
@@ -1296,6 +1416,7 @@ class NSPanel(MqttPlugin):
         # TODO split colors for different elements?
         color = rgb_dec565(getattr(Colors, self.panel_config.get('defaultOnColor', "White")))
 
+        entity = content.get('entity', '')
         heading = content.get('heading', '')
         text = content.get('text', '')
         buttonLeft = content.get('buttonLeft', '')
@@ -1307,7 +1428,7 @@ class NSPanel(MqttPlugin):
         out_msgs = list()
         out_msgs.append('pageType~popupNotify')
         out_msgs.append(
-            f"entityUpdateDetail~topic~{heading}~{color}~{buttonLeft}~{color}~{buttonRight}~{color}~{text}~{color}~{timeout}~{size}~{icon}~{iconColor}")
+            f"entityUpdateDetail~{entity}~{heading}~{color}~{buttonLeft}~{color}~{buttonRight}~{color}~{text}~{color}~{timeout}~{size}~{icon}~{iconColor}")
         return out_msgs
 
     def GeneratePage(self, page):
@@ -1770,7 +1891,7 @@ class NSPanel(MqttPlugin):
         if page_content['pageType'] in ['cardThermo', 'cardAlarm', 'cardMedia', 'cardQR', 'cardPower', 'cardChart']:
             maxItems = 1
         elif page_content['pageType'] == 'cardEntities':
-            maxItems = 4 if self.panel_model == 'eu' else 5
+            maxItems = 6 if self.panel_model == 'us-p' else 4
         elif page_content['pageType'] == 'cardGrid':
             maxItems = 6
         else:
@@ -1796,7 +1917,7 @@ class NSPanel(MqttPlugin):
             if entity['type'] in ['switch', 'light']:
                 value = int(value)
 
-            iconid = Icons.GetIcon(entity.get('iconId',''))
+            iconid = Icons.GetIcon(entity.get('iconId', ''))
             if iconid == '':
                 iconid = entity.get('iconId', '')
 
@@ -1884,13 +2005,13 @@ class NSPanel(MqttPlugin):
         item_pos = self.items.return_item(itemname_pos)
         if item_pos is not None:
             sliderPos = scale(item_pos(),
-                               (entity.get('min_pos', "0"), entity.get('max_pos', "100")), (0, 100))
+                              (entity.get('min_pos', "0"), entity.get('max_pos', "100")), (0, 100))
             textPosition = entity.get('textPosition', 'Position')
         else:
             sliderPos = 'disable'
             textPosition = ''
         secondrow = entity.get('secondrow', 'Zweite Reihe')
-        icon1 = '' # leave empty
+        icon1 = ''  # leave empty
         iconUp = 2
         iconStop = 3
         iconDown = 4
@@ -1908,7 +2029,7 @@ class NSPanel(MqttPlugin):
         if item_tilt is not None:
             textTilt = entity.get('textTilt', 'Lamellen')
             tiltPos = scale(item_tilt(),
-                               (entity.get('min_tilt', "0"), entity.get('max_tilt', "100")), (0, 100))
+                            (entity.get('min_tilt', "0"), entity.get('max_tilt', "100")), (0, 100))
         else:
             textTilt = ''
             tiltPos = 'disable'
@@ -1934,7 +2055,7 @@ class NSPanel(MqttPlugin):
         entity = next((entity for entity in entities if entity.get('entity', '') == pagename), None)
         # iconId = entity.get('iconId', '') # not used
         iconColor = entity.get('iconColor', 'White')
-        modeType = '' # not used
+        modeType = ''  # not used
         state = ''
         itemName = entity.get('item', None)
         item = self.items.return_item(itemName)
@@ -1988,8 +2109,8 @@ class NSPanel(MqttPlugin):
         else:
             if speed is None:
                 speed = 0
-            speed = round(speed/percentage_step)
-            speedMax = int(100/percentage_step)
+            speed = round(speed / percentage_step)
+            speedMax = int(100 / percentage_step)
 
         speed_translation = "Geschwindigkeit"
 
@@ -2054,6 +2175,13 @@ class NSPanel(MqttPlugin):
 
         return f"button~{left}~65535~~~button~{right}~65535~~"
 
+    def update_berry_driver(self, url):
+        self.logger.info('update_berry_driver running')
+        self.publish_tasmota_topic("cmnd", self.tasmota_topic, "Backlog", f"UpdateDriverVersion {url}; Restart 1")
+    def update_display_firmware(self, url):
+        self.logger.info('update_display_firmware called')
+        self.publish_tasmota_topic("cmnd", self.tasmota_topic, "FlashNextion", url)
+        
     ################################################################
     #  Properties
     ################################################################

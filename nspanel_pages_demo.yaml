@@ -11,7 +11,6 @@ config:
       value: 10
     - time: "23:00:00"
       value: 0
-  update_mode: auto-notify
   defaultOffColor: 'Off'
   defaultOnColor: 'On'
   defaultColor: 'Off'
@@ -19,7 +18,7 @@ config:
   screensaver:
     statusIconLeft: NSPanel1.screensaver.statusIconLeft
     statusIconRight: NSPanel1.screensaver.statusIconRight
-    secondLine: Test
+    secondLine: Demo-Zeile
   weather:
     - day: NSPanel1.Wetter.Tag0
       icon: NSPanel1.Wetter.Tag0.Icon
@@ -49,7 +48,7 @@ cards:
         item: NSPanel1.Licht
         iconId: lightbulb
         displayNameEntity: Licht
-        onValue: 100
+        onValue: 1
         iconColor: Red
       - entity: page0_id1
         type: switch # like light but no popup
