@@ -144,7 +144,7 @@ cards:
         arm2: "Abwesend"
         arm3: "Urlaub"
         arm4: "Gäste"
-        Password: NSPanel1.Alarm.Pwd
+        Password: "1234"  #Passwort für das Entsperren von Modus 3 (Urlaub)
         arm1ActionName: NSPanel1.Alarm.Mod1
         arm2ActionName: NSPanel1.Alarm.Mod2
         arm3ActionName: NSPanel1.Alarm.Mod3
