@@ -78,6 +78,13 @@ class NSPanel(MqttPlugin):
             self.full_topic = self.get_parameter_value('full_topic').lower()
             self.desired_panel_model = self.get_parameter_value('model')
             self.firmware_check = self.get_parameter_value('firmware_check')
+            self.brightness = self.get_parameter_value('brightness')
+            self.temperatureUnit = self.get_parameter_value('temperatureUnit')
+            self.defaultBackgroundColor = self.get_parameter_value('defaultBackgroundColor')
+            self.defaultColor = self.get_parameter_value('defaultColor')
+            self.defaultOffColor = self.get_parameter_value('defaultOffColor')
+            self.defaultOnColor = self.get_parameter_value('defaultOnColor')
+            # TODO check if colors are valid otherwise use existing
             pass
         except KeyError as e:
             self.logger.critical(
@@ -688,32 +695,32 @@ class NSPanel(MqttPlugin):
         self.logger.debug(f"previous_page={self.current_page}")
 
     def _get_locale(self, group, entry):
-        return self.locale.get(group, {}).get(entry, {}).get(
-            self.panel_config.get('config', {}).get('locale', 'de-DE'))
+        return self.locale.get(group, {}).get(entry, {}).get('de-DE') # TODO configure in plugin.yaml
 
     def send_current_time(self):
-        secondLine = self.panel_config.get('config', {}).get('screensaver', {}).get('secondLine', '')
-        timeFormat = self.panel_config.get('config', {}).get('timeFormat', "%H:%M")
+        secondLine = self.panel_config.get('screensaver', {}).get('secondLine', '')
+        timeFormat = self.panel_config.get('screensaver', {}).get('timeFormat', "%H:%M")
         self.publish_tasmota_topic(payload=f"time~{self.shtime.now().strftime(timeFormat)}~{secondLine}")
 
     def send_current_date(self):
-        dateFormat = self.panel_config.get('config', {}).get('dateFormat', "%A, %-d. %B %Y")
+        dateFormat = self.panel_config.get('screensaver', {}).get('dateFormat', "%A, %-d. %B %Y")
         # replace some variables to get localized strings
         dateFormat = dateFormat.replace('%A',
                                         self.shtime.weekday_name())  # TODO add code after merge in main repository .replace('%B', self.shtime.current_monthname())
         self.publish_tasmota_topic(payload=f"date~{self.shtime.now().strftime(dateFormat)}")
 
     def send_screensavertimeout(self):
-        screensavertimeout = self.panel_config.get('config', {}).get('screensaver_timeout', 10)
+        screensavertimeout = self.panel_config.get('screensaver', {}).get('timeout', 10)
         self.publish_tasmota_topic(payload=f"timeout~{screensavertimeout}")
 
     def send_panel_brightness(self):
-        brightness_screensaver = self.panel_config.get('config', {}).get('brightness_screensaver', 10)
-        brightness_active = self.panel_config.get('config', {}).get('brightness_active', 100)
+        brightness_screensaver = self.panel_config.get('screensaver', {}).get('brightness', 10)
+        brightness_active = self.brightness
+        dbc = rgb_dec565(getattr(Colors, self.defaultBackgroundColor))
         # same value for both values will break sleep timer of the firmware # comment from HA code
         if brightness_screensaver==brightness_active:
             brightness_screensaver = brightness_screensaver-1
-        self.publish_tasmota_topic(payload=f"dimmode~{brightness_screensaver}~{brightness_active}~6371")
+        self.publish_tasmota_topic(payload=f"dimmode~{brightness_screensaver}~{brightness_active}~{dbc}")
 
     def HandlePanelMessage(self, payload: str) -> None:
         """
@@ -877,14 +884,16 @@ class NSPanel(MqttPlugin):
         self.current_page = 0
         self.send_current_time()
         self.send_current_date()
-        self.publish_tasmota_topic(payload="pageType~screensaver")
-        self.HandleScreensaverWeatherUpdate()  # Geht nur wenn NOTIFY leer wäre! Wird in Nextion so geregelt.
         self.HandleScreensaverColors()  # Geht nur wenn NOTIFY leer wäre! Wird in Nextion so geregelt.
+        self.publish_tasmota_topic(payload="pageType~screensaver")
+        self.send_current_time()
+        self.send_current_date()
+        self.HandleScreensaverWeatherUpdate()  # Geht nur wenn NOTIFY leer wäre! Wird in Nextion so geregelt.
 
     def HandleScreensaverColors(self):
         # payload: color~background~time~timeAMPM~date~tMainIcon~tMainText~tForecast1~tForecast2~tForecast3~tForecast4~tF1Icon~tF2Icon~tF3Icon~tF4Icon~tForecast1Val~tForecast2Val~tForecast3Val~tForecast4Val~bar~tMRIcon~tMR~tTimeAdd
         self.logger.info('Function HandleScreensaverColors to be done')
-        background = rgb_dec565(getattr(Colors, 'HMIDark'))
+        background = rgb_dec565(getattr(Colors, 'Black'))
         timestr = rgb_dec565(getattr(Colors, 'White'))
         timeAPPM = rgb_dec565(getattr(Colors, 'White'))
         date = rgb_dec565(getattr(Colors, 'White'))
@@ -911,7 +920,7 @@ class NSPanel(MqttPlugin):
 
     def get_status_icons(self) -> str:
         self.logger.debug("get_status_icons called")
-        screensaver = self.panel_config.get('config', {}).get('screensaver', {})
+        screensaver = self.panel_config.get('screensaver', {})
         iconLeft = self.items.return_item(screensaver.get('statusIconLeft', None))()
         iconRight = self.items.return_item(screensaver.get('statusIconRight', None))()
         iconSize = screensaver.get('statusIconBig', True)
@@ -943,7 +952,7 @@ class NSPanel(MqttPlugin):
 
     def HandleScreensaverWeatherUpdate(self):
         self.logger.info('Function HandleScreensaverWeatherUpdate')
-        weather = self.panel_config.get('config', {}).get('weather', {})
+        weather = self.panel_config.get('screensaver', {}).get('weather', {})
 
         if weather:
             # actual weather
@@ -1414,7 +1423,7 @@ class NSPanel(MqttPlugin):
     def GeneratePopupNotify(self, content) -> list:
         self.logger.debug(f"GeneratePopupNotify called with content={content}")
         # TODO split colors for different elements?
-        color = rgb_dec565(getattr(Colors, self.panel_config.get('defaultOnColor', "White")))
+        color = rgb_dec565(getattr(Colors, self.defaultColor))
 
         entity = content.get('entity', '')
         heading = content.get('heading', '')
@@ -1498,8 +1507,6 @@ class NSPanel(MqttPlugin):
     def GenerateThermoPage(self, page) -> list:
         self.logger.debug(f"GenerateThermoPage called with page={page}")
 
-        temperatureUnit = self.panel_config.get('config', {}).get('temperatureUnit', '°C')
-
         out_msgs = list()
         out_msgs.append('pageType~cardThermo')
 
@@ -1555,7 +1562,7 @@ class NSPanel(MqttPlugin):
             f'{heading}~'
             f'{self.GetNavigationString(page)}~'
             f'{entity}~'
-            f'{currentTemp} {temperatureUnit}~'  # Ist-Temperatur (String)
+            f'{currentTemp} {self.temperatureUnit}~'  # Ist-Temperatur (String)
             f'{destTemp}~'  # Soll-Temperatur (numerisch ohne Komma in Zehntelgrad)
             f'{statusStr}~'  # Mode
             f'{minTemp}~'  # Thermostat Min-Temperatur (numerisch ohne Komma in Zehntelgrad)
@@ -1565,7 +1572,7 @@ class NSPanel(MqttPlugin):
             f'Aktuell:~'  # Todo #f'{self._get_locale("thermostat", "Currently")}~'   # Bezeichner vor aktueller Raumtemperatur
             f'Zustand:~'  # Todo #f'{self._get_locale("thermostat", "State")}~'       # Bezeichner vor State
             f"~"  # tALbl ?
-            f'{temperatureUnit}~'  # iconTemperature dstTempTwoTempMode
+            f'{self.temperatureUnit}~'  # iconTemperature dstTempTwoTempMode
             f'~'  # dstTempTwoTempMode --> Wenn Wert, dann 2 Temperaturen
             f'{thermoPopup}'  # PopUp
         )
@@ -1812,7 +1819,7 @@ class NSPanel(MqttPlugin):
                 value = self.items.return_item(item)()
 
             icon = Icons.GetIcon(entity.get('icon', ''))
-            iconColor = rgb_dec565(getattr(Colors, entity.get('color', self.panel_config['config']['defaultColor'])))
+            iconColor = rgb_dec565(getattr(Colors, entity.get('color', self.defaultColor)))
             speed = entity.get('speed', '')
             pageData = (
                 f"{pageData}"
@@ -1921,14 +1928,14 @@ class NSPanel(MqttPlugin):
             if iconid == '':
                 iconid = entity.get('iconId', '')
 
-            iconColor = entity.get('iconColor', 'White')
+            iconColor = entity.get('iconColor', self.defaultColor)
             if page_content['pageType'] == 'cardGrid':
                 if entity['type'] == 'text':
                     iconid = str(value)[:4]  # max 4 characters
                 elif value:
-                    iconColor = entity.get('onColor', self.panel_config['config'].get('defaultOnColor', 'On'))
+                    iconColor = entity.get('onColor', self.defaultOnColor)
                 else:
-                    iconColor = entity.get('offColor', self.panel_config['config'].get('defaultOffColor', 'Off'))
+                    iconColor = entity.get('offColor', self.defaultOffColor)
 
             elif page_content['pageType'] == 'cardEntities':
                 if entity['type'] == 'number':
@@ -1957,7 +1964,7 @@ class NSPanel(MqttPlugin):
         self.logger.debug(f"GenerateDetailLight called with entity={pagename}")
         entities = self.panel_config['cards'][self.current_page]['entities']
         entity = next((entity for entity in entities if entity["entity"] == pagename), None)
-        icon_color = rgb_dec565(getattr(Colors, self.panel_config.get('defaultColor', "White")))
+        icon_color = rgb_dec565(getattr(Colors, self.defaultColor))
         # switch
         item = self.items.return_item(entity.get('item', ''))
         if item is None:

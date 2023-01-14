@@ -73,6 +73,53 @@ parameters:
         description:
             de: Prüft beim Start, ob Display-Firmware mit Plugin zusammenpasst. off = keine Prüfung, notify = Nachricht mit Möglichkeit zum Update
             en: Checks at startup if display firmware matches to plugin. off = no check, notify = noification with possibility to update
+    
+    brightness:
+        type: int
+        default: 50
+        valid_min: 0 # off
+        valid_max: 100
+        description:
+            de: ...
+            en: ...
+
+    temperatureUnit:
+        type: str
+        default: '°C'
+        valid_list:
+          - '°C'
+          - '°F'
+        description:
+            de: ...
+            en: ...
+
+    defaultBackgroundColor:
+        type: str
+        default: 'Black'
+        description:
+            de: ...
+            en: ...
+
+    defaultColor:
+        type: str
+        default: 'White'
+        description:
+            de: ...
+            en: ...
+
+    defaultOffColor:
+        type: str
+        default: 'White'
+        description:
+            de: ...
+            en: ...
+
+    defaultOnColor:
+        type: str
+        default: 'Yellow'
+        description:
+            de: ...
+            en: ...
 
     webif_pagelength:
         type: int

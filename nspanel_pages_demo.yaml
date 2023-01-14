@@ -1,24 +1,11 @@
-config:
-  screensaver_timeout: 30       # 0 disable, max. 65 sec
-  brightness_screensaver: 5     # 0-100%
-  brightness_active: 99         # 0-100%
-  temperatureUnit: °C
-  locale: de-DE
+screensaver:
+  timeout: 30       # 0 disable, max. 65 sec
+  brightness: 1     # 0-100%
   timeFormat: '%H:%M'
   dateFormat: '%A, %d. %B %Y'
-  sleep_brightness:
-    - time: "7:00:00"
-      value: 10
-    - time: "23:00:00"
-      value: 0
-  defaultOffColor: 'Off'
-  defaultOnColor: 'On'
-  defaultColor: 'Off'
-  defaultBackgroundColor: Black
-  screensaver:
-    statusIconLeft: NSPanel1.screensaver.statusIconLeft
-    statusIconRight: NSPanel1.screensaver.statusIconRight
-    secondLine: Demo-Zeile
+  statusIconLeft: NSPanel1.screensaver.statusIconLeft
+  statusIconRight: NSPanel1.screensaver.statusIconRight
+  secondLine: Demo-Zeile
   weather:
     - day: NSPanel1.Wetter.Tag0
       icon: NSPanel1.Wetter.Tag0.Icon
