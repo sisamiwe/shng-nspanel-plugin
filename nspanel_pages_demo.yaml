@@ -137,17 +137,18 @@ cards:
     yAxisLabel: scaled to maximum
 
   - pageType: cardAlarm
+    title: "Haus Alarmanlage"
     entity: KeyPad
     items:
         arm1: "Anwesend"
         arm2: "Abwesend"
         arm3: "Urlaub"
         arm4: "Gäste"
-        Password: "1234"
-        arm1ActionName: Alarm.Modus1
-        arm2ActionName: Alarm.Modus2
-        arm3ActionName: Alarm.Modus3
-        arm4ActionName: Alarm.Modus4  
+        Password: NSPanel1.Alarm.Pwd
+        arm1ActionName: NSPanel1.Alarm.Mod1
+        arm2ActionName: NSPanel1.Alarm.Mod2
+        arm3ActionName: NSPanel1.Alarm.Mod3
+        arm4ActionName: NSPanel1.Alarm.Mod4
           
 
   #- pageType: cardQR

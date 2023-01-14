@@ -1080,7 +1080,11 @@ class NSPanel(MqttPlugin):
                 item(value, self.get_shortname())
 
         # Alarmpage Button Handle
-        elif buttonAction == 'Alarm.Modus1':  # Anwesend
+
+        #elif buttonAction[:5] == self.panel_config
+
+
+        elif buttonAction == 'NSPanel1.Alarm.Mod1':  # Anwesend
             self.logger.debug(f"Button {buttonAction} pressed")
 
             password = words[4]
@@ -1095,6 +1099,8 @@ class NSPanel(MqttPlugin):
 
             if item3():
                 self.logger.debug("Passwort needed to unlock")
+                self.logger.debug(f"Saved Pass: {pwd}. Entered Password {password}")
+
                 if password == pwd:
                     self.logger.debug(f"Password {password} = {pwd} correct")
                     self.items.return_item(items.get('arm1ActionName', None))(True)
@@ -1111,7 +1117,7 @@ class NSPanel(MqttPlugin):
 
             self.GeneratePage(self.current_page)
 
-        elif buttonAction == 'Alarm.Modus2':  # Abwesend
+        elif buttonAction == 'NSPanel1.Alarm.Mod2':  # Abwesend
             self.logger.debug(f"Button {buttonAction} pressed")
             password = words[4]
 
@@ -1125,6 +1131,8 @@ class NSPanel(MqttPlugin):
 
             if item3():
                 self.logger.debug("Passwort needed to unlock")
+                self.logger.debug(f"Saved Pass: {pwd}. Entered Password {password}")
+
                 if password == pwd:
                     self.logger.debug(f"Password {password} = {pwd} correct")
                     self.items.return_item(items.get('arm1ActionName', None))(False)
@@ -1141,7 +1149,7 @@ class NSPanel(MqttPlugin):
 
             self.GeneratePage(self.current_page)
 
-        elif buttonAction == 'Alarm.Modus3':  # Urlaub
+        elif buttonAction == 'NSPanel1.Alarm.Mod3':  # Urlaub
             self.logger.debug(f"Button {buttonAction} pressed")
 
             password = words[4]
@@ -1156,6 +1164,8 @@ class NSPanel(MqttPlugin):
 
             if item3():
                 self.logger.debug("Passwort needed to unlock")
+                self.logger.debug(f"Saved Pass: {pwd}. Entered Password {password}")
+
                 if password == pwd:
                     self.logger.debug(f"Password {password} = {pwd} correct")
                     self.items.return_item(items.get('arm1ActionName', None))(False)
@@ -1172,7 +1182,7 @@ class NSPanel(MqttPlugin):
 
             self.GeneratePage(self.current_page)
 
-        elif buttonAction == 'Alarm.Modus4':  # Gäste
+        elif buttonAction == 'NSPanel1.Alarm.Mod4':  # Gäste
             password = words[4]
 
             page_content = self.panel_config['cards'][self.current_page]
@@ -1185,6 +1195,8 @@ class NSPanel(MqttPlugin):
 
             if item3():
                 self.logger.debug("Passwort needed to unlock")
+                self.logger.debug(f"Saved Pass: {pwd}. Entered Password {password}")
+
                 if password == pwd:
                     self.logger.debug(f"Password {password} = {pwd} correct")
                     self.items.return_item(items.get('arm1ActionName', None))(False)
@@ -1482,7 +1494,7 @@ class NSPanel(MqttPlugin):
         out_msgs.append('pageType~cardAlarm')
 
         page_content = self.panel_config['cards'][page]
-
+        title = page_content.get('title', 'undefined')
         entity = page_content.get('entity', 'undefined')
         items = page_content.get('items', 'undefined')
         iconId = Icons.GetIcon('home')  # Icons.GetIcon(items.get('iconId', 'home'))
@@ -1547,8 +1559,9 @@ class NSPanel(MqttPlugin):
         # entityUpd~*entity*~*navigation*~*arm1*~*arm1ActionName*~*arm2*~*arm2ActionName*~*arm3*~*arm3ActionName*~*arm4*~*arm4ActionName*~*icon*~*iconColor*~*numpadStatus*~*flashing*
         pageData = (
             'entityUpd~'
-            f'{entity}~'
+            f'{title}~'
             f'{self.GetNavigationString(page)}~'
+            f'{entity}~'
             f'{arm1}~'  # Statusname for modus 1
             f'{arm1ActionName}~'  # Status item for modus 1
             f'{arm2}~'  # Statusname for modus 2

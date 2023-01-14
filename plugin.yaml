@@ -280,6 +280,30 @@ item_structs:
             enforce_updates: true
             initial_value: 'Szene1'
 
+        Alarm:
+            Pwd:
+                type: str
+                initial_value: 1234
+                enforce_updates: true
+
+            Mod1:
+                type: bool
+                enforce_updates: true
+
+            Mod2:
+                type: bool
+                enforce_updates: true
+
+            Mod3:
+                type: bool
+                enforce_updates: true
+
+            Mod4:
+                type: bool
+                enforce_updates: true
+
+
+
     simulation:
         name: Simulation eines NSPanels
 
