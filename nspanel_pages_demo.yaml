@@ -1,6 +1,6 @@
 screensaver:
   timeout: 30       # 0 disable, max. 65 sec
-  brightness: 1     # 0-100%
+  brightness: 25     # 0-100%
   timeFormat: '%H:%M'
   dateFormat: '%A, %d. %B %Y'
   statusIconLeft: NSPanel1.screensaver.statusIconLeft
@@ -47,8 +47,9 @@ cards:
         item: NSPanel1.Rolladen.move
         item_stop: NSPanel1.Rolladen.stop
         item_pos: NSPanel1.Rolladen.pos
-        iconId: window-shutter
-        displayNameEntity: Rolladen
+        item_status: NSPanel1.Rolladen.move
+        iconId: garage
+        displayNameEntity: Garage
       - entity: page0_id3
         type: shutter
         item: NSPanel1.Rolladen.move
@@ -163,6 +164,7 @@ cards:
         item: NSPanel1.Rolladen.move
         item_stop: NSPanel1.Rolladen.stop
         item_pos: NSPanel1.Rolladen.pos
+        item_status: NSPanel1.Rolladen.move
         iconId: window-shutter
         displayNameEntity: Rolladen
       - entity: page4_id1
