@@ -7,12 +7,12 @@ screensaver:
   statusIconRight: NSPanel1.screensaver.statusIconRight
   secondLine: Demo-Zeile
   weather:
-    - day: NSPanel1.Wetter.Tag0
-      icon: NSPanel1.Wetter.Tag0.Icon
-      text: NSPanel1.Wetter.Tag0.Text
+    - day: # Jetzt/Heute
+      icon: NSPanel1.Wetter.Icon
+      text: NSPanel1.Wetter.Text
       alternativeLayout: False
-      second_icon: NSPanel1.Wetter.Tag0.SecondIcon # only displayed if alternativeLayout is True
-      second_text: NSPanel1.Wetter.Tag0.SecondText # only displayed if alternativeLayout is True
+      second_icon: NSPanel1.Wetter.SecondIcon # only displayed if alternativeLayout is True
+      second_text: NSPanel1.Wetter.SecondText # only displayed if alternativeLayout is True
     - day: NSPanel1.Wetter.Tag1
       icon: NSPanel1.Wetter.Tag1.Icon
       text: NSPanel1.Wetter.Tag1.Text

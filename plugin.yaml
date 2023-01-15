@@ -161,8 +161,7 @@ item_attributes:
             - relay1
             - relay2
             - screensaver_active
-            - screensaver_statusiconleft
-            - screensaver_statusiconright
+            - screensaver_update
             - temp_analog
             - temp_esp32
             - uptime
@@ -236,11 +235,11 @@ item_structs:
         screensaver:
             statusIconLeft:
                 type: dict
-                nspanel_attr@instance: screensaver_statusiconleft
+                nspanel_attr@instance: screensaver_update
                 initial_value: "{'icon': 'email', 'color': 'White'}"
             statusIconRight:
                 type: dict
-                nspanel_attr@instance: screensaver_statusiconright
+                nspanel_attr@instance: screensaver_update
                 initial_value: "{'icon': 'phone', 'color': 'White'}"
 
         timer:
@@ -254,69 +253,80 @@ item_structs:
             cycle: 600
 
         Wetter:
-
-            Tag0:
+        
+            Icon:
+                type: num
+                nspanel_attr@instance: screensaver_update
+                initial_value: 803
+            Text:
                 type: str
-                initial_value: 'Tag0'
-
-                Icon:
-                    type: str
-                    initial_value: 'weather-sunny'
-                Text:
-                    type: str
-                    initial_value: 23 °C
-                SecondIcon:
-                    type: str
-                    initial_value: '50'
-                SecondText:
-                    type: str
-                    initial_value: '%'
+                nspanel_attr@instance: screensaver_update
+                initial_value: 23 °C
+            SecondIcon:
+                type: str
+                nspanel_attr@instance: screensaver_update
+                initial_value: '50'
+            SecondText:
+                type: str
+                nspanel_attr@instance: screensaver_update
+                initial_value: '%'
 
             Tag1:
                 type: str
                 initial_value: 'Tag1'
+                nspanel_attr@instance: screensaver_update
 
                 Icon:
-                    type: str
-                    initial_value: 'weather-snowy'
+                    type: num
+                    initial_value: 800
+                    nspanel_attr@instance: screensaver_update
                 Text:
                     type: str
                     initial_value: 13 °C
-                    
+                    nspanel_attr@instance: screensaver_update
 
             Tag2:
                 type: str
                 initial_value: 'Tag2'
+                nspanel_attr@instance: screensaver_update
 
                 Icon:
-                    type: str
-                    initial_value: 'weather-windy'
+                    type: num
+                    initial_value: 210
+                    nspanel_attr@instance: screensaver_update
                 Text:
                     type: str
                     initial_value: 3 °C
+                    nspanel_attr@instance: screensaver_update
 
             Tag3:
                 type: str
                 initial_value: 'Tag3'
+                nspanel_attr@instance: screensaver_update
 
                 Icon:
-                    type: str
-                    initial_value: 'weather-cloudy'
+                    type: num
+                    initial_value: 300
+                    nspanel_attr@instance: screensaver_update
                 Text:
                     type: str
                     initial_value: -7 °C
+                    nspanel_attr@instance: screensaver_update
 
             Tag4:
                 type: str
                 initial_value: 'Tag4'
+                nspanel_attr@instance: screensaver_update
 
                 Icon:
-                    type: str
-                    initial_value: 'weather-fog'
+                    type: num
+                    initial_value: 600
+                    nspanel_attr@instance: screensaver_update
                     
                 Text:
                     type: str
                     initial_value: -17 °C
+                    nspanel_attr@instance: screensaver_update
 
         Licht:
             type: bool

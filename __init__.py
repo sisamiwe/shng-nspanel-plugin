@@ -130,7 +130,7 @@ class NSPanel(MqttPlugin):
         else:
             # eu version
             self.desired_display_firmware_url = f"http://nspanel.pky.eu/lovelace-ui/github/nspanel-{self.desired_version}.tft"
-        self.desired_berry_driver_url       = "https://raw.githubusercontent.com/joBr99/nspanel-lovelace-ui/main/tasmota/autoexec.be"
+        self.desired_berry_driver_url = "https://raw.githubusercontent.com/joBr99/nspanel-lovelace-ui/main/tasmota/autoexec.be"
 
         # read panel config file
         try:
@@ -269,8 +269,9 @@ class NSPanel(MqttPlugin):
                         self.publish_tasmota_topic('cmnd', self.tasmota_topic, f"POWER{relay}", value, item,
                                                    bool_values=['OFF', 'ON'])
 
-                if nspanel_attr[:11] == 'screensaver':
-                    self.HandleScreensaverIconUpdate()
+                if nspanel_attr == 'screensaver_update':
+                    self.HandleScreensaverWeatherUpdate()  # implicit status icon update
+                    self.HandleScreensaverColors()
 
             elif self.has_iattr(item.conf, 'nspanel_popup'):
                 nspanel_popup = self.get_iattr_value(item.conf, 'nspanel_popup')
@@ -602,10 +603,6 @@ class NSPanel(MqttPlugin):
         dt = self.shtime.now() + timedelta(seconds=(self.telemetry_period - 3))
         self.scheduler_add('check_online_status', self._check_online_status, cycle=self.telemetry_period, next=dt)
 
-        self.logger.debug('Add scheduler for weather')
-        dt = dt + timedelta(seconds=20)
-        self.scheduler_add('update_weather', self.HandleScreensaverWeatherUpdate, next=dt, cycle=3600)
-
     def _remove_scheduler(self):
         """
         remove scheduler for cyclic time and date update
@@ -618,9 +615,6 @@ class NSPanel(MqttPlugin):
 
         self.logger.debug('Remove scheduler for online status')
         self.scheduler_remove('check_online_status')
-
-        self.logger.debug('Remove scheduler for weather')
-        self.scheduler_remove('update_weather')
 
     def _parse_config_file(self):
         """
@@ -695,7 +689,7 @@ class NSPanel(MqttPlugin):
         self.logger.debug(f"previous_page={self.current_page}")
 
     def _get_locale(self, group, entry):
-        return self.locale.get(group, {}).get(entry, {}).get('de-DE') # TODO configure in plugin.yaml
+        return self.locale.get(group, {}).get(entry, {}).get('de-DE')  # TODO configure in plugin.yaml
 
     def send_current_time(self):
         secondLine = self.panel_config.get('screensaver', {}).get('secondLine', '')
@@ -718,7 +712,7 @@ class NSPanel(MqttPlugin):
         brightness_active = self.brightness
         dbc = rgb_dec565(getattr(Colors, self.defaultBackgroundColor))
         # same value for both values will break sleep timer of the firmware # comment from HA code
-        if brightness_screensaver==brightness_active:
+        if brightness_screensaver == brightness_active:
             brightness_screensaver = brightness_screensaver-1
         self.publish_tasmota_topic(payload=f"dimmode~{brightness_screensaver}~{brightness_active}~{dbc}")
 
@@ -893,28 +887,28 @@ class NSPanel(MqttPlugin):
     def HandleScreensaverColors(self):
         # payload: color~background~time~timeAMPM~date~tMainIcon~tMainText~tForecast1~tForecast2~tForecast3~tForecast4~tF1Icon~tF2Icon~tF3Icon~tF4Icon~tForecast1Val~tForecast2Val~tForecast3Val~tForecast4Val~bar~tMRIcon~tMR~tTimeAdd
         self.logger.info('Function HandleScreensaverColors to be done')
-        background = rgb_dec565(getattr(Colors, 'Black'))
-        timestr = rgb_dec565(getattr(Colors, 'White'))
-        timeAPPM = rgb_dec565(getattr(Colors, 'White'))
-        date = rgb_dec565(getattr(Colors, 'White'))
-        tMainIcon = rgb_dec565(getattr(Colors, 'White'))
-        tMainText = rgb_dec565(getattr(Colors, 'White'))
-        tForecast1 = rgb_dec565(getattr(Colors, 'White'))
-        tForecast2 = rgb_dec565(getattr(Colors, 'White'))
-        tForecast3 = rgb_dec565(getattr(Colors, 'White'))
-        tForecast4 = rgb_dec565(getattr(Colors, 'White'))
-        tF1Icon = rgb_dec565(getattr(Colors, 'White'))
-        tF2Icon = rgb_dec565(getattr(Colors, 'White'))
-        tF3Icon = rgb_dec565(getattr(Colors, 'White'))
-        tF4Icon = rgb_dec565(getattr(Colors, 'White'))
-        tForecast1Val = rgb_dec565(getattr(Colors, 'White'))
-        tForecast2Val = rgb_dec565(getattr(Colors, 'White'))
-        tForecast3Val = rgb_dec565(getattr(Colors, 'White'))
-        tForecast4Val = rgb_dec565(getattr(Colors, 'White'))
-        bar = rgb_dec565(getattr(Colors, 'White'))
-        tMRIcon = rgb_dec565(getattr(Colors, 'White'))
-        tMR = rgb_dec565(getattr(Colors, 'White'))
-        tTimeAdd = rgb_dec565(getattr(Colors, 'White'))
+        background = rgb_dec565(getattr(Colors, self.defaultBackgroundColor))
+        timestr = rgb_dec565(getattr(Colors, self.defaultColor))
+        timeAPPM = rgb_dec565(getattr(Colors, self.defaultColor))
+        date = rgb_dec565(getattr(Colors, self.defaultColor))
+        tMainIcon = rgb_dec565(getattr(Colors, self.defaultColor))
+        tMainText = rgb_dec565(getattr(Colors, self.defaultColor))
+        tForecast1 = rgb_dec565(getattr(Colors, self.defaultColor))
+        tForecast2 = rgb_dec565(getattr(Colors, self.defaultColor))
+        tForecast3 = rgb_dec565(getattr(Colors, self.defaultColor))
+        tForecast4 = rgb_dec565(getattr(Colors, self.defaultColor))
+        tF1Icon = rgb_dec565(getattr(Colors, self.defaultColor))
+        tF2Icon = rgb_dec565(getattr(Colors, self.defaultColor))
+        tF3Icon = rgb_dec565(getattr(Colors, self.defaultColor))
+        tF4Icon = rgb_dec565(getattr(Colors, self.defaultColor))
+        tForecast1Val = rgb_dec565(getattr(Colors, self.defaultColor))
+        tForecast2Val = rgb_dec565(getattr(Colors, self.defaultColor))
+        tForecast3Val = rgb_dec565(getattr(Colors, self.defaultColor))
+        tForecast4Val = rgb_dec565(getattr(Colors, self.defaultColor))
+        bar = rgb_dec565(getattr(Colors, self.defaultColor))
+        tMRIcon = rgb_dec565(getattr(Colors, self.defaultColor))
+        tMR = rgb_dec565(getattr(Colors, self.defaultColor))
+        tTimeAdd = rgb_dec565(getattr(Colors, self.defaultColor))
         self.publish_tasmota_topic(
             payload=f"color~{background}~{timestr}~{timeAPPM}~{date}~{tMainIcon}~{tMainText}~{tForecast1}~{tForecast2}~{tForecast3}~{tForecast4}~{tF1Icon}~{tF2Icon}~{tF3Icon}~{tF4Icon}~{tForecast1Val}~{tForecast2Val}~{tForecast3Val}~{tForecast4Val}~{bar}~{tMRIcon}~{tMR}~{tTimeAdd}")
 
@@ -945,10 +939,68 @@ class NSPanel(MqttPlugin):
         icon2Font = iconSize
         return f"{icon1}~{icon1Color}~{icon2}~{icon2Color}~{icon1Font}~{icon2Font}"
 
-    def HandleScreensaverIconUpdate(self):
+    def HandleScreensaverIconUpdate(self):  # Actually unused function
         self.logger.info('Function HandleScreensaverIconUpdate')
         status_icons = self.get_status_icons()
         self.publish_tasmota_topic(payload=f"statusUpdate~{status_icons}")
+
+    def getWeatherIcon(self, icon, day=True):
+        """Get weather condition from weather data."""
+        condition_classes = {
+            'cloudy': [803, 804],
+            'fog': [701, 721, 741],
+            'hail': [906],
+            'lightning': [210, 211, 212, 221],
+            'lightning_rainy': [200, 201, 202, 230, 231, 232],
+            'partlycloudy': [801, 802],
+            'pouring': [504, 314, 502, 503, 522],
+            'rainy': [300, 301, 302, 310, 311, 312, 313, 500, 501, 520, 521],
+            'snowy': [600, 601, 602, 611, 612, 620, 621, 622],
+            'snowy_rainy': [511, 615, 616],
+            'windy': [905, 951, 952, 953, 954, 955, 956, 957],
+            'windy_variant': [958, 959, 960, 961],
+            'exceptional': [711, 731, 751, 761, 762, 771, 900, 901, 962, 903, 904],
+        }
+
+        weatherMapping = {
+            'clear-night': 'weather-night',
+            'cloudy': 'weather-cloudy',
+            'exceptional': 'alert-circle-outline',
+            'fog': 'weather-fog',
+            'hail': 'weather-hail',
+            'lightning': 'weather-lightning',
+            'lightning-rainy': 'weather-lightning-rainy',
+            'partlycloudy': 'weather-partly-cloudy',
+            'pouring': 'weather-pouring',
+            'rainy': 'weather-rainy',
+            'snowy': 'weather-snowy',
+            'snowy-rainy': 'weather-snowy-rainy',
+            'sunny': 'weather-sunny',
+            'windy': 'weather-windy',
+            'windy-variant': 'weather-windy-variant'
+        }
+        self.logger.debug(f"getWeatherIcon called with icon={icon}")
+        # iconname
+        if isinstance(icon, str):
+            return Icons.GetIcon(icon)
+        # numeric value
+        elif (isinstance(icon, int) or isinstance(icon, float)) and icon < 100:
+            return round(icon, 1)
+        # Handle OWM weather code
+        elif isinstance(icon, int):
+            if icon == 800:  # same code for day and night
+                if day:
+                    weatherCondition = ['sunny']
+                else:
+                    weatherCondition = ['clear-night']
+            else:
+                weatherCondition = [k for k, v in condition_classes.items() if icon in v]
+
+            if weatherCondition:
+                return Icons.GetIcon(weatherMapping[weatherCondition[0]])
+            else:
+                self.logger.warning('unknown openweathermap weather code')
+                return icon
 
     def HandleScreensaverWeatherUpdate(self):
         self.logger.info('Function HandleScreensaverWeatherUpdate')
@@ -956,13 +1008,13 @@ class NSPanel(MqttPlugin):
 
         if weather:
             # actual weather
-            tMainIcon = Icons.GetIcon(self.items.return_item(weather[0].get('icon'))())
+            tMainIcon = self.getWeatherIcon(self.items.return_item(weather[0].get('icon'))())
             tMainText = self.items.return_item(weather[0].get('text'))()
             optionalLayoutIcon = ""
             optionalLayoutText = ""
             if weather[0].get('alternativeLayout', False):
                 optionalLayoutItemValue = self.items.return_item(weather[0].get('second_icon'))()
-                optionalLayoutIcon = Icons.GetIcon(optionalLayoutItemValue)
+                optionalLayoutIcon = self.getWeatherIcon(optionalLayoutItemValue)
                 if not optionalLayoutIcon:
                     optionalLayoutIcon = optionalLayoutItemValue
                 optionalLayoutIcon = optionalLayoutIcon
@@ -970,22 +1022,22 @@ class NSPanel(MqttPlugin):
 
             # forecast day 1
             tForecast1 = self.items.return_item(weather[1].get('day'))()
-            tF1Icon = Icons.GetIcon(self.items.return_item(weather[1].get('icon'))())
+            tF1Icon = self.getWeatherIcon(self.items.return_item(weather[1].get('icon'))())
             tForecast1Val = self.items.return_item(weather[1].get('text'))()
 
             # forecast day 2
             tForecast2 = self.items.return_item(weather[2].get('day'))()
-            tF2Icon = Icons.GetIcon(self.items.return_item(weather[2].get('icon'))())
+            tF2Icon = self.getWeatherIcon(self.items.return_item(weather[2].get('icon'))())
             tForecast2Val = self.items.return_item(weather[2].get('text'))()
 
             # forecast day 3
             tForecast3 = self.items.return_item(weather[3].get('day'))()
-            tF3Icon = Icons.GetIcon(self.items.return_item(weather[3].get('icon'))())
+            tF3Icon = self.getWeatherIcon(self.items.return_item(weather[3].get('icon'))())
             tForecast3Val = self.items.return_item(weather[3].get('text'))()
 
             # forecast day 4
             tForecast4 = self.items.return_item(weather[4].get('day'))()
-            tF4Icon = Icons.GetIcon(self.items.return_item(weather[4].get('icon'))())
+            tF4Icon = self.getWeatherIcon(self.items.return_item(weather[4].get('icon'))())
             tForecast4Val = self.items.return_item(weather[4].get('text'))()
 
             status_icons = self.get_status_icons()
@@ -1808,11 +1860,11 @@ class NSPanel(MqttPlugin):
             f"{self.GetNavigationString(page)}~"
             f"{colorHome}~"
             f"{iconHome}~"
-            f"-~" # ignored
+            f"-~"  # ignored
             f"{textHomeBelow}~"
-            f"-~" # ignored
-            f"-~" # ignored
-            f"-~" # ignored
+            f"-~"  # ignored
+            f"-~"  # ignored
+            f"-~"  # ignored
             f"{textHomeAbove}~"
         )
 
@@ -1863,7 +1915,7 @@ class NSPanel(MqttPlugin):
         stepwidth_xAxis = round(nr_of_elements / (nr_of_xAxis_labels - 1))
 
         heading = page_content.get('heading', 'Chart')
-        color = rgb_dec565(getattr(Colors, page_content.get('Color', 'White')))
+        color = rgb_dec565(getattr(Colors, page_content.get('Color', self.defaultColor)))
         yAxisLabel = page_content.get('yAxisLabel', '')
         yAxisTick = '5:10'
 
@@ -2020,7 +2072,7 @@ class NSPanel(MqttPlugin):
         item_pos = self.items.return_item(itemname_pos)
         if item_pos is not None:
             sliderPos = scale(item_pos(),
-                              (entity.get('min_pos', "0"), entity.get('max_pos', "100")), (0, 100))
+                              (entity.get('min_pos', 0), entity.get('max_pos', 100)), (0, 100))
             textPosition = entity.get('textPosition', 'Position')
         else:
             sliderPos = 'disable'
@@ -2044,7 +2096,7 @@ class NSPanel(MqttPlugin):
         if item_tilt is not None:
             textTilt = entity.get('textTilt', 'Lamellen')
             tiltPos = scale(item_tilt(),
-                            (entity.get('min_tilt', "0"), entity.get('max_tilt', "100")), (0, 100))
+                            (entity.get('min_tilt', 0), entity.get('max_tilt', 100)), (0, 100))
         else:
             textTilt = ''
             tiltPos = 'disable'
@@ -2193,6 +2245,7 @@ class NSPanel(MqttPlugin):
     def update_berry_driver(self, url):
         self.logger.info('update_berry_driver running')
         self.publish_tasmota_topic("cmnd", self.tasmota_topic, "Backlog", f"UpdateDriverVersion {url}; Restart 1")
+
     def update_display_firmware(self, url):
         self.logger.info('update_display_firmware called')
         self.publish_tasmota_topic("cmnd", self.tasmota_topic, "FlashNextion", url)
