@@ -238,6 +238,7 @@ class NSPanel(MqttPlugin):
         """
         if 'xxx' in logic.conf:
             # self.function(logic['name'])
+            self.logger.waring('logic not implemented')
             pass
 
     def update_item(self, item, caller=None, source=None, dest=None):
@@ -914,32 +915,7 @@ class NSPanel(MqttPlugin):
         status_icons = self.get_status_icons()
         self.publish_tasmota_topic(payload=f"statusUpdate~{status_icons}")
 
-    def getWeatherCondition(self, icon):
-        """Get weather condition from weather data."""
-        condition_classes = {
-            'cloudy': [803, 804],
-            'fog': [701, 721, 741],
-            'hail': [906],
-            'lightning': [210, 211, 212, 221],
-            'lightning_rainy': [200, 201, 202, 230, 231, 232],
-            'partlycloudy': [801, 802],
-            'pouring': [504, 314, 502, 503, 522],
-            'rainy': [300, 301, 302, 310, 311, 312, 313, 500, 501, 520, 521],
-            'snowy': [600, 601, 602, 611, 612, 620, 621, 622],
-            'snowy_rainy': [511, 615, 616],
-            'windy': [905, 951, 952, 953, 954, 955, 956, 957],
-            'windy_variant': [958, 959, 960, 961],
-            'exceptional': [711, 731, 751, 761, 762, 771, 900, 901, 962, 903, 904],
-        }
-        if icon == 800:  # same code for day and night
-            if self.items.return_item('env.location.day')():
-                return ['sunny']
-            else:
-                return ['clear_night']
-        else:
-            return [k for k, v in condition_classes.items() if icon in v]
-
-    def getWeatherIcon(self, icon):
+    def getWeatherIcon(self, icon, day: bool = True):
         """Get weather icon from weather data."""
         weatherMapping = {
             'clear_night': 'weather-night',
@@ -967,14 +943,14 @@ class NSPanel(MqttPlugin):
             return round(icon, 1)
         # Handle OWM weather code
         elif isinstance(icon, int):
-            weatherCondition = self.getWeatherCondition(icon)[0]
+            weatherCondition = getWeatherCondition(icon, day)[0]
             if weatherCondition:
                 return Icons.GetIcon(weatherMapping[weatherCondition])
             else:
                 self.logger.warning('unknown openweathermap weather code')
                 return icon
 
-    def getWeatherAutoColor(self, icon):
+    def getWeatherAutoColor(self, icon, day: bool = True):
         default_weather_icon_color_mapping = {
             "clear_night": "35957",  # 50% grey
             "cloudy": "31728",  # grey-blue
@@ -994,7 +970,7 @@ class NSPanel(MqttPlugin):
         }
         self.logger.debug(f"getWeatherAutoColor called with icon={icon}")
         if isinstance(icon, int):
-            weatherCondition = self.getWeatherCondition(icon)[0]
+            weatherCondition = getWeatherCondition(icon, day)[0]
             if weatherCondition:
                 return default_weather_icon_color_mapping[weatherCondition]
 
@@ -1042,7 +1018,7 @@ class NSPanel(MqttPlugin):
 
             out_msgs = list()
             out_msgs.append(f"weatherUpdate~"
-                            f"{self.getWeatherIcon(tMainIcon)}~"
+                            f"{self.getWeatherIcon(tMainIcon, self.items.return_item('env.location.day')())}~"
                             f"{tMainText}~"
                             f"{tForecast1}~"
                             f"{self.getWeatherIcon(tF1Icon)}~"
@@ -1066,7 +1042,7 @@ class NSPanel(MqttPlugin):
             timestr = rgb_dec565(getattr(Colors, self.defaultColor))
             timeAPPM = rgb_dec565(getattr(Colors, self.defaultColor))
             date = rgb_dec565(getattr(Colors, self.defaultColor))
-            cMainIcon = self.getWeatherAutoColor(tMainIcon)
+            cMainIcon = self.getWeatherAutoColor(tMainIcon, self.items.return_item('env.location.day')())
             cMainText = rgb_dec565(getattr(Colors, self.defaultColor))
             cForecast1 = rgb_dec565(getattr(Colors, self.defaultColor))
             cForecast2 = rgb_dec565(getattr(Colors, self.defaultColor))
@@ -2410,3 +2386,29 @@ def pos_to_color(x, y, wh):
     hsv = (math.degrees(math.atan2(y, x)) % 360 / 360, sat, 1)
     rgb = hsv2rgb(hsv[0], hsv[1], hsv[2])
     return rgb
+
+
+def getWeatherCondition(weatherid, day: bool = True):
+    """Get weather condition from weather data."""
+    condition_classes = {
+        'cloudy': [803, 804],
+        'fog': [701, 721, 741],
+        'hail': [906],
+        'lightning': [210, 211, 212, 221],
+        'lightning_rainy': [200, 201, 202, 230, 231, 232],
+        'partlycloudy': [801, 802],
+        'pouring': [504, 314, 502, 503, 522],
+        'rainy': [300, 301, 302, 310, 311, 312, 313, 500, 501, 520, 521],
+        'snowy': [600, 601, 602, 611, 612, 620, 621, 622],
+        'snowy_rainy': [511, 615, 616],
+        'windy': [905, 951, 952, 953, 954, 955, 956, 957],
+        'windy_variant': [958, 959, 960, 961],
+        'exceptional': [711, 731, 751, 761, 762, 771, 900, 901, 962, 903, 904],
+    }
+    if weatherid == 800:  # same code for day and night
+        if day:
+            return ['sunny']
+        else:
+            return ['clear_night']
+    else:
+        return [k for k, v in condition_classes.items() if weatherid in v]
