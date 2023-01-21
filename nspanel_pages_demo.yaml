@@ -268,3 +268,10 @@ cards:
     Color: Red
     item: NSPanel1.chart
     yAxisLabel: scaled to maximum
+
+  - pageType: cardLChart
+    entity: page11
+    heading: cardLChart Demo
+    Color: Green
+    item: NSPanel1.chart
+    yAxisLabel: AxisLabel

@@ -1568,7 +1568,7 @@ class NSPanel(MqttPlugin):
         elif page_content['pageType'] == 'cardPower':
             self.SendToPanel(self.GeneratePowerPage(page))
 
-        elif page_content['pageType'] == 'cardChart':
+        elif page_content['pageType'] == 'cardChart' or page_content['pageType'] == 'cardLChart':
             self.SendToPanel(self.GenerateChartPage(page))
 
     def GenerateDetailPage(self, page, entity: str):
@@ -1944,7 +1944,7 @@ class NSPanel(MqttPlugin):
         page_content = self.panel_config['cards'][page]
 
         out_msgs = list()
-        out_msgs.append('pageType~cardChart')
+        out_msgs.append(f"pageType~{page_content['pageType']}")
 
         series_list = list(self.items.return_item(page_content['item'])())
 
