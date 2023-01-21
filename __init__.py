@@ -1728,10 +1728,6 @@ class NSPanel(MqttPlugin):
         iconId = Icons.GetIcon('home')  # Icons.GetIcon(items.get('iconId', 'home'))
         iconColor = rgb_dec565(
             getattr(Colors, 'White'))  # rgb_dec565(getattr(Colors, items.get('iconColor', 'White')))
-        arm1 = items.get('arm1', None)
-        arm2 = items.get('arm2', None)
-        arm3 = items.get('arm3', None)
-        arm4 = items.get('arm4', None)
         arm1ActionName = items.get('arm1ActionName', None)
         arm2ActionName = items.get('arm2ActionName', None)
         arm3ActionName = items.get('arm3ActionName', None)
@@ -1749,7 +1745,7 @@ class NSPanel(MqttPlugin):
         arm3 = items.get('arm3', None)
         arm4 = items.get('arm4', None)
 
-        if item1():  # Modus Anwesend
+        if item1():  # mode 1 active
             iconId = Icons.GetIcon('home')
             iconColor = rgb_dec565(getattr(Colors, 'White'))
             numpadStatus = 'disable'
@@ -1757,7 +1753,7 @@ class NSPanel(MqttPlugin):
             arm1 = ""
             title = items.get('arm1', None)
 
-        if item2():  # Modus Abwesend
+        if item2():  # mode 2 active
             iconId = Icons.GetIcon('home-lock')
             iconColor = rgb_dec565(getattr(Colors, 'Yellow'))
             numpadStatus = 'disable'
@@ -1765,7 +1761,7 @@ class NSPanel(MqttPlugin):
             arm2 = ""
             title = items.get('arm2', None)
 
-        if item3():  # Modus Urlaub
+        if item3():  # mode 3 active
             iconId = Icons.GetIcon('hiking')
             iconColor = rgb_dec565(getattr(Colors, 'Red'))
             numpadStatus = 'enable'
@@ -1773,8 +1769,7 @@ class NSPanel(MqttPlugin):
             arm3 = ""
             title = items.get('arm3', None)
 
-        if item4():  # Modus Gäste
-            title = "Gäste Modus"
+        if item4():  # mode 4 active
             iconId = Icons.GetIcon('home')
             iconColor = rgb_dec565(getattr(Colors, 'Green'))
             numpadStatus = 'disable'
@@ -1788,15 +1783,15 @@ class NSPanel(MqttPlugin):
             f'{title}~'
             f'{self.GetNavigationString(page)}~'
             f'{entity}~'
-            f'{arm1}~'  # Statusname for modus 1
-            f'alarm-modus1~'
-            f'{arm2}~'  # Statusname for modus 2
-            f'alarm-modus2~'
-            f'{arm3}~'  # Statusname for modus 3
-            f'alarm-modus3~'
-            f'{arm4}~'  # Statusname for modus 4
-            f'alarm-modus4~'
-            f'{iconId}~'  # iconId for which modus activated
+            f'{arm1}~'  # Statusname for mode 1
+            f'alarm-mode1~'
+            f'{arm2}~'  # Statusname for mode 2
+            f'alarm-mode2~'
+            f'{arm3}~'  # Statusname for mode 3
+            f'alarm-mode3~'
+            f'{arm4}~'  # Statusname for mode 4
+            f'alarm-mode4~'
+            f'{iconId}~'  # iconId for which mode activated
             f'{iconColor}~'  # iconColor
             f'{numpadStatus}~'  # Numpad on/off
             f'{flashing}'  # IconFlashing
