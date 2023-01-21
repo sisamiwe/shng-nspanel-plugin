@@ -619,6 +619,7 @@ class NSPanel(MqttPlugin):
 
         self.logger.debug('Remove scheduler for online status')
         self.scheduler_remove('check_online_status')
+        
 
     def _parse_config_file(self):
         """
@@ -1305,128 +1306,6 @@ class NSPanel(MqttPlugin):
                 self.logger.debug(f"item={item.id()} will be set to new value={value}")
                 item(value, self.get_shortname())
 
-        # Alarmpage Button Handle
-        elif buttonAction == 'Alarm.Modus1':  # Anwesend
-            self.logger.debug(f"Button {buttonAction} pressed")
-
-            password = words[4]
-
-            page_content = self.panel_config['cards'][self.current_page]
-            items = page_content.get('items', 'undefined')
-            pwd = items.get('Password', None)
-            item1 = self.items.return_item(items.get('arm1ActionName'))
-            item2 = self.items.return_item(items.get('arm2ActionName'))
-            item3 = self.items.return_item(items.get('arm3ActionName'))
-            item4 = self.items.return_item(items.get('arm4ActionName'))
-
-            if item3():
-                self.logger.debug("Passwort needed to unlock")
-                if password == pwd:
-                    self.logger.debug(f"Password {password} = {pwd} correct")
-                    self.items.return_item(items.get('arm1ActionName', None))(True)
-                    self.items.return_item(items.get('arm2ActionName', None))(False)
-                    self.items.return_item(items.get('arm3ActionName', None))(False)
-                    self.items.return_item(items.get('arm4ActionName', None))(False)
-                else:
-                    self.logger.debug("Password incorrect")
-            else:
-                self.items.return_item(items.get('arm1ActionName', None))(True)
-                self.items.return_item(items.get('arm2ActionName', None))(False)
-                self.items.return_item(items.get('arm3ActionName', None))(False)
-                self.items.return_item(items.get('arm4ActionName', None))(False)
-
-            self.GeneratePage(self.current_page)
-
-        elif buttonAction == 'Alarm.Modus2':  # Abwesend
-            self.logger.debug(f"Button {buttonAction} pressed")
-            password = words[4]
-
-            page_content = self.panel_config['cards'][self.current_page]
-            items = page_content.get('items', 'undefined')
-            pwd = items.get('Password', None)
-            item1 = self.items.return_item(items.get('arm1ActionName'))
-            item2 = self.items.return_item(items.get('arm2ActionName'))
-            item3 = self.items.return_item(items.get('arm3ActionName'))
-            item4 = self.items.return_item(items.get('arm4ActionName'))
-
-            if item3():
-                self.logger.debug("Passwort needed to unlock")
-                if password == pwd:
-                    self.logger.debug(f"Password {password} = {pwd} correct")
-                    self.items.return_item(items.get('arm1ActionName', None))(False)
-                    self.items.return_item(items.get('arm2ActionName', None))(True)
-                    self.items.return_item(items.get('arm3ActionName', None))(False)
-                    self.items.return_item(items.get('arm4ActionName', None))(False)
-                else:
-                    self.logger.debug("Password incorrect")
-            else:
-                self.items.return_item(items.get('arm1ActionName', None))(False)
-                self.items.return_item(items.get('arm2ActionName', None))(True)
-                self.items.return_item(items.get('arm3ActionName', None))(False)
-                self.items.return_item(items.get('arm4ActionName', None))(False)
-
-            self.GeneratePage(self.current_page)
-
-        elif buttonAction == 'Alarm.Modus3':  # Urlaub
-            self.logger.debug(f"Button {buttonAction} pressed")
-
-            password = words[4]
-
-            page_content = self.panel_config['cards'][self.current_page]
-            items = page_content.get('items', 'undefined')
-            pwd = items.get('Password', None)
-            item1 = self.items.return_item(items.get('arm1ActionName'))
-            item2 = self.items.return_item(items.get('arm2ActionName'))
-            item3 = self.items.return_item(items.get('arm3ActionName'))
-            item4 = self.items.return_item(items.get('arm4ActionName'))
-
-            if item3():
-                self.logger.debug("Passwort needed to unlock")
-                if password == pwd:
-                    self.logger.debug(f"Password {password} = {pwd} correct")
-                    self.items.return_item(items.get('arm1ActionName', None))(False)
-                    self.items.return_item(items.get('arm2ActionName', None))(False)
-                    self.items.return_item(items.get('arm3ActionName', None))(True)
-                    self.items.return_item(items.get('arm4ActionName', None))(False)
-                else:
-                    self.logger.debug("Password incorrect")
-            else:
-                self.items.return_item(items.get('arm1ActionName', None))(False)
-                self.items.return_item(items.get('arm2ActionName', None))(False)
-                self.items.return_item(items.get('arm3ActionName', None))(True)
-                self.items.return_item(items.get('arm4ActionName', None))(False)
-
-            self.GeneratePage(self.current_page)
-
-        elif buttonAction == 'Alarm.Modus4':  # Gäste
-            password = words[4]
-
-            page_content = self.panel_config['cards'][self.current_page]
-            items = page_content.get('items', 'undefined')
-            pwd = items.get('Password', None)
-            item1 = self.items.return_item(items.get('arm1ActionName'))
-            item2 = self.items.return_item(items.get('arm2ActionName'))
-            item3 = self.items.return_item(items.get('arm3ActionName'))
-            item4 = self.items.return_item(items.get('arm4ActionName'))
-
-            if item3():
-                self.logger.debug("Passwort needed to unlock")
-                if password == pwd:
-                    self.logger.debug(f"Password {password} = {pwd} correct")
-                    self.items.return_item(items.get('arm1ActionName', None))(False)
-                    self.items.return_item(items.get('arm2ActionName', None))(False)
-                    self.items.return_item(items.get('arm3ActionName', None))(False)
-                    self.items.return_item(items.get('arm4ActionName', None))(True)
-                else:
-                    self.logger.debug("Password incorrect")
-            else:
-                self.items.return_item(items.get('arm1ActionName', None))(False)
-                self.items.return_item(items.get('arm2ActionName', None))(False)
-                self.items.return_item(items.get('arm3ActionName', None))(False)
-                self.items.return_item(items.get('arm4ActionName', None))(True)
-
-            self.GeneratePage(self.current_page)
-
         elif buttonAction == 'timer-start':
             parameter = words[4]
             self.logger.debug(f"timer-start called with pageName={pageName} and parameter={parameter}")
@@ -1516,7 +1395,114 @@ class NSPanel(MqttPlugin):
             self.logger.debug(f"swipedUp to be implemented")
 
         else:
-            self.logger.warning(f"unknown buttonAction {buttonAction}")
+            self.logger.debug(f"Button {buttonAction} pressed")
+            page_content = self.panel_config['cards'][self.current_page]
+            entity = page_content.get('entity', 'undefined')
+
+            #Zugriffe für AlarmCard Modi
+            if entity == pageName:
+                items = page_content.get('items', 'undefined')
+                pwd = items.get('Password', None)
+                item1 = self.items.return_item(items.get('arm1ActionName'))
+                item2 = self.items.return_item(items.get('arm2ActionName'))
+                item3 = self.items.return_item(items.get('arm3ActionName'))
+                item4 = self.items.return_item(items.get('arm4ActionName'))
+                self.logger.debug(f"items {item1},{item2},{item3},{item4} found")
+
+                if buttonAction == str(item1):  # Anwesend
+                    self.logger.debug(f"Button {buttonAction} pressed")
+                    password = words[4]
+                    if item3():
+                        self.logger.debug("Passwort needed to unlock")
+                        self.logger.debug(f"Saved Pass: {pwd} Entered Password: {password}")
+
+                        if password == pwd:
+                            self.logger.debug(f"Password {password} = {pwd} correct")
+                            self.items.return_item(items.get('arm1ActionName', None))(True)
+                            self.items.return_item(items.get('arm2ActionName', None))(False)
+                            self.items.return_item(items.get('arm3ActionName', None))(False)
+                            self.items.return_item(items.get('arm4ActionName', None))(False)
+                        else:
+                            self.logger.debug("Password incorrect")
+                    else:
+                        self.items.return_item(items.get('arm1ActionName', None))(True)
+                        self.items.return_item(items.get('arm2ActionName', None))(False)
+                        self.items.return_item(items.get('arm3ActionName', None))(False)
+                        self.items.return_item(items.get('arm4ActionName', None))(False)
+
+                    self.GeneratePage(self.current_page)
+
+                if buttonAction == str(item2):  # Abwesend
+                    self.logger.debug(f"Button {buttonAction} pressed")
+                    password = words[4]
+                    if item3():
+                        self.logger.debug("Passwort needed to unlock")
+                        self.logger.debug(f"Saved Pass: {pwd} Entered Password: {password}")
+
+                        if password == pwd:
+                            self.logger.debug(f"Password {password} = {pwd} correct")
+                            self.items.return_item(items.get('arm1ActionName', None))(False)
+                            self.items.return_item(items.get('arm2ActionName', None))(True)
+                            self.items.return_item(items.get('arm3ActionName', None))(False)
+                            self.items.return_item(items.get('arm4ActionName', None))(False)
+                        else:
+                            self.logger.debug("Password incorrect")
+                    else:
+                        self.items.return_item(items.get('arm1ActionName', None))(False)
+                        self.items.return_item(items.get('arm2ActionName', None))(True)
+                        self.items.return_item(items.get('arm3ActionName', None))(False)
+                        self.items.return_item(items.get('arm4ActionName', None))(False)
+
+                    self.GeneratePage(self.current_page)
+
+                if buttonAction == str(item3):  # Urlaub
+                    self.logger.debug(f"Button {buttonAction} pressed")
+                    password = words[4]
+                    if item3():
+                        self.logger.debug("Passwort needed to unlock")
+                        self.logger.debug(f"Saved Pass: {pwd} Entered Password: {password}")
+
+                        if password == pwd:
+                            self.logger.debug(f"Password {password} = {pwd} correct")
+                            self.items.return_item(items.get('arm1ActionName', None))(False)
+                            self.items.return_item(items.get('arm2ActionName', None))(False)
+                            self.items.return_item(items.get('arm3ActionName', None))(True)
+                            self.items.return_item(items.get('arm4ActionName', None))(False)
+                        else:
+                            self.logger.debug("Password incorrect")
+                    else:
+                        self.items.return_item(items.get('arm1ActionName', None))(False)
+                        self.items.return_item(items.get('arm2ActionName', None))(False)
+                        self.items.return_item(items.get('arm3ActionName', None))(True)
+                        self.items.return_item(items.get('arm4ActionName', None))(False)
+
+                    self.GeneratePage(self.current_page)
+
+                if buttonAction == str(item4):  # Gäste
+                    self.logger.debug(f"Button {buttonAction} pressed")
+                    password = words[4]
+                    if item3():
+                        self.logger.debug("Passwort needed to unlock")
+                        self.logger.debug(f"Saved Pass: {pwd} Entered Password: {password}")
+
+                        if password == pwd:
+                            self.logger.debug(f"Password {password} = {pwd} correct")
+                            self.items.return_item(items.get('arm1ActionName', None))(False)
+                            self.items.return_item(items.get('arm2ActionName', None))(False)
+                            self.items.return_item(items.get('arm3ActionName', None))(False)
+                            self.items.return_item(items.get('arm4ActionName', None))(True)
+                        else:
+                            self.logger.debug("Password incorrect")
+                    else:
+                        self.items.return_item(items.get('arm1ActionName', None))(False)
+                        self.items.return_item(items.get('arm2ActionName', None))(False)
+                        self.items.return_item(items.get('arm3ActionName', None))(False)
+                        self.items.return_item(items.get('arm4ActionName', None))(True)
+
+                    self.GeneratePage(self.current_page)
+
+            else:
+                self.logger.debug(f"Button {buttonAction} is not declared")
 
     def GeneratePopupNotify(self, content) -> list:
         self.logger.debug(f"GeneratePopupNotify called with content={content}")
@@ -1742,9 +1728,8 @@ class NSPanel(MqttPlugin):
         out_msgs.append('pageType~cardAlarm')
 
         page_content = self.panel_config['cards'][page]
-
-        entity = page_content.get('entity', 'undefined')
         title = page_content.get('title', 'undefined')
+        entity = page_content.get('entity', 'undefined')
         items = page_content.get('items', 'undefined')
         iconId = Icons.GetIcon('home')  # Icons.GetIcon(items.get('iconId', 'home'))
         iconColor = rgb_dec565(
@@ -1766,6 +1751,7 @@ class NSPanel(MqttPlugin):
         item4 = self.items.return_item(arm4ActionName)
 
         if item1():  # Modus Anwesend
+            title = "Anwesend Modus"
             iconId = Icons.GetIcon('home')
             iconColor = rgb_dec565(getattr(Colors, 'White'))
             numpadStatus = 'disable'
@@ -1776,6 +1762,7 @@ class NSPanel(MqttPlugin):
             arm4 = items.get('arm4', None)
 
         if item2():  # Modus Abwesend
+            title = "Abwesend Modus"
             iconId = Icons.GetIcon('home-lock')
             iconColor = rgb_dec565(getattr(Colors, 'Yellow'))
             numpadStatus = 'disable'
@@ -1786,6 +1773,7 @@ class NSPanel(MqttPlugin):
             arm4 = items.get('arm4', None)
 
         if item3():  # Modus Urlaub
+            title = "Urlaub Modus"
             iconId = Icons.GetIcon('hiking')
             iconColor = rgb_dec565(getattr(Colors, 'Red'))
             numpadStatus = 'enable'
@@ -1796,6 +1784,7 @@ class NSPanel(MqttPlugin):
             arm4 = items.get('arm4', None)
 
         if item4():  # Modus Gäste
+            title = "Gäste Modus"
             iconId = Icons.GetIcon('home')
             iconColor = rgb_dec565(getattr(Colors, 'Green'))
             numpadStatus = 'disable'

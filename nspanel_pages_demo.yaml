@@ -221,11 +221,11 @@ cards:
         arm2: "Abwesend"
         arm3: "Urlaub"
         arm4: "Gäste"
-        Password: "1234"
-        arm1ActionName: NSPanel1.Alarm.Modus1
-        arm2ActionName: NSPanel1.Alarm.Modus2
-        arm3ActionName: NSPanel1.Alarm.Modus3
-        arm4ActionName: NSPanel1.Alarm.Modus4
+        Password: "1234"  #Passwort für das Entsperren von Modus 3 (Urlaub)
+        arm1ActionName: Alarm.Modus1
+        arm2ActionName: Alarm.Modus2
+        arm3ActionName: Alarm.Modus3
+        arm4ActionName: Alarm.Modus4  
 
   - pageType: cardQR
     entity: page8
