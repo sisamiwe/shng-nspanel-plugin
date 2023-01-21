@@ -221,6 +221,10 @@ class NSPanel(MqttPlugin):
             if nspanel_attr[:11] == 'screensaver':
                 return self.update_item
 
+        # register screensaver update items
+        if self.has_iattr(item.conf, 'nspanel_update'):
+            return self.update_item
+
         # search for notify items
         if self.has_iattr(item.conf, 'nspanel_popup'):
             nspanel_popup = self.get_iattr_value(item.conf, 'nspanel_popup')
@@ -270,8 +274,8 @@ class NSPanel(MqttPlugin):
                         self.publish_tasmota_topic('cmnd', self.tasmota_topic, f"POWER{relay}", value, item,
                                                    bool_values=['OFF', 'ON'])
 
-                if nspanel_attr == 'screensaver_update':
-                    self.HandleScreensaverWeatherUpdate()  # implicit status icon update
+            if self.has_iattr(item.conf, 'nspanel_update'):
+                self.HandleScreensaverWeatherUpdate()  # implicit status icon update
 
             elif self.has_iattr(item.conf, 'nspanel_popup'):
                 nspanel_popup = self.get_iattr_value(item.conf, 'nspanel_popup')

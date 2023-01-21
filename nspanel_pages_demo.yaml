@@ -3,28 +3,28 @@ screensaver:
   brightness: 25     # 0-100%
   timeFormat: '%H:%M'
   dateFormat: '%A, %d. %B %Y'
-  statusIconLeft: NSPanel1.screensaver.statusIconLeft
-  statusIconRight: NSPanel1.screensaver.statusIconRight
+  statusIconLeft: NSPanel1.Screensaver.statusIcon.Left
+  statusIconRight: NSPanel1.Screensaver.statusIcon.Right
   secondLine: Demo-Zeile
   weather:
     - day: # Jetzt/Heute
-      icon: NSPanel1.Wetter.Icon
-      text: NSPanel1.Wetter.Text
+      icon: NSPanel1.Screensaver.Wetter_Heute.Icon
+      text: NSPanel1.Screensaver.Wetter_Heute.Text
       alternativeLayout: False
-      second_icon: NSPanel1.Wetter.SecondIcon # only displayed if alternativeLayout is True
-      second_text: NSPanel1.Wetter.SecondText # only displayed if alternativeLayout is True
-    - day: NSPanel1.Wetter.Tag1
-      icon: NSPanel1.Wetter.Tag1.Icon
-      text: NSPanel1.Wetter.Tag1.Text
-    - day: NSPanel1.Wetter.Tag2
-      icon: NSPanel1.Wetter.Tag2.Icon
-      text: NSPanel1.Wetter.Tag2.Text
-    - day: NSPanel1.Wetter.Tag3
-      icon: NSPanel1.Wetter.Tag3.Icon
-      text: NSPanel1.Wetter.Tag3.Text
-    - day: NSPanel1.Wetter.Tag4 # only displayed if alternativeLayout is False
-      icon: NSPanel1.Wetter.Tag4.Icon # only displayed if alternativeLayout is False
-      text: NSPanel1.Wetter.Tag4.Text # only displayed if alternativeLayout is False
+      second_icon: NSPanel1.Screensaver.Wetter_Heute.SecondIcon # only displayed if alternativeLayout is True
+      second_text: NSPanel1.Screensaver.Wetter_Heute.SecondText # only displayed if alternativeLayout is True
+    - day: NSPanel1.Screensaver.Wetter_Tag1
+      icon: NSPanel1.Screensaver.Wetter_Tag1.Icon
+      text: NSPanel1.Screensaver.Wetter_Tag1.Text
+    - day: NSPanel1.Screensaver.Wetter_Tag2
+      icon: NSPanel1.Screensaver.Wetter_Tag2.Icon
+      text: NSPanel1.Screensaver.Wetter_Tag2.Text
+    - day: NSPanel1.Screensaver.Wetter_Tag3
+      icon: NSPanel1.Screensaver.Wetter_Tag3.Icon
+      text: NSPanel1.Screensaver.Wetter_Tag3.Text
+    - day: NSPanel1.Screensaver.Wetter_Tag4 # only displayed if alternativeLayout is False
+      icon: NSPanel1.Screensaver.Wetter_Tag4.Icon # only displayed if alternativeLayout is False
+      text: NSPanel1.Screensaver.Wetter_Tag4.Text # only displayed if alternativeLayout is False
 
 cards:
   - pageType: cardEntities
