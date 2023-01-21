@@ -59,6 +59,15 @@ Beispiele
 
 ToDo
 
+
+Neueren/älteren Displaystand nutzen
+--------------------------
+Kommandos zum Update auf den letzten Stand des Displays  
+EU: ``FlashNextion http://nspanel.pky.eu/lui.tft``  
+US Landscape: ``FlashNextion http://nspanel.pky.eu/lui-us-l.tft``  
+US Portrait: ``FlashNextion http://nspanel.pky.eu/lui-us-p.tft``  
+Dazu sollte die Benachrichtigung beim Start abgeschalten werden.
+
 Web Interface
 -------------
 

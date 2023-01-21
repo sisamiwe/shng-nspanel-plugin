@@ -120,7 +120,7 @@ class NSPanel(MqttPlugin):
         self.desired_version = "v3.8.3"
         self.display_display_update = True
 
-        # URLs for driver/firmware updates
+        # URLs for display updates
         if self.desired_panel_model == "us-l":
             # us landscape version
             self.desired_display_firmware_url = f"http://nspanel.pky.eu/lovelace-ui/github/nspanel-us-l-{self.desired_version}.tft"
@@ -130,6 +130,7 @@ class NSPanel(MqttPlugin):
         else:
             # eu version
             self.desired_display_firmware_url = f"http://nspanel.pky.eu/lovelace-ui/github/nspanel-{self.desired_version}.tft"
+        # URL for berry driver update
         self.desired_berry_driver_url = "https://raw.githubusercontent.com/joBr99/nspanel-lovelace-ui/main/tasmota/autoexec.be"
 
         # read panel config file
