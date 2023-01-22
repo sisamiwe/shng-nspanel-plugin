@@ -1221,6 +1221,16 @@ class NSPanel(MqttPlugin):
                 self._previous_page()
                 self.GeneratePage(self.current_page)
 
+            elif pageName == 'alarm-button':
+                self.logger.warning(words)
+                item_name = self.panel_config['cards'][self.current_page].get('icon2Action', '')
+                item = self.items.return_item(item_name)
+                if item is not None:
+                    value = not item()
+                    self.logger.debug(f"item={item.id()} will be set to new value={value}")
+                    item(value, self.get_shortname())
+                    self.GeneratePage(self.current_page)
+
             else:
                 entities = self.panel_config['cards'][self.current_page]['entities']
                 entity = next((entity for entity in entities if entity["entity"] == pageName), None)
@@ -1316,7 +1326,7 @@ class NSPanel(MqttPlugin):
             item4 = self.items.return_item(items.get('arm4ActionName'))
             self.logger.debug(f"items {item1},{item2},{item3},{item4} found")
 
-            if buttonAction[6:] == "modus1":  # Anwesend
+            if buttonAction[6:] == "mode1":  # Anwesend
                 self.logger.debug(f"Button {buttonAction} pressed")
                 password = words[4]
                 if item3():
@@ -1339,7 +1349,7 @@ class NSPanel(MqttPlugin):
 
                 self.GeneratePage(self.current_page)
 
-            if buttonAction[6:] == "modus2":  # Abwesend
+            if buttonAction[6:] == "mode2":  # Abwesend
                 self.logger.debug(f"Button {buttonAction} pressed")
                 password = words[4]
                 if item3():
@@ -1362,7 +1372,7 @@ class NSPanel(MqttPlugin):
 
                 self.GeneratePage(self.current_page)
 
-            if buttonAction[6:] == "modus3":  # Urlaub
+            if buttonAction[6:] == "mode3":  # Urlaub
                 self.logger.debug(f"Button {buttonAction} pressed")
                 password = words[4]
                 if item3():
@@ -1385,7 +1395,7 @@ class NSPanel(MqttPlugin):
 
                 self.GeneratePage(self.current_page)
 
-            if buttonAction[6:] == "modus4":  # Gäste
+            if buttonAction[6:] == "mode4":  # Gäste
                 self.logger.debug(f"Button {buttonAction} pressed")
                 password = words[4]
                 if item3():
@@ -1726,9 +1736,22 @@ class NSPanel(MqttPlugin):
         title = page_content.get('title', 'undefined')
         entity = page_content.get('entity', 'undefined')
         items = page_content.get('items', 'undefined')
-        iconId = Icons.GetIcon('home')  # Icons.GetIcon(items.get('iconId', 'home'))
+        iconId = Icons.GetIcon('home')
         iconColor = rgb_dec565(
-            getattr(Colors, 'White'))  # rgb_dec565(getattr(Colors, items.get('iconColor', 'White')))
+            getattr(Colors, 'White'))
+        icon2 = page_content.get('icon2', '')
+        if icon2 != '':
+            icon2 = Icons.GetIcon(icon2)
+        icon2Color = rgb_dec565(getattr(Colors, page_content.get('icon2Color', self.defaultColor)))
+        icon2Action = page_content.get('icon2Action', '')
+        if icon2Action != '':
+            item2Action = self.items.return_item(icon2Action)
+            if item2Action():
+                icon2Color = rgb_dec565(getattr(Colors, page_content.get('icon2OnColor', self.defaultOnColor)))
+            else:
+                icon2Color = rgb_dec565(getattr(Colors, page_content.get('icon2OffColor', self.defaultOffColor)))
+            # replace item with command name
+            icon2Action = 'alarm-button'
         arm1ActionName = items.get('arm1ActionName', None)
         arm2ActionName = items.get('arm2ActionName', None)
         arm3ActionName = items.get('arm3ActionName', None)
@@ -1795,7 +1818,10 @@ class NSPanel(MqttPlugin):
             f'{iconId}~'  # iconId for which mode activated
             f'{iconColor}~'  # iconColor
             f'{numpadStatus}~'  # Numpad on/off
-            f'{flashing}'  # IconFlashing
+            f'{flashing}~'  # IconFlashing
+            f'{icon2}~'
+            f'{icon2Color}~'
+            f'{icon2Action}'
         )
         out_msgs.append(pageData)
 

@@ -382,6 +382,8 @@ item_structs:
                 type: num
 
         Alarm:
+            Aktion:
+                type: bool
             Modus1:
                 type: bool
             Modus2:

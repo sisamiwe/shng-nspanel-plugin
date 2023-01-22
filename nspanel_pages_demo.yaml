@@ -1,5 +1,5 @@
 screensaver:
-  timeout: 30       # 0 disable, max. 65 sec
+  timeout: 60       # 0 disable, max. 65 sec
   brightness: 25     # 0-100%
   timeFormat: '%H:%M'
   dateFormat: '%A, %d. %B %Y'
@@ -216,6 +216,12 @@ cards:
   - pageType: cardAlarm
     entity: page7
     title: cardAlarm Demo # only shown if no mode is active
+    # icon in bottom left corner (for all modes)
+    icon2: 'cube'
+    icon2OnColor: 'Green'
+    icon2OffColor: 'White'
+    icon2Action: NSPanel1.Alarm.Aktion
+    # elements on right side
     items:
         arm1: "Anwesend"
         arm2: "Abwesend"
