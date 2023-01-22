@@ -264,11 +264,11 @@ item_structs:
                 SecondIcon:
                     type: str
                     nspanel_update@instance: ...:.
-                    initial_value: '50'
+                    initial_value: 'home-thermometer'
                 SecondText:
                     type: str
                     nspanel_update@instance: ...:.
-                    initial_value: '%'
+                    initial_value: '22.1 °C'
 
             Wetter_Tag1:
                 type: str

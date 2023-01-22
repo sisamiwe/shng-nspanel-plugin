@@ -258,7 +258,7 @@ class NSPanel(MqttPlugin):
         """
         # stop if only update and no change
         if item.property.last_change_age != item.property.last_update_age:
-            self.logger.error(f"update_item without change")
+            self.logger.debug(f"update_item was called without change")
             return
 
         if self.alive and caller != self.get_shortname():
@@ -280,7 +280,8 @@ class NSPanel(MqttPlugin):
                                                    bool_values=['OFF', 'ON'])
 
             if self.has_iattr(item.conf, 'nspanel_update'):
-                self.HandleScreensaverWeatherUpdate()  # implicit status icon update
+                self.HandleScreensaverWeatherUpdate()
+                self.HandleScreensaverIconUpdate()
 
             elif self.has_iattr(item.conf, 'nspanel_popup'):
                 nspanel_popup = self.get_iattr_value(item.conf, 'nspanel_popup')
@@ -897,7 +898,8 @@ class NSPanel(MqttPlugin):
         self.publish_tasmota_topic(payload="pageType~screensaver")
         self.send_current_time()
         self.send_current_date()
-        self.HandleScreensaverWeatherUpdate()  # Geht nur wenn NOTIFY leer wäre! Wird in Nextion so geregelt.
+        self.HandleScreensaverWeatherUpdate()
+        self.HandleScreensaverIconUpdate()
 
     def get_status_icons(self) -> str:
         self.logger.debug("get_status_icons called")
@@ -926,7 +928,7 @@ class NSPanel(MqttPlugin):
         icon2Font = iconSize
         return f"{icon1}~{icon1Color}~{icon2}~{icon2Color}~{icon1Font}~{icon2Font}"
 
-    def HandleScreensaverIconUpdate(self):  # Actually unused function
+    def HandleScreensaverIconUpdate(self):
         self.logger.info('Function HandleScreensaverIconUpdate')
         status_icons = self.get_status_icons()
         self.publish_tasmota_topic(payload=f"statusUpdate~{status_icons}")
@@ -1000,57 +1002,79 @@ class NSPanel(MqttPlugin):
             # actual weather
             tMainIcon = self.items.return_item(weather[0].get('icon'))()
             tMainText = self.items.return_item(weather[0].get('text'))()
+            cMainIcon = self.getWeatherAutoColor(tMainIcon, self.items.return_item('env.location.day')())
             optionalLayoutIcon = ""
             optionalLayoutText = ""
+            optionalLayoutIconColor = ""
             if weather[0].get('alternativeLayout', False):
-                optionalLayoutItemValue = self.items.return_item(weather[0].get('second_icon'))()
-                optionalLayoutIcon = optionalLayoutItemValue
-                if not optionalLayoutIcon:
-                    optionalLayoutIcon = optionalLayoutItemValue
-                optionalLayoutIcon = optionalLayoutIcon
+                optionalLayoutIconItem = self.items.return_item(weather[0].get('second_icon'))
+                if optionalLayoutIconItem is not None:
+                    optionalLayoutIcon = optionalLayoutIconItem()
+                optionalLayoutIconColor = rgb_dec565(getattr(Colors, self.defaultColor))
                 optionalLayoutText = self.items.return_item(weather[0].get('second_text'))()
 
             # forecast day 1
             tForecast1 = self.items.return_item(weather[1].get('day'))()
             tF1Icon = self.items.return_item(weather[1].get('icon'))()
             tForecast1Val = self.items.return_item(weather[1].get('text'))()
+            cF1Icon = self.getWeatherAutoColor(tF1Icon)
 
             # forecast day 2
             tForecast2 = self.items.return_item(weather[2].get('day'))()
             tF2Icon = self.items.return_item(weather[2].get('icon'))()
             tForecast2Val = self.items.return_item(weather[2].get('text'))()
+            cF2Icon = self.getWeatherAutoColor(tF2Icon)
 
             # forecast day 3
             tForecast3 = self.items.return_item(weather[3].get('day'))()
             tF3Icon = self.items.return_item(weather[3].get('icon'))()
             tForecast3Val = self.items.return_item(weather[3].get('text'))()
+            cF3Icon = self.getWeatherAutoColor(tF3Icon)
 
             # forecast day 4
             tForecast4 = self.items.return_item(weather[4].get('day'))()
             tF4Icon = self.items.return_item(weather[4].get('icon'))()
             tForecast4Val = self.items.return_item(weather[4].get('text'))()
-
-            status_icons = self.get_status_icons()
+            cF4Icon = self.getWeatherAutoColor(tF4Icon)
 
             out_msgs = list()
             out_msgs.append(f"weatherUpdate~"
+                            f"ignore~"
+                            f"ignore~"
                             f"{self.getWeatherIcon(tMainIcon, self.items.return_item('env.location.day')())}~"
+                            f"{cMainIcon}~"
+                            f"ignore~"
                             f"{tMainText}~"
-                            f"{tForecast1}~"
+                            f"ignore~"
+                            f"ignore~"
                             f"{self.getWeatherIcon(tF1Icon)}~"
+                            f"{cF1Icon}~"
+                            f"{tForecast1}~"
                             f"{tForecast1Val}~"
-                            f"{tForecast2}~"
+                            f"ignore~"
+                            f"ignore~"
                             f"{self.getWeatherIcon(tF2Icon)}~"
+                            f"{cF2Icon}~"
+                            f"{tForecast2}~"
                             f"{tForecast2Val}~"
-                            f"{tForecast3}~"
+                            f"ignore~"
+                            f"ignore~"
                             f"{self.getWeatherIcon(tF3Icon)}~"
+                            f"{cF3Icon}~"
+                            f"{tForecast3}~"
                             f"{tForecast3Val}~"
-                            f"{tForecast4}~"
+                            f"ignore~"
+                            f"ignore~"
                             f"{self.getWeatherIcon(tF4Icon)}~"
+                            f"{cF4Icon}~"
+                            f"{tForecast4}~"
                             f"{tForecast4Val}~"
+                            f"ignore~"
+                            f"ignore~"
                             f"{Icons.GetIcon(optionalLayoutIcon)}~"
-                            f"{optionalLayoutText}~"
-                            f"{status_icons}"
+                            f"{optionalLayoutIconColor}~"
+                            f"ignore~"
+                            f"{optionalLayoutText}"
                             )
 
             # set colors
@@ -1058,22 +1082,16 @@ class NSPanel(MqttPlugin):
             timestr = rgb_dec565(getattr(Colors, self.defaultColor))
             timeAPPM = rgb_dec565(getattr(Colors, self.defaultColor))
             date = rgb_dec565(getattr(Colors, self.defaultColor))
-            cMainIcon = self.getWeatherAutoColor(tMainIcon, self.items.return_item('env.location.day')())
             cMainText = rgb_dec565(getattr(Colors, self.defaultColor))
             cForecast1 = rgb_dec565(getattr(Colors, self.defaultColor))
             cForecast2 = rgb_dec565(getattr(Colors, self.defaultColor))
             cForecast3 = rgb_dec565(getattr(Colors, self.defaultColor))
             cForecast4 = rgb_dec565(getattr(Colors, self.defaultColor))
-            cF1Icon = self.getWeatherAutoColor(tF1Icon)
-            cF2Icon = self.getWeatherAutoColor(tF2Icon)
-            cF3Icon = self.getWeatherAutoColor(tF3Icon)
-            cF4Icon = self.getWeatherAutoColor(tF4Icon)
             cForecast1Val = rgb_dec565(getattr(Colors, self.defaultColor))
             cForecast2Val = rgb_dec565(getattr(Colors, self.defaultColor))
             cForecast3Val = rgb_dec565(getattr(Colors, self.defaultColor))
             cForecast4Val = rgb_dec565(getattr(Colors, self.defaultColor))
             bar = rgb_dec565(getattr(Colors, self.defaultColor))
-            tMRIcon = rgb_dec565(getattr(Colors, self.defaultColor))
             tMR = rgb_dec565(getattr(Colors, self.defaultColor))
             tTimeAdd = rgb_dec565(getattr(Colors, self.defaultColor))
 
@@ -1081,22 +1099,17 @@ class NSPanel(MqttPlugin):
                             f'{timestr}~'
                             f'{timeAPPM}~'
                             f'{date}~'
-                            f'{cMainIcon}~'
                             f'{cMainText}~'
                             f'{cForecast1}~'
                             f'{cForecast2}~'
                             f'{cForecast3}~'
                             f'{cForecast4}~'
-                            f'{cF1Icon}~'
-                            f'{cF2Icon}~'
-                            f'{cF3Icon}~'
-                            f'{cF4Icon}~'
                             f'{cForecast1Val}~'
                             f'{cForecast2Val}~'
                             f'{cForecast3Val}~'
                             f'{cForecast4Val}~'
                             f'{bar}~'
-                            f'{tMRIcon}~'
+                            f'{tMR}~'
                             f'{tMR}~'
                             f'{tTimeAdd}'
                             )
@@ -1781,10 +1794,11 @@ class NSPanel(MqttPlugin):
                 break
 
             name = entity.get('entity', '')
-            button = entity.get('type', 'disable')
+            button = entity.get('type', 'delete')
             displayNameEntity = entity.get('displayNameEntity', 'Auswahl')
-            if button == 'disable':
+            if button == 'delete':
                 icon = ''
+                name = ''
             else:
                 icon = Icons.GetIcon(entity.get('icon', ''))
             PageData = (

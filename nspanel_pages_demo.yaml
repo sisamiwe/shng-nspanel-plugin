@@ -10,7 +10,7 @@ screensaver:
     - day: # Jetzt/Heute
       icon: NSPanel1.Screensaver.Wetter_Heute.Icon
       text: NSPanel1.Screensaver.Wetter_Heute.Text
-      alternativeLayout: False
+      alternativeLayout: True
       second_icon: NSPanel1.Screensaver.Wetter_Heute.SecondIcon # only displayed if alternativeLayout is True
       second_text: NSPanel1.Screensaver.Wetter_Heute.SecondText # only displayed if alternativeLayout is True
     - day: NSPanel1.Screensaver.Wetter_Tag1
@@ -212,6 +212,10 @@ cards:
           value: 'Rockantenne'
           item: NSPanel1.Media.Preset1
         - entity: Preset2
+          type: delete # hide element
+        - entity: Preset3
+          type: delete # hide element
+        - entity: Preset4
           type: input_sel # popup input select
           displayNameEntity: 'Sender wählen'
           icon: 'radio'
