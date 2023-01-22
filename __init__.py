@@ -110,7 +110,6 @@ class NSPanel(MqttPlugin):
         self.berry_driver_version = 0
         self.display_firmware_version = 0
         self.panel_model = ''
-        self.useMediaEvents = False
         self.alive = None
 
         # define desired versions
@@ -142,7 +141,7 @@ class NSPanel(MqttPlugin):
             return
 
         # link items from config to method 'update_item'
-        self._get_items_of_panel_config_to_update_item()
+        self.get_items_of_panel_config_to_update_item()
 
         # read locale file
         try:
@@ -257,6 +256,11 @@ class NSPanel(MqttPlugin):
         :param source: if given it represents the source
         :param dest: if given it represents the dest
         """
+        # stop if only update and no change
+        if item.property.last_change_age != item.property.last_update_age:
+            self.logger.error(f"update_item without change")
+            return
+
         if self.alive and caller != self.get_shortname():
             # code to execute if the plugin is not stopped
             # and only, if the item has not been changed by this plugin:
@@ -653,7 +657,7 @@ class NSPanel(MqttPlugin):
         self.logger.debug(f"_parse_locale_file: locale={locale_dict} available!")
         return locale_dict
 
-    def _get_items_of_panel_config_to_update_item(self):
+    def get_items_of_panel_config_to_update_item(self):
         """
         Put all item out of config file to update_item
         """
@@ -667,6 +671,14 @@ class NSPanel(MqttPlugin):
                     item = entity.get('item')
                     # Add all possible items without check, parse_item is only called for valid items
                     if item is not None and item not in temp:
+                        temp.append(item)
+                        if item not in self.panel_config_items:
+                            self.panel_config_items.append(item)
+
+            for element in card:
+                if element[:4] == 'item':
+                    item = card.get(element)
+                    if item not in temp:
                         temp.append(item)
                         if item not in self.panel_config_items:
                             self.panel_config_items.append(item)
@@ -860,7 +872,6 @@ class NSPanel(MqttPlugin):
 
             elif method == 'sleepReached':
                 # event,sleepReached,cardEntities
-                self.useMediaEvents = False
                 self.HandleScreensaver()
 
             elif method == 'pageOpenDetail':
@@ -1222,7 +1233,6 @@ class NSPanel(MqttPlugin):
                 self.GeneratePage(self.current_page)
 
             elif pageName == 'alarm-button':
-                self.logger.warning(words)
                 item_name = self.panel_config['cards'][self.current_page].get('icon2Action', '')
                 item = self.items.return_item(item_name)
                 if item is not None:
@@ -1249,6 +1259,9 @@ class NSPanel(MqttPlugin):
                     if item is not None:
                         if entity['type'] == 'text':
                             self.logger.debug(f"item={item.id()} will get no update because it's text")
+                        elif entity['type'] == 'preset':
+                            # Force update of item
+                            item(entity.get('value', ''), self.get_shortname())
                         elif entity['type'] == 'input_sel':
                             # Force update of item
                             item(item(), self.get_shortname())
@@ -1258,9 +1271,12 @@ class NSPanel(MqttPlugin):
                             self.logger.debug(f"item={item.id()} will be set to new value={value}")
                             item(value, self.get_shortname())
 
-                        # Reload Page with new item value
                         # perhaps a complete reload with self.GeneratePage(self.current_page) is necessary in other cases
-                        self.SendToPanel(self.GeneratePageElements(self.current_page))
+                        if self.panel_config['cards'][self.current_page]['pageType'] == 'cardMedia':
+                            self.GeneratePage(self.current_page)
+                        else:
+                            # Reload Page with new item value
+                            self.SendToPanel(self.GeneratePageElements(self.current_page))
 
         elif buttonAction == 'tempUpd':
             value = int(words[4]) / 10
@@ -1443,8 +1459,7 @@ class NSPanel(MqttPlugin):
             preset_modes = entity['preset_modes']
             item_name = entity['item_preset']
             item = self.items.return_item(item_name)
-            value = preset_modes[int(parameter)]
-            self.logger.warning(f"{preset_modes} -> {parameter} -> {value}]")
+            value = str(preset_modes[int(parameter)])
             item(value, self.get_shortname())
             self.SendToPanel(self.GenerateDetailFan(pageName))
 
@@ -1458,25 +1473,57 @@ class NSPanel(MqttPlugin):
             option_list = options.split("?")
             item_name = entity['item']
             item = self.items.return_item(item_name)
-            item(option_list[int(parameter)], self.get_shortname())
+            value = str(option_list[int(parameter)])
+            item(value, self.get_shortname())
             self.GeneratePage(self.current_page)
 
         elif buttonAction[:6] == 'media-':
             action = buttonAction[6:]
             self.logger.debug(f"media called with pageName={pageName} and action={action}")
+            page_content = self.panel_config['cards'][self.current_page]
             if action == "OnOff":
-                self.logger.debug(f"OnOff to be implemented")
+                item_OnOff = self.items.return_item(page_content.get('item_OnOff', 'undefined'))
+                value = not item_OnOff()
+                item_OnOff(value, self.get_shortname())
             elif action == "pause":
-                self.logger.debug(f"Pause to be implemented")
+                item_play = self.items.return_item(page_content.get('item_play', 'undefined'))
+                item_pause = self.items.return_item(page_content.get('item_pause', 'undefined'))
+                if item_play is not None and item_pause is not None:
+                    if item_pause():
+                        item_pause(False, self.get_shortname())
+                    elif item_play():
+                        item_pause(True, self.get_shortname())
+                    else:
+                        item_play(True, self.get_shortname())
             elif action == "back":
-                self.logger.debug(f"Back to be implemented")
+                item_back = self.items.return_item(page_content.get('item_back', 'undefined'))
+                if item_back is not None:
+                    item_back(True, self.get_shortname())
             elif action == "next":
-                self.logger.debug(f"Next to be implemented")
+                item_next = self.items.return_item(page_content.get('item_next', 'undefined'))
+                if item_next is not None:
+                    item_next(True, self.get_shortname())
             elif action == "shuffle":
-                self.logger.debug(f"Shuffle to be implemented")
+                item_shuffle = self.items.return_item(page_content.get('item_shuffle', 'undefined'))
+                if item_shuffle is not None:
+                    value = not item_shuffle()
+                    item_shuffle(value, self.get_shortname())
+            else:
+                self.logger.warning(f"Command to be implemented")
+
+            self.GeneratePage(self.current_page)
 
         elif buttonAction == 'volumeSlider':
-            self.logger.debug(f"volumeSlider to be implemented")
+            parameter = words[4]
+            self.logger.debug(f"volumeSlider called with pageName={pageName} and parameter={parameter}")
+            page_content = self.panel_config['cards'][self.current_page]
+            item_volume = self.items.return_item(page_content.get('item_volume', 'undefined'))
+            if item_volume is not None:
+                if int(words[4]) == 65535:
+                    self.logger.info("volumeSlider underflow setting parameter to 0 - redraw page")
+                    self.GeneratePage(self.current_page)
+                else:
+                    item_volume(parameter, self.get_shortname())
 
         elif buttonAction == 'notifyAction':
             parameter = words[4]
@@ -1547,7 +1594,6 @@ class NSPanel(MqttPlugin):
             self.SendToPanel(self.GenerateGridPage(page))
 
         elif page_content['pageType'] == 'cardMedia':
-            self.useMediaEvents = True
             self.SendToPanel(self.GenerateMediaPage(page))
 
         elif page_content['pageType'] == 'cardAlarm':
@@ -1671,32 +1717,36 @@ class NSPanel(MqttPlugin):
         return out_msgs
 
     def GenerateMediaPage(self, page) -> list:
-        self.logger.debug(f"GenerateMediaPage called with page={page} to be implemented")
+        self.logger.debug(f"GenerateMediaPage called with page={page}")
         page_content = self.panel_config['cards'][page]
         heading = page_content.get('heading', 'undefined')
         entity = page_content.get('entity', 'undefined')
-        title = page_content.get('title', 'undefined')
+        title = self.items.return_item(page_content.get('item_title', 'undefined'))
+        if title is not None:
+            title = title()
         titleColor = page_content.get('titleColor', 65535)
-        author = page_content.get('author', 'undefined')
+        author = self.items.return_item(page_content.get('item_author', 'undefined'))
+        if author is not None:
+            author = author()
         authorColor = page_content.get('authorColor', 65535)
-        volume = page_content.get('volume', 0)
-        playPauseIcon = page_content.get('playPauseIcon', Icons.GetIcon('play-pause'))
-        onOff = page_content.get('onOffBtn', 0)
+        volume = self.items.return_item(page_content.get('item_volume', 'undefined'))
+        if volume is not None:
+            volume = volume()
+        playPauseIcon = Icons.GetIcon('play-pause')
+        onOff = page_content.get('onOffBtn', '')
         if onOff == '':
             onOffBtn = 'disable'
         elif onOff == 0:
             onOffBtn = rgb_dec565(getattr(Colors, 'White'))
         else:
             onOffBtn = rgb_dec565(getattr(Colors, 'On'))
-        shuffle = page_content.get('iconShuffle', 0)
-        if shuffle == '':
+        shuffle_item = self.items.return_item(page_content.get('iconShuffle', None))
+        if shuffle_item is None or shuffle_item() == '':
             iconShuffle = 'disable'
         elif shuffle == 0:
             iconShuffle = Icons.GetIcon('shuffle-disabled')
         else:
             iconShuffle = Icons.GetIcon('shuffle')
-
-        dummy_items = "button~name~icon~65535~name~ignore"
 
         out_msgs = list()
         out_msgs.append('pageType~cardMedia')
@@ -1714,14 +1764,33 @@ class NSPanel(MqttPlugin):
             f'{volume}~'
             f'{playPauseIcon}~'
             f'{onOffBtn}~'
-            f'{iconShuffle}~'
-            f'{dummy_items}~'
-            f'{dummy_items}~'
-            f'{dummy_items}~'
-            f'{dummy_items}~'
-            f'{dummy_items}~'
-            f'{dummy_items}~'
+            f'{iconShuffle}'
         )
+
+        # TODO could be merged with GeneratePageElements?
+        entities = page_content.get('entities', '{}')
+
+        maxPresets = 6
+        if len(entities) > maxPresets:
+            self.logger.warning(
+                f"Page definition contains too many Entities. Max allowed Entities for page={page_content['pageType']} is {maxPresets}")
+
+        for idx, entity in enumerate(entities):
+            self.logger.debug(f"entity={entity}")
+            if idx > maxPresets:
+                break
+
+            name = entity.get('entity', '')
+            button = entity.get('type', 'disable')
+            displayNameEntity = entity.get('displayNameEntity', 'Auswahl')
+            if button == 'disable':
+                icon = ''
+            else:
+                icon = Icons.GetIcon(entity.get('icon', ''))
+            PageData = (
+                f'{PageData}~'
+                f"{button}~{name}~{icon}~65535~{displayNameEntity}~ignore"
+            )
 
         out_msgs.append(PageData)
         return out_msgs
@@ -2197,6 +2266,8 @@ class NSPanel(MqttPlugin):
         item = self.items.return_item(itemName)
         if item is not None:
             state = item()
+            if state == '':
+                state = 'empty'
             self.logger.debug(f"item={item} itemValue={state}")
         options = entity.get('options', '')
 

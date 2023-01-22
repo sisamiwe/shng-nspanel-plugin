@@ -393,6 +393,31 @@ item_structs:
             Modus4:
                 type: bool
 
+        Media:
+            Title:
+                type: str
+                initial_value: "Musiktitel"
+            Author:
+                type: str
+                initial_value: "Künstler"
+            Volume:
+                type: num
+                initial_value: 10
+            Play:
+                type: bool
+            Pause:
+                type: bool
+            Back:
+                type: bool
+            Next:
+                type: bool
+            Shuffle:
+                type: bool
+            Preset1:
+                type: str
+            Preset2:
+                type: str
+
         wlan:
             SSID:
                 type: str

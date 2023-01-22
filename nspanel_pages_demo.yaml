@@ -195,7 +195,28 @@ cards:
   - pageType: cardMedia
     entity: page5
     heading: cardMedia Demo
-    # TODO
+    item_title: NSPanel1.Media.Title
+    item_author: NSPanel1.Media.Author
+    item_volume: NSPanel1.Media.Volume
+    item_play: NSPanel1.Media.Play
+    item_pause: NSPanel1.Media.Pause
+    item_next: NSPanel1.Media.Next
+    item_back: NSPanel1.Media.Back
+    item_shuffle: NSPanel1.Media.Shuffle
+    item_onOff: ''  # item to switch player on/off
+    item_shuffle: ''
+    entities: # up to six elements
+        - entity: Preset1
+          type: preset # direct access
+          icon: 'diamond'
+          value: 'Rockantenne'
+          item: NSPanel1.Media.Preset1
+        - entity: Preset2
+          type: input_sel # popup input select
+          displayNameEntity: 'Sender wählen'
+          icon: 'radio'
+          item: NSPanel1.Media.Preset2
+          options: radio NRW?Bayern 1?WDR 2?SWR 3?NDR 2?Antenne Bayern?1Live?Bayern 3?Radio Bob?Hit Radio FFH?SWR4 BW?SWR1 BW
 
   - pageType: cardThermo
     entity: page6
