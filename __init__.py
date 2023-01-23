@@ -884,7 +884,6 @@ class NSPanel(MqttPlugin):
                 self.GenerateDetailPage(words[2], words[3])
 
             elif method == 'buttonPress2':
-                self.logger.debug(f"{words[0]} - {words[1]} - {words[2]} - {words[3]}")
                 self.HandleButtonEvent(words)
 
             elif method == 'button1':
@@ -1231,6 +1230,14 @@ class NSPanel(MqttPlugin):
             if item is not None:
                 item(f"[{red}, {blue}, {green}]", self.get_shortname())
                 self.logger.debug(f"item={item.id()} will be set to red={red} blue={blue} green={green}")
+
+        elif buttonAction == 'bNext':
+            self._next_page()
+            self.GeneratePage(self.current_page)
+
+        elif buttonAction == 'bPrev':
+            self._previous_page()
+            self.GeneratePage(self.current_page)
 
         elif buttonAction == 'button':
             self.logger.debug(f"button called with pageName={pageName}")
