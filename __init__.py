@@ -256,14 +256,14 @@ class NSPanel(MqttPlugin):
         :param source: if given it represents the source
         :param dest: if given it represents the dest
         """
-        # stop if only update and no change
-        if item.property.last_change_age != item.property.last_update_age:
-            self.logger.debug(f"update_item was called without change")
-            return
-
         if self.alive and caller != self.get_shortname():
             # code to execute if the plugin is not stopped
             # and only, if the item has not been changed by this plugin:
+            # stop if only update and no change
+            if abs(item.property.last_change_age - item.property.last_update_age) > 0.01:
+                self.logger.debug(
+                    f"update_item was called with item {item.property.path} - no change")
+                return
             self.logger.debug(
                 f"update_item was called with item {item.property.path} from caller {caller}, source {source} and dest {dest}")
 
@@ -279,9 +279,13 @@ class NSPanel(MqttPlugin):
                         self.publish_tasmota_topic('cmnd', self.tasmota_topic, f"POWER{relay}", value, item,
                                                    bool_values=['OFF', 'ON'])
 
-            if self.has_iattr(item.conf, 'nspanel_update'):
-                self.HandleScreensaverWeatherUpdate()
-                self.HandleScreensaverIconUpdate()
+            # Update screensaver, if active
+            if self.has_iattr(item.conf, 'nspanel_update') and self.panel_status['screensaver_active']:
+                nspanel_update = self.get_iattr_value(item.conf, 'nspanel_update')
+                if nspanel_update == 'weather':
+                    self.HandleScreensaverWeatherUpdate()
+                if nspanel_update == 'status':
+                    self.HandleScreensaverIconUpdate()
 
             elif self.has_iattr(item.conf, 'nspanel_popup'):
                 nspanel_popup = self.get_iattr_value(item.conf, 'nspanel_popup')

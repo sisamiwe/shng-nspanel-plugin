@@ -168,11 +168,14 @@ item_attributes:
             - wifi_signal
 
     nspanel_update:
-        type: bool
-        default: True
+        type: str
+        default: weather
         description:
-            de: "Änderungen des Items aktualisieren den Screensaver."
-            en: "Changes of the item refresh the screensaver."
+            de: "Änderungen des Items aktualisieren Teile der Bildschirmschoner-Karte."
+            en: "Changes of the item refresh parts of the screensaver card."
+        valid_list:
+            - weather
+            - status
 
     nspanel_popup:
         type: str
@@ -240,92 +243,93 @@ item_structs:
             initial_value: "{'heading': 'Hinweis', 'text': 'Text\\r\\nmit Umbruch'}"
 
         Screensaver:
-            nspanel_update@instance: True
             statusIcon:
+                nspanel_update@instance: status
                 Left:
                     type: dict
-                    nspanel_update@instance: ...:.
+                    nspanel_update@instance: ..:.
                     initial_value: "{'icon': 'email', 'color': 'White'}"
                 Right:
                     type: dict
-                    nspanel_update@instance: ...:.
+                    nspanel_update@instance: ..:.
                     initial_value: "{'icon': 'phone', 'color': 'White'}"
 
             Wetter_Heute:
+                nspanel_update@instance: weather
         
                 Icon:
                     type: num
-                    nspanel_update@instance: ...:.
+                    nspanel_update@instance: ..:.
                     initial_value: 803
                 Text:
                     type: str
-                    nspanel_update@instance: ...:.
+                    nspanel_update@instance: ..:.
                     initial_value: 23 °C
                 SecondIcon:
                     type: str
-                    nspanel_update@instance: ...:.
+                    nspanel_update@instance: ..:.
                     initial_value: 'home-thermometer'
                 SecondText:
                     type: str
-                    nspanel_update@instance: ...:.
+                    nspanel_update@instance: ..:.
                     initial_value: '22.1 °C'
 
             Wetter_Tag1:
                 type: str
                 initial_value: 'Tag1'
-                nspanel_update@instance: ..:.
+                nspanel_update@instance: weather
 
                 Icon:
                     type: num
                     initial_value: 800
-                    nspanel_update@instance: ...:.
+                    nspanel_update@instance: ..:.
                 Text:
                     type: str
                     initial_value: 13 °C
-                    nspanel_update@instance: ...:.
+                    nspanel_update@instance: ..:.
 
             Wetter_Tag2:
                 type: str
                 initial_value: 'Tag2'
-                nspanel_update@instance: ..:.
+                nspanel_update@instance: weather
 
                 Icon:
                     type: num
                     initial_value: 210
-                    nspanel_update@instance: ...:.
+                    nspanel_update@instance: ..:.
                 Text:
                     type: str
                     initial_value: 3 °C
-                    nspanel_update@instance: ...:.
+                    nspanel_update@instance: ..:.
 
             Wetter_Tag3:
                 type: str
                 initial_value: 'Tag3'
-                nspanel_update@instance: ..:.
+                nspanel_update@instance: weather
 
                 Icon:
                     type: num
                     initial_value: 300
-                    nspanel_update@instance: ...:.
+                    nspanel_update@instance: ..:.
                 Text:
                     type: str
                     initial_value: -7 °C
-                    nspanel_update@instance: ...:.
+                    nspanel_update@instance: ..:.
 
             Wetter_Tag4:
                 type: str
                 initial_value: 'Tag4'
-                nspanel_update@instance: ..:.
+                nspanel_update@instance: weather
 
                 Icon:
                     type: num
                     initial_value: 600
-                    nspanel_update@instance: ...:.
+                    nspanel_update@instance: ..:.
                     
                 Text:
                     type: str
                     initial_value: -17 °C
-                    nspanel_update@instance: ...:.
+                    nspanel_update@instance: ..:.
 
         timer:
             type: num
