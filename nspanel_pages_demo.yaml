@@ -62,6 +62,7 @@ cards:
         max_tilt: 255
         iconId: window-shutter
         displayNameEntity: Jalousie
+
   - pageType: cardEntities
     heading: cardEntities Demo 2
     entities:
@@ -203,8 +204,8 @@ cards:
     item_next: NSPanel1.Media.Next
     item_back: NSPanel1.Media.Back
     item_shuffle: NSPanel1.Media.Shuffle
-    item_onOff: ''  # item to switch player on/off
-    item_shuffle: ''
+    item_onOff: # item to switch player on/off
+    item_shuffle: 
     entities: # up to six elements
         - entity: Preset1
           type: preset # direct access
@@ -225,18 +226,17 @@ cards:
   - pageType: cardThermo
     entity: page6
     heading: cardThermo Demo
-    items:
-        item_temp_current: NSPanel1.Heizung.Istwert # an item for the actual temperature
-        item_temp_set:     NSPanel1.Heizung.Sollwert # an item for the set temperature
-        item_mode:         NSPanel1.Heizung.Betriebsart # an item for comfort / standby (3x bit or 1x byte, optional) RTR Betriebsmodus (1-4)
-        item_night:         # an item for night (3x bit or 1x byte, optional)
-        item_frost:         # an item for frost (3x bit or 1x byte, optional)
-        item_state:         # an item for the current state of the actuator (optional) RTR Betriebszustand -> raumtemp.eg.wohnen.rtr.reglerstatus.allgemein
-        item_text:          # an item for additional text, (optional)
-        minSetValue: 5     # min Value which can be set (decimal degrees)
-        maxSetValue: 30    # max Value which can be set (decimal degrees)
-        stepSetValue: 0.5    # step for Value which can be set (decimal degrees)
-        popupThermoMode1: false
+    item_temp_current: NSPanel1.Heizung.Istwert # an item for the actual temperature
+    item_temp_set: NSPanel1.Heizung.Sollwert # an item for the set temperature
+    item_mode: NSPanel1.Heizung.Betriebsart # an item for comfort / standby (3x bit or 1x byte, optional) RTR Betriebsmodus (1-4)
+    item_night: # an item for night (3x bit or 1x byte, optional)
+    item_frost: # an item for frost (3x bit or 1x byte, optional)
+    item_state: # an item for the current state of the actuator (optional) RTR Betriebszustand -> raumtemp.eg.wohnen.rtr.reglerstatus.allgemein
+    item_text: # an item for additional text, (optional)
+    minSetValue: 5     # min Value which can be set (decimal degrees)
+    maxSetValue: 30    # max Value which can be set (decimal degrees)
+    stepSetValue: 0.5    # step for Value which can be set (decimal degrees)
+    popupThermoMode1: false
 
   - pageType: cardAlarm
     entity: page7
@@ -245,27 +245,38 @@ cards:
     icon2: 'cube'
     icon2OnColor: 'Green'
     icon2OffColor: 'White'
-    icon2Action: NSPanel1.Alarm.Aktion
+    item_icon2: NSPanel1.Alarm.Aktion
     # elements on right side
-    items:
-        arm1: "Anwesend"
-        arm2: "Abwesend"
-        arm3: "Urlaub"
-        arm4: "Gäste"
-        Password: "1234"  #Passwort für das Entsperren von Modus 3 (Urlaub)
-        arm1ActionName: NSPanel1.Alarm.Modus1
-        arm2ActionName: NSPanel1.Alarm.Modus2
-        arm3ActionName: NSPanel1.Alarm.Modus3
-        arm4ActionName: NSPanel1.Alarm.Modus4
+    entities:
+        - entity: Anwesend
+          item: NSPanel1.Alarm.Modus1
+          password: #Passwort für das Entsperren, leer = kein Passwort
+          icon: home
+          color: White
+        - entity: Abwesend
+          item: NSPanel1.Alarm.Modus2
+          password: 123
+          icon: home-lock
+          color: Yellow
+        - entity: Urlaub
+          item: NSPanel1.Alarm.Modus3
+          password: 123456
+          icon: hiking
+          color: Red
+        - entity: Gäste
+          item: NSPanel1.Alarm.Modus4
+          password: 
+          icon: home
+          color: Green
+          flashing: True # jeder Wert aktiviert das blinken
 
   - pageType: cardQR
     entity: page8
     heading: cardQR Demo
     iconColor: White
     hidePassword: false
-    items:
-        SSID: NSPanel1.wlan.SSID
-        Password: NSPanel1.wlan.PW
+    item_SSID: NSPanel1.wlan.SSID
+    item_Password: NSPanel1.wlan.PW
 
   - pageType: cardPower
     entity: page9
