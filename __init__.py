@@ -1136,6 +1136,11 @@ class NSPanel(MqttPlugin):
         # TODO direct toggle item
         self.GeneratePage(self.current_page)
 
+    def getEntityByName(self, name: str = ""):
+        entities = self.panel_config['cards'][self.current_page]['entities']
+        entity = next((entity for entity in entities if entity["entity"] == name), None)
+        return entity
+
     def HandleButtonEvent(self, words):
 
         # words=['event', 'buttonPress2', 'licht.eg.tv_wand_nische', 'OnOff', '1']
@@ -1157,8 +1162,7 @@ class NSPanel(MqttPlugin):
 
         elif buttonAction == 'OnOff':
             value = int(words[4])
-            entities = self.panel_config['cards'][self.current_page]['entities']
-            entity = next((entity for entity in entities if entity["entity"] == pageName), None)
+            entity = self.getEntityByName(pageName)
             item_name = entity.get('item', '')
             item = self.items.return_item(item_name)
             if item is not None:
@@ -1169,8 +1173,7 @@ class NSPanel(MqttPlugin):
         elif buttonAction == 'number-set' or buttonAction == 'positionSlider' or buttonAction == 'tiltSlider':
             self.logger.debug(f"{buttonAction} called with with pageName={pageName}")
             value = int(words[4])
-            entities = self.panel_config['cards'][self.current_page]['entities']
-            entity = next((entity for entity in entities if entity["entity"] == pageName), None)
+            entity = self.getEntityByName(pageName)
             itemconfigname = 'item'
             scaled_value = value  # no scaling for number-set
             if buttonAction == 'positionSlider':
@@ -1195,8 +1198,7 @@ class NSPanel(MqttPlugin):
         elif buttonAction == 'brightnessSlider':
             value = int(words[4])
             self.logger.debug(f"brightnessSlider called with pageName={pageName}")
-            entities = self.panel_config['cards'][self.current_page]['entities']
-            entity = next((entity for entity in entities if entity["entity"] == pageName), None)
+            entity = self.getEntityByName(pageName)
             item = self.items.return_item(entity.get('item_brightness', None))
             scaled_value = scale(value, (0, 100),
                                  (entity.get('min_brightness', "0"), entity.get('max_brightness', "100")))
@@ -1207,8 +1209,7 @@ class NSPanel(MqttPlugin):
         elif buttonAction == 'colorTempSlider':
             value = int(words[4])
             self.logger.debug(f"colorTempSlider called with pageName={pageName}")
-            entities = self.panel_config['cards'][self.current_page]['entities']
-            entity = next((entity for entity in entities if entity["entity"] == pageName), None)
+            entity = self.getEntityByName(pageName)
             item = self.items.return_item(entity.get('item_temperature', None))
             scaled_value = scale(value, (100, 0),
                                  (entity.get('min_temperature', "0"), entity.get('max_temperature', "100")))
@@ -1219,8 +1220,7 @@ class NSPanel(MqttPlugin):
         elif buttonAction == 'colorWheel':
             value = words[4]
             self.logger.debug(f"colorWheel called with pageName={pageName}")
-            entities = self.panel_config['cards'][self.current_page]['entities']
-            entity = next((entity for entity in entities if entity["entity"] == pageName), None)
+            entity = self.getEntityByName(pageName)
             item = self.items.return_item(entity.get('item_color', None))
             value = value.split('|')
             rgb = pos_to_color(int(value[0]), int(value[1]), int(value[2]))
@@ -1266,8 +1266,7 @@ class NSPanel(MqttPlugin):
                     self.GeneratePage(self.current_page)
 
             else:
-                entities = self.panel_config['cards'][self.current_page]['entities']
-                entity = next((entity for entity in entities if entity["entity"] == pageName), None)
+                entity = self.getEntityByName(pageName)
                 # Handle different types
                 # popupLight - popupShutter - popupThermo
                 if entity['type'][:5] == 'popup':
@@ -1322,8 +1321,7 @@ class NSPanel(MqttPlugin):
         # Moving shutter for Up and Down moves
         elif buttonAction == 'up':
             # shutter moving until upper position
-            entities = self.panel_config['cards'][self.current_page]['entities']
-            entity = next((entity for entity in entities if entity["entity"] == pageName), None)
+            entity = self.getEntityByName(pageName)
             value = entity.get('upValue', 0)
             item_name = entity['item']
             item = self.items.return_item(item_name)
@@ -1334,8 +1332,7 @@ class NSPanel(MqttPlugin):
 
         elif buttonAction == 'down':
             # shutter moving down until down position
-            entities = self.panel_config['cards'][self.current_page]['entities']
-            entity = next((entity for entity in entities if entity["entity"] == pageName), None)
+            entity = self.getEntityByName(pageName)
             value = entity.get('downValue', 1)
             item_name = entity['item']
             item = self.items.return_item(item_name)
@@ -1347,8 +1344,7 @@ class NSPanel(MqttPlugin):
         elif buttonAction == 'stop':
             # shutter stops
             value = 1
-            entities = self.panel_config['cards'][self.current_page]['entities']
-            entity = next((entity for entity in entities if entity["entity"] == pageName), None)
+            entity = self.getEntityByName(pageName)
             item_name = entity['item_stop']
             item = self.items.return_item(item_name)
 
@@ -1463,8 +1459,7 @@ class NSPanel(MqttPlugin):
             self.logger.debug(f"timer-start called with pageName={pageName} and parameter={parameter}")
             timer = parameter.split(':')
             seconds = (int(timer[0]) * 60 + int(timer[1])) * 60 + int(timer[2]) + 1
-            entities = self.panel_config['cards'][self.current_page]['entities']
-            entity = next((entity for entity in entities if entity["entity"] == pageName), None)
+            entity = self.getEntityByName(pageName)
             item = self.items.return_item(entity.get('item', None))
             if item is not None:
                 self.logger.debug(f"item={item.id()} will be set to value={seconds - 1}")
@@ -1478,8 +1473,7 @@ class NSPanel(MqttPlugin):
             parameter = words[4]
             self.logger.debug(
                 f"mode-preset_modes called with pageName={pageName}, action={action} and parameter={parameter}")
-            entities = self.panel_config['cards'][self.current_page]['entities']
-            entity = next((entity for entity in entities if entity["entity"] == pageName), None)
+            entity = self.getEntityByName(pageName)
             preset_modes = entity['preset_modes']
             item_name = entity['item_preset']
             item = self.items.return_item(item_name)
@@ -1491,8 +1485,7 @@ class NSPanel(MqttPlugin):
             action = buttonAction[5:]  # unused
             parameter = words[4]
             self.logger.debug(f"mode called with pageName={pageName}, action={action} and parameter={parameter}")
-            entities = self.panel_config['cards'][self.current_page]['entities']
-            entity = next((entity for entity in entities if entity["entity"] == pageName), None)
+            entity = self.getEntityByName(pageName)
             options = entity['options']
             option_list = options.split("?")
             item_name = entity['item']
@@ -2185,8 +2178,7 @@ class NSPanel(MqttPlugin):
 
     def GenerateDetailLight(self, pagename) -> list:
         self.logger.debug(f"GenerateDetailLight called with entity={pagename}")
-        entities = self.panel_config['cards'][self.current_page]['entities']
-        entity = next((entity for entity in entities if entity["entity"] == pagename), None)
+        entity = self.getEntityByName(pagename)
         icon_color = rgb_dec565(getattr(Colors, self.defaultColor))
         # switch
         item = self.items.return_item(entity.get('item', ''))
@@ -2228,8 +2220,7 @@ class NSPanel(MqttPlugin):
 
     def GenerateDetailShutter(self, pagename) -> list:
         self.logger.debug(f"GenerateDetailShutter called with entity={pagename} to be implemented")
-        entities = self.panel_config['cards'][self.current_page]['entities']
-        entity = next((entity for entity in entities if entity.get('entity', '') == pagename), None)
+        entity = self.getEntityByName(pagename)
         # iconId = entity.get('iconId', '') # not used
         itemname_pos = entity.get('item_pos', None)
         item_pos = self.items.return_item(itemname_pos)
@@ -2281,8 +2272,7 @@ class NSPanel(MqttPlugin):
 
     def GenerateDetailInSel(self, pagename) -> list:
         self.logger.debug(f"GenerateDetailInSel called with entity={pagename}")
-        entities = self.panel_config['cards'][self.current_page]['entities']
-        entity = next((entity for entity in entities if entity.get('entity', '') == pagename), None)
+        entity = self.getEntityByName(pagename)
         # iconId = entity.get('iconId', '') # not used
         iconColor = entity.get('iconColor', 'White')
         modeType = ''  # not used
@@ -2303,8 +2293,7 @@ class NSPanel(MqttPlugin):
 
     def GenerateDetailTimer(self, pagename) -> list:
         self.logger.debug(f"GenerateDetailTimer called with entity={pagename}")
-        entities = self.panel_config['cards'][self.current_page]['entities']
-        entity = next((entity for entity in entities if entity.get('entity', '') == pagename), None)
+        entity = self.getEntityByName(pagename)
         editable = entity.get('editable', 1)
         actionleft = entity.get('actionleft', '')
         actioncenter = entity.get('actioncenter', '')
@@ -2327,8 +2316,7 @@ class NSPanel(MqttPlugin):
 
     def GenerateDetailFan(self, pagename) -> list:
         self.logger.debug(f"GenerateDetailFan called with entity={pagename}")
-        entities = self.panel_config['cards'][self.current_page]['entities']
-        entity = next((entity for entity in entities if entity.get('entity', '') == pagename), None)
+        entity = self.getEntityByName(pagename)
         item = self.items.return_item(entity.get('item', None))
         switch_val = 1 if item() else 0
         icon_color = entity.get('color', 65535)
