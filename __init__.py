@@ -111,6 +111,7 @@ class NSPanel(MqttPlugin):
         self.display_firmware_version = 0
         self.panel_model = ''
         self.alive = None
+        self.lastPayload = []
 
         # define desired versions
         self.desired_berry_driver_version = 8
@@ -1364,35 +1365,36 @@ class NSPanel(MqttPlugin):
             self.logger.debug(f"Button {buttonAction} pressed")
             password = words[4]
 
-            setNewMode = False
-            anyItemTrue = False
-            for idx, entity in enumerate(entities):
-                item = self.items.return_item(entity.get('item'))
-                storedPassword = entity.get('password', '')
+            if len(buttonAction) > 10:
+                setNewMode = False
+                anyItemTrue = False
+                for idx, entity in enumerate(entities):
+                    item = self.items.return_item(entity.get('item'))
+                    storedPassword = entity.get('password', '')
 
-                if item():
-                    anyItemTrue = True
-                    if storedPassword is None or storedPassword == '':
-                        setNewMode = True
-                    else:
-                        self.logger.debug(f"Passwort needed to unlock")
-                        if password.isdigit():
-                            password = int(password)
-                        if password == storedPassword:
-                            self.logger.debug(f"Password correct")
+                    if item():
+                        anyItemTrue = True
+                        if storedPassword is None or storedPassword == '':
                             setNewMode = True
                         else:
-                            self.logger.debug("Password incorrect")
+                            self.logger.debug(f"Passwort needed to unlock")
+                            if password.isdigit():
+                                password = int(password)
+                            if password == storedPassword:
+                                self.logger.debug(f"Password correct")
+                                setNewMode = True
+                            else:
+                                self.logger.debug("Password incorrect")
 
-            if setNewMode or not anyItemTrue:
-                for idx, entity in enumerate(entities):
-                    if idx == int(buttonAction[10:]):
-                        value = True
-                    else:
-                        value = False
-                    self.items.return_item(entity.get('item'))(value)
-
-                self.GeneratePage(self.current_page)
+                if setNewMode or not anyItemTrue:
+                    for idx, entity in enumerate(entities):
+                        if idx == int(buttonAction[10:]):
+                            value = True
+                        else:
+                            value = False
+                        self.items.return_item(entity.get('item'))(value)
+            else:
+                self.logger.warning(f"buttonAction: {buttonAction} too short")
 
         elif buttonAction == 'timer-start':
             parameter = words[4]
@@ -2259,11 +2261,19 @@ class NSPanel(MqttPlugin):
     def SendToPanel(self, payload):
         self.logger.debug(f"SendToPanel called with payload={payload}")
 
-        if isinstance(payload, list):
-            for entry in payload:
-                self.publish_tasmota_topic(payload=entry)
+        if self.lastPayload == payload:
+            self.logger.error("SendToPanel: duplicate payload no transfer")
         else:
-            self.publish_tasmota_topic(payload=payload)
+            if isinstance(payload, list):
+                for idx, entry in enumerate(payload):
+                    if idx >= len(self.lastPayload) or self.lastPayload[idx] != payload[idx]:
+                        self.publish_tasmota_topic(payload=entry)
+                    else:
+                        self.logger.debug("SendToPanel: identical element in payload")
+                self.lastPayload = payload
+            else:
+                self.lastPayload = [payload]
+                self.publish_tasmota_topic(payload=payload)
 
     def GetNavigationString(self, page) -> str:
         """
