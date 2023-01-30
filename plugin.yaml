@@ -176,6 +176,7 @@ item_attributes:
         valid_list:
             - weather
             - status
+            - time # for secondLine
 
     nspanel_popup:
         type: str
@@ -243,6 +244,11 @@ item_structs:
             initial_value: "{'heading': 'Hinweis', 'text': 'Text\\r\\nmit Umbruch'}"
 
         Screensaver:
+            secondLine:
+                type: str
+                initial_value: 'Some text'
+                nspanel_update@instance: time
+
             statusIcon:
                 nspanel_update@instance: status
                 Left:

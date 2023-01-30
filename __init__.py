@@ -294,6 +294,8 @@ class NSPanel(MqttPlugin):
                     self.HandleScreensaverWeatherUpdate()
                 if nspanel_update == 'status':
                     self.HandleScreensaverIconUpdate()
+                if nspanel_update == 'time':
+                    self.send_current_time()
 
             elif self.has_iattr(item.conf, 'nspanel_popup'):
                 nspanel_popup = self.get_iattr_value(item.conf, 'nspanel_popup')
@@ -722,7 +724,10 @@ class NSPanel(MqttPlugin):
         return self.locale.get(group, {}).get(entry, {}).get('de-DE')  # TODO configure in plugin.yaml
 
     def send_current_time(self):
-        secondLine = self.panel_config.get('screensaver', {}).get('secondLine', '')
+        secondLineItem = self.panel_config.get('screensaver', {}).get('itemSecondLine', '')
+        secondLine = self.items.return_item(secondLineItem)()
+        if secondLine is None:
+            secondLine = ''
         timeFormat = self.panel_config.get('screensaver', {}).get('timeFormat', "%H:%M")
         self.publish_tasmota_topic(payload=f"time~{self.shtime.now().strftime(timeFormat)}~{secondLine}")
 

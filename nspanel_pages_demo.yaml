@@ -5,7 +5,7 @@ screensaver:
   dateFormat: '%A, %d. %B %Y'
   statusIconLeft: NSPanel1.Screensaver.statusIcon.Left
   statusIconRight: NSPanel1.Screensaver.statusIcon.Right
-  secondLine: Demo-Zeile
+  itemSecondLine: NSPanel1.Screensaver.secondLine
   weather:
     - day: # Jetzt/Heute
       icon: NSPanel1.Screensaver.Wetter_Heute.Icon
