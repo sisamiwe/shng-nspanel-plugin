@@ -909,8 +909,7 @@ class NSPanel(MqttPlugin):
         self.panel_status['screensaver_active'] = True
         self._set_item_value('item_screensaver_active', self.panel_status['screensaver_active'])
         self.current_page = 0
-        self.send_current_time()
-        self.send_current_date()
+        self.lastPayload = [""]
         self.publish_tasmota_topic(payload="pageType~screensaver")
         self.send_current_time()
         self.send_current_date()
