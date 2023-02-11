@@ -319,3 +319,14 @@ cards:
     Color: Green
     item: NSPanel1.chart
     yAxisLabel: AxisLabel
+
+  - pageType: cardUnlock
+    entity: page12
+    title: cardUnlock Demo # only shown if no mode is active
+    icon: lock
+    color: Red
+    # up to 4 pages with different passwords, empty password not supported
+    entities:
+        - entity: cardChart # can be a hidden card (if implemented)
+          page: page10
+          password: 1234

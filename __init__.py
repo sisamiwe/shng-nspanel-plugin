@@ -1153,6 +1153,12 @@ class NSPanel(MqttPlugin):
         entity = next((entity for entity in entities if entity["entity"] == name), None)
         return entity
 
+    def getPageByName(self, name: str = ""):
+        cards = self.panel_config['cards']
+        for idx, card in enumerate(cards):
+            if card.get("entity", None) == name:
+                return idx
+
     def HandleButtonEvent(self, words):
 
         # words=['event', 'buttonPress2', 'licht.eg.tv_wand_nische', 'OnOff', '1']
@@ -1170,6 +1176,7 @@ class NSPanel(MqttPlugin):
             if pageName == 'popupNotify' and self.panel_status['screensaver_active']:
                 self.HandleScreensaver()
             else:
+                self.lastPayload = [""]
                 self.GeneratePage(self.current_page)
 
         elif buttonAction == 'OnOff':
@@ -1372,25 +1379,39 @@ class NSPanel(MqttPlugin):
             if len(buttonAction) > 10:
                 setNewMode = False
                 anyItemTrue = False
+                navigateTo = False
                 for idx, entity in enumerate(entities):
-                    item = self.items.return_item(entity.get('item'))
                     storedPassword = entity.get('password', '')
-
-                    if item():
-                        anyItemTrue = True
-                        if storedPassword is None or storedPassword == '':
-                            setNewMode = True
+                    page = entity.get('page', None)
+                    if idx == int(buttonAction[10:]) and page:
+                        navigateTo = True
+                        if password.isdigit():
+                            password = int(password)
+                        if password == storedPassword:
+                            self.current_page = self.getPageByName(page)
+                            self.logger.debug("Password correct")
+                            self.GeneratePage(self.current_page)
                         else:
-                            self.logger.debug(f"Passwort needed to unlock")
-                            if password.isdigit():
-                                password = int(password)
-                            if password == storedPassword:
-                                self.logger.debug(f"Password correct")
+                            self.logger.debug("Password incorrect")
+                        break
+                    else:
+                        item = self.items.return_item(entity.get('item'))
+
+                        if item is not None and item():
+                            anyItemTrue = True
+                            if storedPassword is None or storedPassword == '':
                                 setNewMode = True
                             else:
-                                self.logger.debug("Password incorrect")
+                                self.logger.debug(f"Passwort needed to unlock")
+                                if password.isdigit():
+                                    password = int(password)
+                                if password == storedPassword:
+                                    self.logger.debug(f"Password correct")
+                                    setNewMode = True
+                                else:
+                                    self.logger.debug("Password incorrect")
 
-                if setNewMode or not anyItemTrue:
+                if (setNewMode or not anyItemTrue) and not navigateTo:
                     for idx, entity in enumerate(entities):
                         if idx == int(buttonAction[10:]):
                             value = True
@@ -1559,7 +1580,7 @@ class NSPanel(MqttPlugin):
         elif page_content['pageType'] == 'cardMedia':
             self.SendToPanel(self.GenerateMediaPage(page))
 
-        elif page_content['pageType'] == 'cardAlarm':
+        elif page_content['pageType'] == 'cardAlarm' or page_content['pageType'] == 'cardUnlock':
             self.SendToPanel(self.GenerateAlarmPage(page))
 
         elif page_content['pageType'] == 'cardQR':
@@ -1769,10 +1790,9 @@ class NSPanel(MqttPlugin):
         title = page_content.get('title', 'undefined')
         cardEntity = page_content.get('entity', 'undefined')
         arm = ['', '', '', '']
-        iconId = Icons.GetIcon('home')
-        iconColor = rgb_dec565(
-            getattr(Colors, 'White'))
-        numpadStatus = 'disable'
+        iconId = Icons.GetIcon(page_content.get('icon', 'home'))
+        iconColor = rgb_dec565(getattr(Colors, page_content.get('color', 'White')))
+        numpadStatus = 'enable'
         flashing = 'disable'
         icon2 = page_content.get('icon2', '')
         if icon2 != '':
@@ -1793,7 +1813,7 @@ class NSPanel(MqttPlugin):
             if idx >= maxEntities:
                 break
             item = self.items.return_item(entity.get('item', None))
-            if item():  # mode active
+            if item is not None and item():  # mode active
                 iconId = Icons.GetIcon(entity.get('icon', 'home'))
                 iconColor = rgb_dec565(getattr(Colors, entity.get('color', 'White')))
                 password = entity.get('password', '')
