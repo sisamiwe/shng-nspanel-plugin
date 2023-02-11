@@ -3,6 +3,7 @@ screensaver:
   brightness: 25     # 0-100%
   timeFormat: '%H:%M'
   dateFormat: '%A, %d. %B %Y'
+  doubleTapToUnlock: True
   statusIconLeft: NSPanel1.Screensaver.statusIcon.Left
   statusIconRight: NSPanel1.Screensaver.statusIcon.Right
   itemSecondLine: NSPanel1.Screensaver.secondLine

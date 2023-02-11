@@ -1176,8 +1176,9 @@ class NSPanel(MqttPlugin):
             if pageName == 'popupNotify' and self.panel_status['screensaver_active']:
                 self.HandleScreensaver()
             else:
-                self.lastPayload = [""]
-                self.GeneratePage(self.current_page)
+                if len(words) <= 4 or not self.panel_config.get('screensaver', {}).get('doubleTapToUnlock', False) or int(words[4]) >= 2:
+                    self.lastPayload = [""]
+                    self.GeneratePage(self.current_page)
 
         elif buttonAction == 'OnOff':
             value = int(words[4])
