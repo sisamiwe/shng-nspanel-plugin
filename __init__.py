@@ -1901,19 +1901,25 @@ class NSPanel(MqttPlugin):
         iconHome = Icons.GetIcon(page_content.get('iconHome', 'home'))
         colorHome = rgb_dec565(getattr(Colors, page_content.get('colorHome', 'home')))
 
-        # Generata PageDate according to: entityUpd~heading~navigation~colorHome~iconHome~textHome[~iconColor~icon~  speed~valueDown]x6
+        # Generata PageDate according to: entityUpd~PowerTest~x~navUp~A~65535~~~delete~~~~~~text~sensor.power_consumption~B~17299~Power consumption~100W~1~text~sensor.power_consumption~C~17299~Power consumption~100W~1~text~sensor.today_energy~D~17299~Total energy 1~5836.0kWh~0~delete~~~~~~0~text~sensor.today_energy~E~17299~Total energy 1~5836.0kWh~-30~delete~~~~~~0~text~sensor.today_energy~F~65504~Total energy 1~5836.0kWh~90~text~sensor.today_energy~G~17299~Total energy 1~5836.0kWh~10
         pageData = (
             f"entityUpd~"
             f"{page_content['heading']}~"
             f"{self.GetNavigationString(page)}~"
-            f"{colorHome}~"
+            f"~"  # ignored
+            f"~"  # ignored
             f"{iconHome}~"
+            f"{colorHome}~"
             f"-~"  # ignored
             f"{textHomeBelow}~"
             f"-~"  # ignored
             f"-~"  # ignored
             f"-~"  # ignored
+            f"-~"  # ignored
+            f"-~"  # ignored
+            f"-~"  # ignored
             f"{textHomeAbove}~"
+            f"-~"  # ignored
         )
 
         for idx, entity in enumerate(page_content['entities']):
@@ -1926,15 +1932,20 @@ class NSPanel(MqttPlugin):
             if item != '':
                 value = self.items.return_item(item)()
 
+            name = entity.get('displayNameEntity', '')
+
             icon = Icons.GetIcon(entity.get('icon', ''))
             iconColor = rgb_dec565(getattr(Colors, entity.get('color', self.defaultColor)))
             speed = entity.get('speed', '')
             pageData = (
                 f"{pageData}"
-                f"{iconColor}~"
+                f"-~"  # ignored
+                f"-~"  # ignored
                 f"{icon}~"
-                f"{speed}~"
+                f"{iconColor}~"
+                f"{name}~"
                 f"{value}~"
+                f"{speed}~"
             )
 
         out_msgs.append(pageData)

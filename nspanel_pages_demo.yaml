@@ -289,12 +289,14 @@ cards:
         - entity: LeftTop # empty element are not displayed
         - entity: LeftMiddle
           item: NSPanel1.Power.Links # item
+          displayNameEntity: Links
           icon: 'solar-power-variant'
           speed: 0 # TODO: use item to change speed?
         - entity: LeftBottom
         - entity: RightTop
         - entity: RightMiddle
           item: NSPanel1.Power.Rechts1
+          displayNameEntity: Rechts
           icon: 'car'
           color: 'Green'
           speed: 2 # use -1 for other direction
