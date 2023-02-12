@@ -4,28 +4,27 @@ screensaver:
   timeFormat: '%H:%M'
   dateFormat: '%A, %d. %B %Y'
   doubleTapToUnlock: True
+  type: 1
+  alternativeLayout: True # display second line instead of 4 day forecase
   statusIconLeft: NSPanel1.Screensaver.statusIcon.Left
   statusIconRight: NSPanel1.Screensaver.statusIcon.Right
   itemSecondLine: NSPanel1.Screensaver.secondLine
-  weather:
-    - day: # Jetzt/Heute
+  entities:
+    - heading: # Jetzt/Heute
       icon: NSPanel1.Screensaver.Wetter_Heute.Icon
       text: NSPanel1.Screensaver.Wetter_Heute.Text
-      alternativeLayout: True
-      second_icon: NSPanel1.Screensaver.Wetter_Heute.SecondIcon # only displayed if alternativeLayout is True
-      second_text: NSPanel1.Screensaver.Wetter_Heute.SecondText # only displayed if alternativeLayout is True
-    - day: NSPanel1.Screensaver.Wetter_Tag1
+    - heading: NSPanel1.Screensaver.Wetter_Tag1
       icon: NSPanel1.Screensaver.Wetter_Tag1.Icon
       text: NSPanel1.Screensaver.Wetter_Tag1.Text
-    - day: NSPanel1.Screensaver.Wetter_Tag2
+    - heading: NSPanel1.Screensaver.Wetter_Tag2
       icon: NSPanel1.Screensaver.Wetter_Tag2.Icon
       text: NSPanel1.Screensaver.Wetter_Tag2.Text
-    - day: NSPanel1.Screensaver.Wetter_Tag3
+    - heading: NSPanel1.Screensaver.Wetter_Tag3
       icon: NSPanel1.Screensaver.Wetter_Tag3.Icon
       text: NSPanel1.Screensaver.Wetter_Tag3.Text
-    - day: NSPanel1.Screensaver.Wetter_Tag4 # only displayed if alternativeLayout is False
-      icon: NSPanel1.Screensaver.Wetter_Tag4.Icon # only displayed if alternativeLayout is False
-      text: NSPanel1.Screensaver.Wetter_Tag4.Text # only displayed if alternativeLayout is False
+    - heading: NSPanel1.Screensaver.Wetter_Tag4
+      icon: NSPanel1.Screensaver.Wetter_Tag4.Icon
+      text: NSPanel1.Screensaver.Wetter_Tag4.Text
 
 cards:
   - pageType: cardEntities

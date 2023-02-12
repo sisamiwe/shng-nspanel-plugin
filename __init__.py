@@ -910,7 +910,10 @@ class NSPanel(MqttPlugin):
         self._set_item_value('item_screensaver_active', self.panel_status['screensaver_active'])
         self.current_page = 0
         self.lastPayload = [""]
-        self.publish_tasmota_topic(payload="pageType~screensaver")
+        variant = self.panel_config.get('screensaver', {}).get('type', 1)
+        if int(variant) < 2:
+            variant = ''
+        self.publish_tasmota_topic(payload=f"pageType~screensaver{variant}")
         self.send_current_time()
         self.send_current_date()
         self.HandleScreensaverWeatherUpdate()
@@ -1011,82 +1014,89 @@ class NSPanel(MqttPlugin):
 
     def HandleScreensaverWeatherUpdate(self):
         self.logger.info('Function HandleScreensaverWeatherUpdate')
-        weather = self.panel_config.get('screensaver', {}).get('weather', {})
+        screensaver_config = self.panel_config.get('screensaver', {})
+        entities = screensaver_config.get('entities', {})
 
-        if weather:
+        if entities:
             # actual weather
-            tMainIcon = self.items.return_item(weather[0].get('icon'))()
-            tMainText = self.items.return_item(weather[0].get('text'))()
+            tMainIcon = self.items.return_item(entities[0].get('icon'))()
+            tMainText = self.items.return_item(entities[0].get('text'))()
             cMainIcon = self.getWeatherAutoColor(tMainIcon, self.items.return_item('env.location.day')())
+            tMainIcon = self.getWeatherIcon(tMainIcon, self.items.return_item('env.location.day')())
             optionalLayoutIcon = ""
             optionalLayoutText = ""
             optionalLayoutIconColor = ""
-            if weather[0].get('alternativeLayout', False):
-                optionalLayoutIconItem = self.items.return_item(weather[0].get('second_icon'))
+            if screensaver_config.get('alternativeLayout', False):
+                optionalLayoutIconItem = self.items.return_item(entities[4].get('icon'))
                 if optionalLayoutIconItem is not None:
                     optionalLayoutIcon = optionalLayoutIconItem()
-                optionalLayoutIconColor = rgb_dec565(getattr(Colors, self.defaultColor))
-                optionalLayoutText = self.items.return_item(weather[0].get('second_text'))()
+                optionalLayoutText = self.items.return_item(entities[4].get('text'))()
+                optionalLayoutIconColor = self.getWeatherAutoColor(optionalLayoutIconItem)
+                optionalLayoutIcon = self.getWeatherIcon(optionalLayoutIcon)
 
             # forecast day 1
-            tForecast1 = self.items.return_item(weather[1].get('day'))()
-            tF1Icon = self.items.return_item(weather[1].get('icon'))()
-            tForecast1Val = self.items.return_item(weather[1].get('text'))()
+            tForecast1 = self.items.return_item(entities[1].get('heading'))()
+            tF1Icon = self.items.return_item(entities[1].get('icon'))()
+            tForecast1Val = self.items.return_item(entities[1].get('text'))()
             cF1Icon = self.getWeatherAutoColor(tF1Icon)
+            tF1Icon = self.getWeatherIcon(tF1Icon)
 
             # forecast day 2
-            tForecast2 = self.items.return_item(weather[2].get('day'))()
-            tF2Icon = self.items.return_item(weather[2].get('icon'))()
-            tForecast2Val = self.items.return_item(weather[2].get('text'))()
+            tForecast2 = self.items.return_item(entities[2].get('heading'))()
+            tF2Icon = self.items.return_item(entities[2].get('icon'))()
+            tForecast2Val = self.items.return_item(entities[2].get('text'))()
             cF2Icon = self.getWeatherAutoColor(tF2Icon)
+            tF2Icon = self.getWeatherIcon(tF2Icon)
 
             # forecast day 3
-            tForecast3 = self.items.return_item(weather[3].get('day'))()
-            tF3Icon = self.items.return_item(weather[3].get('icon'))()
-            tForecast3Val = self.items.return_item(weather[3].get('text'))()
+            tForecast3 = self.items.return_item(entities[3].get('heading'))()
+            tF3Icon = self.items.return_item(entities[3].get('icon'))()
+            tForecast3Val = self.items.return_item(entities[3].get('text'))()
             cF3Icon = self.getWeatherAutoColor(tF3Icon)
+            tF3Icon = self.getWeatherIcon(tF3Icon)
 
             # forecast day 4
-            tForecast4 = self.items.return_item(weather[4].get('day'))()
-            tF4Icon = self.items.return_item(weather[4].get('icon'))()
-            tForecast4Val = self.items.return_item(weather[4].get('text'))()
+            tForecast4 = self.items.return_item(entities[4].get('heading'))()
+            tF4Icon = self.items.return_item(entities[4].get('icon'))()
+            tForecast4Val = self.items.return_item(entities[4].get('text'))()
             cF4Icon = self.getWeatherAutoColor(tF4Icon)
+            tF4Icon = self.getWeatherIcon(tF4Icon)
 
             out_msgs = list()
             out_msgs.append(f"weatherUpdate~"
                             f"ignore~"
                             f"ignore~"
-                            f"{self.getWeatherIcon(tMainIcon, self.items.return_item('env.location.day')())}~"
+                            f"{tMainIcon}~"
                             f"{cMainIcon}~"
                             f"ignore~"
                             f"{tMainText}~"
                             f"ignore~"
                             f"ignore~"
-                            f"{self.getWeatherIcon(tF1Icon)}~"
+                            f"{tF1Icon}~"
                             f"{cF1Icon}~"
                             f"{tForecast1}~"
                             f"{tForecast1Val}~"
                             f"ignore~"
                             f"ignore~"
-                            f"{self.getWeatherIcon(tF2Icon)}~"
+                            f"{tF2Icon}~"
                             f"{cF2Icon}~"
                             f"{tForecast2}~"
                             f"{tForecast2Val}~"
                             f"ignore~"
                             f"ignore~"
-                            f"{self.getWeatherIcon(tF3Icon)}~"
+                            f"{tF3Icon}~"
                             f"{cF3Icon}~"
                             f"{tForecast3}~"
                             f"{tForecast3Val}~"
                             f"ignore~"
                             f"ignore~"
-                            f"{self.getWeatherIcon(tF4Icon)}~"
+                            f"{tF4Icon}~"
                             f"{cF4Icon}~"
                             f"{tForecast4}~"
                             f"{tForecast4Val}~"
                             f"ignore~"
                             f"ignore~"
-                            f"{Icons.GetIcon(optionalLayoutIcon)}~"
+                            f"{optionalLayoutIcon}~"
                             f"{optionalLayoutIconColor}~"
                             f"ignore~"
                             f"{optionalLayoutText}"
