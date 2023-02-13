@@ -141,6 +141,8 @@ class NSPanel(MqttPlugin):
             self._init_complete = False
             return
 
+        self.screensaverType = self.panel_config.get('screensaver', {}).get('type', 1)
+
         # link items from config to method 'update_item'
         self.get_items_of_panel_config_to_update_item()
 
@@ -910,10 +912,10 @@ class NSPanel(MqttPlugin):
         self._set_item_value('item_screensaver_active', self.panel_status['screensaver_active'])
         self.current_page = 0
         self.lastPayload = [""]
-        variant = self.panel_config.get('screensaver', {}).get('type', 1)
-        if int(variant) < 2:
-            variant = ''
-        self.publish_tasmota_topic(payload=f"pageType~screensaver{variant}")
+        if self.screensaverType < 2:
+            self.publish_tasmota_topic(payload=f"pageType~screensaver")
+        else:
+            self.publish_tasmota_topic(payload=f"pageType~screensaver{self.screensaverType}")
         self.send_current_time()
         self.send_current_date()
         self.HandleScreensaverWeatherUpdate()
@@ -971,20 +973,12 @@ class NSPanel(MqttPlugin):
             'windy_variant': 'weather-windy-variant'
         }
         self.logger.debug(f"getWeatherIcon called with icon={icon}")
-        # iconname
-        if isinstance(icon, str):
-            return Icons.GetIcon(icon)
-        # numeric value
-        elif (isinstance(icon, int) or isinstance(icon, float)) and icon < 100:
-            return round(icon, 1)
-        # Handle OWM weather code
-        elif isinstance(icon, int):
-            weatherCondition = getWeatherCondition(icon, day)[0]
-            if weatherCondition:
-                return Icons.GetIcon(weatherMapping[weatherCondition])
-            else:
-                self.logger.warning('unknown openweathermap weather code')
-                return icon
+        weatherCondition = getWeatherCondition(icon, day)[0]
+        if weatherCondition:
+            return Icons.GetIcon(weatherMapping[weatherCondition])
+        else:
+            self.logger.warning('unknown openweathermap weather code')
+            return icon
 
     def getWeatherAutoColor(self, icon, day: bool = True):
         default_weather_icon_color_mapping = {
@@ -1018,89 +1012,63 @@ class NSPanel(MqttPlugin):
         entities = screensaver_config.get('entities', {})
 
         if entities:
-            # actual weather
-            tMainIcon = self.items.return_item(entities[0].get('icon'))()
-            tMainText = self.items.return_item(entities[0].get('text'))()
-            cMainIcon = self.getWeatherAutoColor(tMainIcon, self.items.return_item('env.location.day')())
-            tMainIcon = self.getWeatherIcon(tMainIcon, self.items.return_item('env.location.day')())
-            optionalLayoutIcon = ""
-            optionalLayoutText = ""
-            optionalLayoutIconColor = ""
-            if screensaver_config.get('alternativeLayout', False):
-                optionalLayoutIconItem = self.items.return_item(entities[4].get('icon'))
-                if optionalLayoutIconItem is not None:
-                    optionalLayoutIcon = optionalLayoutIconItem()
-                optionalLayoutText = self.items.return_item(entities[4].get('text'))()
-                optionalLayoutIconColor = self.getWeatherAutoColor(optionalLayoutIconItem)
-                optionalLayoutIcon = self.getWeatherIcon(optionalLayoutIcon)
 
-            # forecast day 1
-            tForecast1 = self.items.return_item(entities[1].get('heading'))()
-            tF1Icon = self.items.return_item(entities[1].get('icon'))()
-            tForecast1Val = self.items.return_item(entities[1].get('text'))()
-            cF1Icon = self.getWeatherAutoColor(tF1Icon)
-            tF1Icon = self.getWeatherIcon(tF1Icon)
+            pageData = f"weatherUpdate~"
+            alternativeData = ""
 
-            # forecast day 2
-            tForecast2 = self.items.return_item(entities[2].get('heading'))()
-            tF2Icon = self.items.return_item(entities[2].get('icon'))()
-            tForecast2Val = self.items.return_item(entities[2].get('text'))()
-            cF2Icon = self.getWeatherAutoColor(tF2Icon)
-            tF2Icon = self.getWeatherIcon(tF2Icon)
+            maxEntities = 5
+            if self.screensaverType == 2:
+                maxEntities = 15
+            for idx, entity in enumerate(entities):
+                if idx >= maxEntities:
+                    break
 
-            # forecast day 3
-            tForecast3 = self.items.return_item(entities[3].get('heading'))()
-            tF3Icon = self.items.return_item(entities[3].get('icon'))()
-            tForecast3Val = self.items.return_item(entities[3].get('text'))()
-            cF3Icon = self.getWeatherAutoColor(tF3Icon)
-            tF3Icon = self.getWeatherIcon(tF3Icon)
+                heading = entity.get('heading', '')
+                heading_item = self.items.return_item(heading)
+                if heading_item is not None:
+                    heading = heading_item()
+                icon = entity.get('icon', '')
+                icon_item = self.items.return_item(icon)
+                if icon_item is not None:
+                    icon = icon_item()
+                iconColor = entity.get('iconColor', 'White')
+                iconColor_item = self.items.return_item(iconColor)
+                if iconColor_item is not None:
+                    iconColor = iconColor_item()
+                text = entity.get('text', '')
+                text_item = self.items.return_item(text)
+                if text_item is not None:
+                    text = text_item()
 
-            # forecast day 4
-            tForecast4 = self.items.return_item(entities[4].get('heading'))()
-            tF4Icon = self.items.return_item(entities[4].get('icon'))()
-            tForecast4Val = self.items.return_item(entities[4].get('text'))()
-            cF4Icon = self.getWeatherAutoColor(tF4Icon)
-            tF4Icon = self.getWeatherIcon(tF4Icon)
+                iconType = entity.get('type', '')
+                if iconType == "weather":
+                    iconColor = "weather"
+                    icon = self.getWeatherIcon(icon, self.items.return_item('env.location.day')() or idx > 0)
+                elif iconType == "icon":
+                    icon = Icons.GetIcon(icon)
+                elif iconType == "float":
+                    icon = round(icon, 1)
+
+                if iconColor == "weather":
+                    iconColor = self.getWeatherAutoColor(icon, self.items.return_item('env.location.day')() or idx > 0)
+                elif iconColor == "item":
+                    if text:
+                        iconColor = self.defaultOnColor
+                    else:
+                        iconColor = self.defaultOffColor
+                    iconColor = rgb_dec565(getattr(Colors, iconColor))
+                else:
+                    iconColor = rgb_dec565(getattr(Colors, iconColor))
+
+                if screensaver_config.get('alternativeLayout', False) and idx == 1:
+                    alternativeData = f"ignore~ignore~ignore~ignore~ignore~ignore~ignore~ignore~{icon}~{iconColor}~{heading}~{text}~"
+                else:
+                    pageData = f"{pageData}ignore~ignore~{icon}~{iconColor}~{heading}~{text}~"
+
+            pageData = f"{pageData}{alternativeData}"
 
             out_msgs = list()
-            out_msgs.append(f"weatherUpdate~"
-                            f"ignore~"
-                            f"ignore~"
-                            f"{tMainIcon}~"
-                            f"{cMainIcon}~"
-                            f"ignore~"
-                            f"{tMainText}~"
-                            f"ignore~"
-                            f"ignore~"
-                            f"{tF1Icon}~"
-                            f"{cF1Icon}~"
-                            f"{tForecast1}~"
-                            f"{tForecast1Val}~"
-                            f"ignore~"
-                            f"ignore~"
-                            f"{tF2Icon}~"
-                            f"{cF2Icon}~"
-                            f"{tForecast2}~"
-                            f"{tForecast2Val}~"
-                            f"ignore~"
-                            f"ignore~"
-                            f"{tF3Icon}~"
-                            f"{cF3Icon}~"
-                            f"{tForecast3}~"
-                            f"{tForecast3Val}~"
-                            f"ignore~"
-                            f"ignore~"
-                            f"{tF4Icon}~"
-                            f"{cF4Icon}~"
-                            f"{tForecast4}~"
-                            f"{tForecast4Val}~"
-                            f"ignore~"
-                            f"ignore~"
-                            f"{optionalLayoutIcon}~"
-                            f"{optionalLayoutIconColor}~"
-                            f"ignore~"
-                            f"{optionalLayoutText}"
-                            )
+            out_msgs.append(pageData)
 
             # set colors
             background = rgb_dec565(getattr(Colors, self.defaultBackgroundColor))
