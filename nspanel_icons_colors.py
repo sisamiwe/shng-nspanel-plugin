@@ -6898,8 +6898,48 @@ class IconsSelector(object):
     "zodiac-virgo": "",
     }
 
-    def GetIcon(self, ma_name: str) -> str:
-        return self.iconMap.get(ma_name, '')
+    iconMapActiveInactive = {
+        "battery": "battery-outline",
+        "blinds": "blinds-open",
+        "blinds-horizontal-closed": "blinds-horizontal",
+        "blinds-vertical-closed": "blinds-vertical",
+        "curtains-closed": "curtains",
+        "circle-slice-8": "checkbox-blank-circle",
+        "door-closed": "door-open",
+        "door-sliding": "door-sliding-open",
+        "fan": "fan-off",
+        "garage": "garage-open",
+        "garage-variant": "garage-open-variant",
+        "gate": "gate-open",
+        "lightbulb": "lightbulb-off",
+        "lightbulb-cfl": "lightbulb-cfl-off",
+        "lightbulb-cfl-spiral": "lightbulb-cfl-spiral-off",
+        "lightbulb-fluorescent-tube": "lightbulb-fluorescent-tube-outline",
+        "lightbulb-group": "lightbulb-group-off",
+        "lightbulb-group-outline": "lightbulb-group-off-outline",
+        "lightbulb-multiple": "lightbulb-multiple-off",
+        "lightbulb-multiple-outline": "lightbulb-multiple-off-outline",
+        "lightbulb-spot": "lightbulb-spot-off",
+        "lock": "lock-open",
+        "mailbox-up": "mailbox-outline",
+        "roller-shade-closed": "roller-shade",
+        "router-wireless": "router-wireless-off",
+        "umbrella-closed": "umbrella",
+        "umbrella-closed-outline": "umbrella-outline",
+        "wifi": "wifi-off",
+        "window-shutter": "window-shutter-open",
+        "window-closed": "window-open",
+        "window-closed-variant": "window-open-variant",
+    }
+
+    def GetIcon(self, iconName: str, inactive: bool = False) -> str:
+        if inactive and iconName in self.iconMapActiveInactive.keys():
+            iconName = self.iconMapActiveInactive.get(iconName, iconName)
+        icon = self.iconMap.get(iconName, None)
+        if icon:
+            return icon
+        else:
+            return iconName
 
 class ColorThemes(object):
     HMIOff =           {'red':  68, 'green': 115, 'blue': 158}     # Blau-Off - Original Entity Off

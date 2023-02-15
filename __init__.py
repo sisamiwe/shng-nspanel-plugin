@@ -2010,27 +2010,6 @@ class NSPanel(MqttPlugin):
     def GeneratePageElements(self, page) -> str:
         self.logger.debug(f"GeneratePageElements called with page={page}")
 
-        iconMapping = {"battery": "battery-outline",
-                       "blinds": "blinds-open",
-                       "blinds-horizontal-closed": "blinds-horizontal",
-                       "blinds-vertical-closed": "blinds-vertical",
-                       "curtains-closed": "curtains",
-                       "circle-slice-8": "checkbox-blank-circle",
-                       "door-closed": "door-open",
-                       "door-sliding": "door-sliding-open",
-                       "garage": "garage-open",
-                       "garage-variant": "garage-open-variant",
-                       "gate": "gate-open",
-                       "lock": "lock-open",
-                       "mailbox-up": "mailbox-outline",
-                       "roller-shade-closed": "roller-shade",
-                       "umbrella-closed": "umbrella",
-                       "umbrella-closed-outline": "umbrella-outline",
-                       "window-shutter": "window-shutter-open",
-                       "window-closed": "window-open",
-                       "window-closed-variant": "window-open-variant",
-                       }
-
         page_content = self.panel_config['cards'][page]
 
         if page_content['pageType'] in ['cardThermo', 'cardAlarm', 'cardMedia', 'cardQR', 'cardPower', 'cardChart']:
@@ -2064,11 +2043,11 @@ class NSPanel(MqttPlugin):
 
             iconName = entity.get('iconId', '')
             status = self.items.return_item(entity.get('item_status', None))
-            if (status is not None) and (iconName in iconMapping.keys()):
-                if not status():
-                    iconName = iconMapping[iconName]
+            inactive = False
+            if (status is not None) and not status():
+                inactive = True
 
-            iconid = Icons.GetIcon(iconName)
+            iconid = Icons.GetIcon(iconName, inactive)
             iconColor = entity.get('iconColor', self.defaultColor)
             if page_content['pageType'] == 'cardGrid':
                 if entity['type'] == 'text':
