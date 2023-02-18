@@ -337,6 +337,21 @@ item_structs:
                     initial_value: -17 °C
                     nspanel_update@instance: ..:.
 
+            Wetter_Tag5:
+                type: str
+                initial_value: 'Tag5'
+                nspanel_update@instance: weather
+
+                Icon:
+                    type: num
+                    initial_value: 600
+                    nspanel_update@instance: ..:.
+                    
+                Text:
+                    type: str
+                    initial_value: 32 °C
+                    nspanel_update@instance: ..:.
+
         timer:
             type: num
             nspanel_popup@instance: timer
@@ -349,6 +364,7 @@ item_structs:
 
         Licht:
             type: bool
+            nspanel_update@instance: weather
             
             Helligkeit:
                 type: num
@@ -359,6 +375,7 @@ item_structs:
 
         Rolladen:
             move:
+                nspanel_update@instance: weather
                 type: bool
                 enforce_updates: true
             stop:

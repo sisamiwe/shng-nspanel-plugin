@@ -747,7 +747,7 @@ class NSPanel(MqttPlugin):
     def send_panel_brightness(self):
         brightness_screensaver = self.panel_config.get('screensaver', {}).get('brightness', 10)
         brightness_active = self.brightness
-        dbc = rgb_dec565(getattr(Colors, self.defaultBackgroundColor))
+        dbc = Colors.GetColor(self.defaultBackgroundColor)
         # same value for both values will break sleep timer of the firmware # comment from HA code
         if brightness_screensaver == brightness_active:
             brightness_screensaver = brightness_screensaver - 1
@@ -937,13 +937,13 @@ class NSPanel(MqttPlugin):
         icon1Color = 'White'
         if isinstance(iconLeft, dict):
             icon1 = Icons.GetIcon(iconLeft.get('icon', ''))
-            icon1Color = rgb_dec565(getattr(Colors, iconLeft.get('color', 'White')))
+            icon1Color = Colors.GetColor(iconLeft.get('color', 'White'))
         # Right Icon
         icon2 = ''
         icon2Color = 'White'
         if isinstance(iconRight, dict):
             icon2 = Icons.GetIcon(iconRight.get('icon', ''))
-            icon2Color = rgb_dec565(getattr(Colors, iconRight.get('color', 'White')))
+            icon2Color = Colors.GetColor(iconRight.get('color', 'White'))
         icon1Font = iconSize
         icon2Font = iconSize
         return f"{icon1}~{icon1Color}~{icon2}~{icon2Color}~{icon1Font}~{icon2Font}"
@@ -953,7 +953,7 @@ class NSPanel(MqttPlugin):
         status_icons = self.get_status_icons()
         self.publish_tasmota_topic(payload=f"statusUpdate~{status_icons}")
 
-    def getWeatherIcon(self, icon, day: bool = True):
+    def getWeatherIcon(self, weathercondition):
         """Get weather icon from weather data."""
         weatherMapping = {
             'clear_night': 'weather-night',
@@ -972,39 +972,15 @@ class NSPanel(MqttPlugin):
             'windy': 'weather-windy',
             'windy_variant': 'weather-windy-variant'
         }
-        self.logger.debug(f"getWeatherIcon called with icon={icon}")
-        weatherCondition = getWeatherCondition(icon, day)[0]
-        if weatherCondition:
-            return Icons.GetIcon(weatherMapping[weatherCondition])
+        self.logger.debug(f"getWeatherIcon called with weathercondition={weathercondition}")
+        return Icons.GetIcon(weatherMapping.get(weathercondition, "-"))
+
+    def getItemValue(self, itemname):
+        item = self.items.return_item(itemname)
+        if item is not None:
+            return item()
         else:
-            self.logger.warning('unknown openweathermap weather code')
-            return icon
-
-    def getWeatherAutoColor(self, icon, day: bool = True):
-        default_weather_icon_color_mapping = {
-            "clear_night": "35957",  # 50% grey
-            "cloudy": "31728",  # grey-blue
-            "exceptional": "63488",  # red
-            "fog": "21130",  # 75% grey
-            "hail": "65535",  # white
-            "lightning": "65120",  # golden-yellow
-            "lightning_rainy": "50400",  # dark-golden-yellow
-            "partlycloudy": "35957",  # 50% grey
-            "pouring": "249",  # blue
-            "rainy": "33759",  # light-blue
-            "snowy": "65535",  # white
-            "snowy_rainy": "44479",  # light-blue-grey
-            "sunny": "63469",  # bright-yellow
-            "windy": "35957",  # 50% grey
-            "windy_variant": "35957"  # 50% grey
-        }
-        self.logger.debug(f"getWeatherAutoColor called with icon={icon}")
-        if isinstance(icon, int):
-            weatherCondition = getWeatherCondition(icon, day)[0]
-            if weatherCondition:
-                return default_weather_icon_color_mapping[weatherCondition]
-
-        return rgb_dec565(getattr(Colors, self.defaultColor))
+            return itemname
 
     def HandleScreensaverWeatherUpdate(self):
         self.logger.info('Function HandleScreensaverWeatherUpdate')
@@ -1023,42 +999,31 @@ class NSPanel(MqttPlugin):
                 if idx >= maxEntities:
                     break
 
-                heading = entity.get('heading', '')
-                heading_item = self.items.return_item(heading)
-                if heading_item is not None:
-                    heading = heading_item()
-                icon = entity.get('icon', '')
-                icon_item = self.items.return_item(icon)
-                if icon_item is not None:
-                    icon = icon_item()
-                iconColor = entity.get('iconColor', 'White')
-                iconColor_item = self.items.return_item(iconColor)
-                if iconColor_item is not None:
-                    iconColor = iconColor_item()
-                text = entity.get('text', '')
-                text_item = self.items.return_item(text)
-                if text_item is not None:
-                    text = text_item()
-
-                iconType = entity.get('type', '')
-                if iconType == "weather":
-                    iconColor = "weather"
-                    icon = self.getWeatherIcon(icon, self.items.return_item('env.location.day')() or idx > 0)
-                elif iconType == "icon":
-                    icon = Icons.GetIcon(icon)
-                elif iconType == "float":
-                    icon = round(icon, 1)
+                heading = self.getItemValue(entity.get('heading', ''))
+                item = self.getItemValue(entity.get('item', ''))
+                icon = self.getItemValue(entity.get('icon', ''))
+                iconColor = self.getItemValue(entity.get('iconColor', 'White'))
+                text = self.getItemValue(entity.get('text', ''))
 
                 if iconColor == "weather":
-                    iconColor = self.getWeatherAutoColor(icon, self.items.return_item('env.location.day')() or idx > 0)
-                elif iconColor == "item":
-                    if text:
+                    weatherCondition = getWeatherCondition(icon, self.items.return_item('env.location.day')() or idx > 0)
+                    icon = self.getWeatherIcon(weatherCondition)
+                    iconColor = Colors.GetColor(weatherCondition)
+
+                inactive = False
+                if iconColor == "item":
+                    if item:
                         iconColor = self.defaultOnColor
                     else:
+                        inactive = True
                         iconColor = self.defaultOffColor
-                    iconColor = rgb_dec565(getattr(Colors, iconColor))
-                else:
-                    iconColor = rgb_dec565(getattr(Colors, iconColor))
+
+                icon = Icons.GetIcon(icon, inactive)
+                iconColor = Colors.GetColor(iconColor)
+
+                # Handle to long strings, if no icon was found
+                if idx < 4 or idx > 9:
+                    icon = str(icon)[:2]
 
                 if screensaver_config.get('alternativeLayout', False) and idx == 1:
                     alternativeData = f"ignore~ignore~ignore~ignore~ignore~ignore~ignore~ignore~{icon}~{iconColor}~{heading}~{text}~"
@@ -1071,22 +1036,22 @@ class NSPanel(MqttPlugin):
             out_msgs.append(pageData)
 
             # set colors
-            background = rgb_dec565(getattr(Colors, self.defaultBackgroundColor))
-            timestr = rgb_dec565(getattr(Colors, self.defaultColor))
-            timeAPPM = rgb_dec565(getattr(Colors, self.defaultColor))
-            date = rgb_dec565(getattr(Colors, self.defaultColor))
-            cMainText = rgb_dec565(getattr(Colors, self.defaultColor))
-            cForecast1 = rgb_dec565(getattr(Colors, self.defaultColor))
-            cForecast2 = rgb_dec565(getattr(Colors, self.defaultColor))
-            cForecast3 = rgb_dec565(getattr(Colors, self.defaultColor))
-            cForecast4 = rgb_dec565(getattr(Colors, self.defaultColor))
-            cForecast1Val = rgb_dec565(getattr(Colors, self.defaultColor))
-            cForecast2Val = rgb_dec565(getattr(Colors, self.defaultColor))
-            cForecast3Val = rgb_dec565(getattr(Colors, self.defaultColor))
-            cForecast4Val = rgb_dec565(getattr(Colors, self.defaultColor))
-            bar = rgb_dec565(getattr(Colors, self.defaultColor))
-            tMR = rgb_dec565(getattr(Colors, self.defaultColor))
-            tTimeAdd = rgb_dec565(getattr(Colors, self.defaultColor))
+            background = Colors.GetColor(self.defaultBackgroundColor)
+            timestr = Colors.GetColor(self.defaultColor)
+            timeAPPM = Colors.GetColor(self.defaultColor)
+            date = Colors.GetColor(self.defaultColor)
+            cMainText = Colors.GetColor(self.defaultColor)
+            cForecast1 = Colors.GetColor(self.defaultColor)
+            cForecast2 = Colors.GetColor(self.defaultColor)
+            cForecast3 = Colors.GetColor(self.defaultColor)
+            cForecast4 = Colors.GetColor(self.defaultColor)
+            cForecast1Val = Colors.GetColor(self.defaultColor)
+            cForecast2Val = Colors.GetColor(self.defaultColor)
+            cForecast3Val = Colors.GetColor(self.defaultColor)
+            cForecast4Val = Colors.GetColor(self.defaultColor)
+            bar = Colors.GetColor(self.defaultColor)
+            tMR = Colors.GetColor(self.defaultColor)
+            tTimeAdd = Colors.GetColor(self.defaultColor)
 
             out_msgs.append(f'color~{background}~'
                             f'{timestr}~'
@@ -1522,7 +1487,7 @@ class NSPanel(MqttPlugin):
     def GeneratePopupNotify(self, content) -> list:
         self.logger.debug(f"GeneratePopupNotify called with content={content}")
         # TODO split colors for different elements?
-        color = rgb_dec565(getattr(Colors, self.defaultColor))
+        color = Colors.GetColor(self.defaultColor)
 
         entity = content.get('entity', '')
         heading = content.get('heading', '')
@@ -1532,7 +1497,7 @@ class NSPanel(MqttPlugin):
         timeout = content.get('timeout', 120)
         size = content.get('size', 0)
         icon = Icons.GetIcon(content.get('icon', ''))
-        iconColor = rgb_dec565(getattr(Colors, content.get('iconColor', 'White')))
+        iconColor = Colors.GetColor(content.get('iconColor', 'White'))
         out_msgs = list()
         out_msgs.append('pageType~popupNotify')
         out_msgs.append(
@@ -1627,13 +1592,15 @@ class NSPanel(MqttPlugin):
         mode = self.items.return_item(page_content.get('item_mode', None))()
         if mode is not None:
             mode = mode if (0 < mode < 5) else 1
-            modes = {1: ('Komfort', Icons.GetIcon('alpha-a-circle'), (rgb_dec565(Colors.On), 33840, 33840, 33840),
+            colorOn = Colors.GetColor('On')
+            colorOff = Colors.GetColor('Off')
+            modes = {1: ('Komfort', Icons.GetIcon('alpha-a-circle'), (colorOn, colorOff, colorOff, colorOff),
                          (1, 0, 0, 0)),
-                     2: ('Standby', Icons.GetIcon('power-standby'), (33840, rgb_dec565(Colors.On), 33840, 33840),
-                         (0, 1, 0, 1)),
-                     3: ('Nacht', Icons.GetIcon('weather-night'), (33840, 33840, rgb_dec565(Colors.On), 33840),
+                     2: ('Standby', Icons.GetIcon('power-standby'), (colorOff, colorOn, colorOff, colorOff),
+                         (0, 1, 0, 0)),
+                     3: ('Nacht', Icons.GetIcon('weather-night'), (colorOff, colorOff, colorOn, colorOff),
                          (0, 0, 1, 0)),
-                     4: ('Frost', Icons.GetIcon('head-snowflake'), (33840, 33840, 33840, rgb_dec565(Colors.On)),
+                     4: ('Frost', Icons.GetIcon('head-snowflake'), (colorOff, colorOff, colorOff, colorOn),
                          (0, 0, 0, 1)),
                      }
 
@@ -1699,9 +1666,9 @@ class NSPanel(MqttPlugin):
         if onOff == '':
             onOffBtn = 'disable'
         elif onOff == 0:
-            onOffBtn = rgb_dec565(getattr(Colors, 'White'))
+            onOffBtn = Colors.GetColor('White')
         else:
-            onOffBtn = rgb_dec565(getattr(Colors, 'On'))
+            onOffBtn = Colors.GetColor('On')
         shuffle_item = self.items.return_item(page_content.get('iconShuffle', None))
         if shuffle_item is None or shuffle_item() == '':
             iconShuffle = 'disable'
@@ -1770,20 +1737,20 @@ class NSPanel(MqttPlugin):
         cardEntity = page_content.get('entity', 'undefined')
         arm = ['', '', '', '']
         iconId = Icons.GetIcon(page_content.get('icon', 'home'))
-        iconColor = rgb_dec565(getattr(Colors, page_content.get('color', 'White')))
+        iconColor = Colors.GetColor(page_content.get('color', 'White'))
         numpadStatus = 'enable'
         flashing = 'disable'
         icon2 = page_content.get('icon2', '')
         if icon2 != '':
             icon2 = Icons.GetIcon(icon2)
-        icon2Color = rgb_dec565(getattr(Colors, page_content.get('icon2Color', self.defaultColor)))
+        icon2Color = Colors.GetColor(page_content.get('icon2Color', self.defaultColor))
         item_icon2 = page_content.get('item_icon2', '')
         if item_icon2 != '':
             item2Action = self.items.return_item(item_icon2)
             if item2Action():
-                icon2Color = rgb_dec565(getattr(Colors, page_content.get('icon2OnColor', self.defaultOnColor)))
+                icon2Color = Colors.GetColor(page_content.get('icon2OnColor', self.defaultOnColor))
             else:
-                icon2Color = rgb_dec565(getattr(Colors, page_content.get('icon2OffColor', self.defaultOffColor)))
+                icon2Color = Colors.GetColor(page_content.get('icon2OffColor', self.defaultOffColor))
             # replace item with command name
             item_icon2 = 'alarm-button'
 
@@ -1794,7 +1761,7 @@ class NSPanel(MqttPlugin):
             item = self.items.return_item(entity.get('item', None))
             if item is not None and item():  # mode active
                 iconId = Icons.GetIcon(entity.get('icon', 'home'))
-                iconColor = rgb_dec565(getattr(Colors, entity.get('color', 'White')))
+                iconColor = Colors.GetColor(entity.get('color', 'White'))
                 password = entity.get('password', '')
                 numpadStatus = 'disable' if password is None or password == '' else 'enable'
                 flashing = 'disable' if entity.get('flashing', '') == '' else 'enable'
@@ -1840,7 +1807,7 @@ class NSPanel(MqttPlugin):
         SSID = self.items.return_item(page_content.get('item_SSID', 'undefined'))()
         Password = self.items.return_item(page_content.get('item_Password', 'undefined'))()
         hiddenPWD = page_content.get('hidePassword', False)
-        iconColor = rgb_dec565(getattr(Colors, page_content.get('iconColor', 'White')))
+        iconColor = Colors.GetColor(page_content.get('iconColor', 'White'))
 
         type1 = 'text'
         internalName1 = 'S'  # wird nicht angezeigt
@@ -1897,7 +1864,7 @@ class NSPanel(MqttPlugin):
         textHomeBelow = self.items.return_item(page_content['itemHomeBelow'])()
         textHomeAbove = self.items.return_item(page_content['itemHomeAbove'])()
         iconHome = Icons.GetIcon(page_content.get('iconHome', 'home'))
-        colorHome = rgb_dec565(getattr(Colors, page_content.get('colorHome', 'home')))
+        colorHome = Colors.GetColor(page_content.get('colorHome', 'home'))
 
         # Generata PageDate according to: entityUpd~PowerTest~x~navUp~A~65535~~~delete~~~~~~text~sensor.power_consumption~B~17299~Power consumption~100W~1~text~sensor.power_consumption~C~17299~Power consumption~100W~1~text~sensor.today_energy~D~17299~Total energy 1~5836.0kWh~0~delete~~~~~~0~text~sensor.today_energy~E~17299~Total energy 1~5836.0kWh~-30~delete~~~~~~0~text~sensor.today_energy~F~65504~Total energy 1~5836.0kWh~90~text~sensor.today_energy~G~17299~Total energy 1~5836.0kWh~10
         pageData = (
@@ -1933,7 +1900,7 @@ class NSPanel(MqttPlugin):
             name = entity.get('displayNameEntity', '')
 
             icon = Icons.GetIcon(entity.get('icon', ''))
-            iconColor = rgb_dec565(getattr(Colors, entity.get('color', self.defaultColor)))
+            iconColor = Colors.GetColor(entity.get('color', self.defaultColor))
             speed = entity.get('speed', '')
             pageData = (
                 f"{pageData}"
@@ -1972,7 +1939,7 @@ class NSPanel(MqttPlugin):
         stepwidth_xAxis = round(nr_of_elements / (nr_of_xAxis_labels - 1))
 
         heading = page_content.get('heading', 'Chart')
-        color = rgb_dec565(getattr(Colors, page_content.get('Color', self.defaultColor)))
+        color = Colors.GetColor(page_content.get('Color', self.defaultColor))
         yAxisLabel = page_content.get('yAxisLabel', '')
         yAxisTick = '5:10'
 
@@ -2067,7 +2034,7 @@ class NSPanel(MqttPlugin):
 
             displayNameEntity = entity.get('displayNameEntity', '')
 
-            iconColor = rgb_dec565(getattr(Colors, str(iconColor)))
+            iconColor = Colors.GetColor(str(iconColor))
             pageData = (
                 f"{pageData}~"
                 f"{entity['type']}~"
@@ -2083,7 +2050,7 @@ class NSPanel(MqttPlugin):
     def GenerateDetailLight(self, pagename) -> list:
         self.logger.debug(f"GenerateDetailLight called with entity={pagename}")
         entity = self.getEntityByName(pagename)
-        icon_color = rgb_dec565(getattr(Colors, self.defaultColor))
+        icon_color = Colors.GetColor(self.defaultColor)
         # switch
         item = self.items.return_item(entity.get('item', ''))
         if item is None:
@@ -2190,7 +2157,7 @@ class NSPanel(MqttPlugin):
             self.logger.debug(f"item={item} itemValue={state}")
         options = entity.get('options', '')
 
-        iconColor = rgb_dec565(getattr(Colors, iconColor))
+        iconColor = Colors.GetColor(iconColor)
         out_msgs = list()
         out_msgs.append(f"entityUpdateDetail2~{pagename}~~{iconColor}~{modeType}~{state}~{options}")
         return out_msgs
@@ -2379,10 +2346,6 @@ class NSPanel(MqttPlugin):
             return f"send_mqtt_from_nspanel with payload={payload} to topic={topic} done"
 
 
-def rgb_dec565(rgb):
-    return ((rgb['red'] >> 3) << 11) | (rgb['green'] >> 2) << 5 | ((rgb['blue']) >> 3)
-
-
 def scale(val, src, dst):
     """
     Scale the given value from the scale of src to the scale of dst.
@@ -2430,8 +2393,8 @@ def getWeatherCondition(weatherid, day: bool = True):
     }
     if weatherid == 800:  # same code for day and night
         if day:
-            return ['sunny']
+            return 'sunny'
         else:
-            return ['clear_night']
+            return 'clear_night'
     else:
-        return [k for k, v in condition_classes.items() if weatherid in v]
+        return [k for k, v in condition_classes.items() if weatherid in v][0]

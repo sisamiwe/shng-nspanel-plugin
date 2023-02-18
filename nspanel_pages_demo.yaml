@@ -10,49 +10,55 @@ screensaver:
   statusIconRight: NSPanel1.Screensaver.statusIcon.Right
   itemSecondLine: NSPanel1.Screensaver.secondLine
   entities:
+    # Links groß
     - heading: # Jetzt/Heute
-      icon: NSPanel1.Screensaver.Wetter_Heute.Icon
-      text: NSPanel1.Screensaver.Wetter_Heute.Text
-    - heading: NSPanel1.Screensaver.Wetter_Tag1
-      icon: NSPanel1.Screensaver.Wetter_Tag1.Icon
-      text: NSPanel1.Screensaver.Wetter_Tag1.Text
-    - heading: NSPanel1.Screensaver.Wetter_Tag2
-      icon: NSPanel1.Screensaver.Wetter_Tag2.Icon
-      text: NSPanel1.Screensaver.Wetter_Tag2.Text
-    - heading: NSPanel1.Screensaver.Wetter_Tag3
-      icon: NSPanel1.Screensaver.Wetter_Tag3.Icon
-      text: NSPanel1.Screensaver.Wetter_Tag3.Text
-    - heading: NSPanel1.Screensaver.Wetter_Tag4
-      icon: NSPanel1.Screensaver.Wetter_Tag4.Icon
-      text: NSPanel1.Screensaver.Wetter_Tag4.Text
+      icon: thermometer
+      text: 22 °C
+    # Links klein
+    - icon: wifi
+      text: Aus
+    - icon: heating-coil
+      iconColor: Yellow
+      text: 50 %
+    - icon: trash-can
+      text: Restmüll
+    # untere Reihe
     - heading: Heute
       icon: NSPanel1.Screensaver.Wetter_Heute.Icon
       text: NSPanel1.Screensaver.Wetter_Heute.Text
-      type: weather
+      iconColor: weather
     - heading: NSPanel1.Screensaver.Wetter_Tag1
       icon: NSPanel1.Screensaver.Wetter_Tag1.Icon
       text: NSPanel1.Screensaver.Wetter_Tag1.Text
-      type: weather
+      iconColor: weather
     - heading: NSPanel1.Screensaver.Wetter_Tag2
       icon: NSPanel1.Screensaver.Wetter_Tag2.Icon
       text: NSPanel1.Screensaver.Wetter_Tag2.Text
-      type: weather
+      iconColor: weather
     - heading: NSPanel1.Screensaver.Wetter_Tag3
       icon: NSPanel1.Screensaver.Wetter_Tag3.Icon
       text: NSPanel1.Screensaver.Wetter_Tag3.Text
+      iconColor: weather
     - heading: NSPanel1.Screensaver.Wetter_Tag4
       icon: NSPanel1.Screensaver.Wetter_Tag4.Icon
       text: NSPanel1.Screensaver.Wetter_Tag4.Text
+      iconColor: weather
+    - heading: NSPanel1.Screensaver.Wetter_Tag5
+      icon: NSPanel1.Screensaver.Wetter_Tag5.Icon
+      text: NSPanel1.Screensaver.Wetter_Tag5.Text
+      iconColor: weather
     # Icons below time/date
     - icon: garage
-      iconColor: item
-      text: NSPanel1.Licht
-      type: icon
+      iconColor: Red
     - icon: 12.22
-      type: float
-    - icon: NSPanel1.Screensaver.Wetter_Tag2.Icon
-    - icon: NSPanel1.Screensaver.Wetter_Tag3.Icon
-    - icon: NSPanel1.Screensaver.Wetter_Tag4.Icon
+    - icon: star
+      iconColor: Green
+    - icon: window-shutter
+      item: NSPanel1.Rolladen.move
+      iconColor: item
+    - icon: lightbulb
+      item: NSPanel1.Licht
+      iconColor: item
 
 cards:
   - pageType: cardEntities
