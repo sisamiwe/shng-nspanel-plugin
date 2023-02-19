@@ -174,7 +174,7 @@ item_attributes:
             de: "Änderungen des Items aktualisieren Teile der Bildschirmschoner-Karte."
             en: "Changes of the item refresh parts of the screensaver card."
         valid_list:
-            - weather
+            - weather # and all other icons except status
             - status
             - time # for secondLine
 

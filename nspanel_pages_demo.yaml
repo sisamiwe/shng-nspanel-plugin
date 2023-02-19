@@ -1,10 +1,9 @@
-screensaver:
+- pageType: screensaver2
   timeout: 60       # 0 disable, max. 65 sec
   brightness: 25     # 0-100%
   timeFormat: '%H:%M'
   dateFormat: '%A, %d. %B %Y'
   doubleTapToUnlock: True
-  type: 2
   alternativeLayout: False # display second line instead of 4 day forecase
   statusIconLeft: NSPanel1.Screensaver.statusIcon.Left
   statusIconRight: NSPanel1.Screensaver.statusIcon.Right
@@ -60,307 +59,306 @@ screensaver:
       item: NSPanel1.Licht
       iconColor: item
 
-cards:
-  - pageType: cardEntities
-    heading: cardEntities Demo 1
-    entities:
-      - entity: page0_id0
-        type: light
-        item: NSPanel1.Licht
-        iconId: lightbulb
-        displayNameEntity: Licht
-        onValue: 1
-        iconColor: Red
-      - entity: page0_id1
-        type: switch # like light but no popup
-        item: NSPanel1.Schalter
-        iconId: electric-switch
-        displayNameEntity: Schalter
-      - entity: page0_id2
-        type: shutter
-        item: NSPanel1.Rolladen.move
-        item_stop: NSPanel1.Rolladen.stop
-        item_pos: NSPanel1.Rolladen.pos
-        item_status: NSPanel1.Rolladen.move
-        iconId: garage
-        displayNameEntity: Garage
-      - entity: page0_id3
-        type: shutter
-        item: NSPanel1.Rolladen.move
-        item_stop: NSPanel1.Rolladen.stop
-        item_pos: NSPanel1.Rolladen.pos
-        item_tilt: NSPanel1.Rolladen.tilt
-        min_pos: 0
-        max_pos: 255
-        min_tilt: 0
-        max_tilt: 255
-        iconId: window-shutter
-        displayNameEntity: Jalousie
+- pageType: cardEntities
+  heading: cardEntities Demo 1
+  entities:
+    - entity: page0_id0
+      type: light
+      item: NSPanel1.Licht
+      iconId: lightbulb
+      displayNameEntity: Licht
+      onValue: 1
+      iconColor: Red
+    - entity: page0_id1
+      type: switch # like light but no popup
+      item: NSPanel1.Schalter
+      iconId: electric-switch
+      displayNameEntity: Schalter
+    - entity: page0_id2
+      type: shutter
+      item: NSPanel1.Rolladen.move
+      item_stop: NSPanel1.Rolladen.stop
+      item_pos: NSPanel1.Rolladen.pos
+      item_status: NSPanel1.Rolladen.move
+      iconId: garage
+      displayNameEntity: Garage
+    - entity: page0_id3
+      type: shutter
+      item: NSPanel1.Rolladen.move
+      item_stop: NSPanel1.Rolladen.stop
+      item_pos: NSPanel1.Rolladen.pos
+      item_tilt: NSPanel1.Rolladen.tilt
+      min_pos: 0
+      max_pos: 255
+      min_tilt: 0
+      max_tilt: 255
+      iconId: window-shutter
+      displayNameEntity: Jalousie
 
-  - pageType: cardEntities
-    heading: cardEntities Demo 2
-    entities:
-      - entity: page1_id0
-        type: button
-        item: NSPanel1.Button
-        iconId: gesture-tap
-        displayNameEntity: Button
-        optionalValue: Mach was
-        onValue: True
-        offValue: True
-      - entity: page1_id2
-        type: number
-        item: NSPanel1.Nummer
-        min_value: 1
-        max_value: 9
-        iconId: brightness-percent
-        displayNameEntity: Bereich
-      - entity: page1_id3
-        type: input_sel
-        item: NSPanel1.Auswahl
-        iconId: format-list-bulleted
-        displayNameEntity: Auswahl
-        options: Szene1?Szene2?Szene3?Szene4?Szene5
-      - entity: page1_id4
-        type: text
-        item: NSPanel1.Text
-        iconId: text
-        displayNameEntity: Text
+- pageType: cardEntities
+  heading: cardEntities Demo 2
+  entities:
+    - entity: page1_id0
+      type: button
+      item: NSPanel1.Button
+      iconId: gesture-tap
+      displayNameEntity: Button
+      optionalValue: Mach was
+      onValue: True
+      offValue: True
+    - entity: page1_id2
+      type: number
+      item: NSPanel1.Nummer
+      min_value: 1
+      max_value: 9
+      iconId: brightness-percent
+      displayNameEntity: Bereich
+    - entity: page1_id3
+      type: input_sel
+      item: NSPanel1.Auswahl
+      iconId: format-list-bulleted
+      displayNameEntity: Auswahl
+      options: Szene1?Szene2?Szene3?Szene4?Szene5
+    - entity: page1_id4
+      type: text
+      item: NSPanel1.Text
+      iconId: text
+      displayNameEntity: Text
 
-  - pageType: cardEntities
-    heading: cardEntities Demo 3
-    entities:
-      - entity: page2_id0
-        type: delete
-      - entity: page2_id2
-        type: fan
-        item: NSPanel1.Ventilator
-        item_speed: NSPanel1.Ventilator.Geschwindigkeit
-        item_preset: NSPanel1.Ventilator.Preset
-        iconId: fan
-        displayNameEntity: Ventilator
-        preset_modes: [Normal, Party, Abwesend]
+- pageType: cardEntities
+  heading: cardEntities Demo 3
+  entities:
+    - entity: page2_id0
+      type: delete
+    - entity: page2_id2
+      type: fan
+      item: NSPanel1.Ventilator
+      item_speed: NSPanel1.Ventilator.Geschwindigkeit
+      item_preset: NSPanel1.Ventilator.Preset
+      iconId: fan
+      displayNameEntity: Ventilator
+      preset_modes: [Normal, Party, Abwesend]
 
-  - pageType: cardGrid
-    heading: cardGrid Demo 1
-    entities:
-      - entity: page3_id0
-        type: light # button/switch/number behave exactly same
-        item: NSPanel1.Licht
-        iconId: lightbulb
-        displayNameEntity: Licht
-        onColor: Red
-        offColor: Green
-      - entity: page3_id1
-        type: popupLight
-        iconId: brightness-5
-        displayNameEntity: Licht Dim
-        item: NSPanel1.Licht
-        item_brightness: NSPanel1.Licht.Helligkeit
-        min_brightness: 1
-        max_brightness: 255
-      - entity: page3_id2
-        type: popupLight
-        iconId: gradient-horizontal
-        displayNameEntity: Licht TW
-        item: NSPanel1.Licht
-        item_brightness: NSPanel1.Licht.Helligkeit
-        min_brightness: 1
-        max_brightness: 255
-        item_temperature: NSPanel1.Licht.Farbtemperatur
-        min_temperature: 0
-        max_temperature: 255
-      - entity: page3_id3
-        type: popupLight
-        iconId: palette
-        displayNameEntity: Licht RGB
-        item: NSPanel1.Licht
-        item_color: NSPanel1.Licht.Farbe
-      - entity: page3_id4
-        type: delete # means display no element
-      - entity: page3_id5
-        type: popupLight
-        iconId: lightbulb-on-50
-        displayNameEntity: Licht TW+RGB
-        item: NSPanel1.Licht
-        item_brightness: NSPanel1.Licht.Helligkeit
-        min_brightness: 1
-        max_brightness: 255
-        item_temperature: NSPanel1.Licht.Farbtemperatur
-        min_temperature: 0
-        max_temperature: 255
-        item_color: NSPanel1.Licht.Farbe
+- pageType: cardGrid
+  heading: cardGrid Demo 1
+  entities:
+    - entity: page3_id0
+      type: light # button/switch/number behave exactly same
+      item: NSPanel1.Licht
+      iconId: lightbulb
+      displayNameEntity: Licht
+      onColor: Red
+      offColor: Green
+    - entity: page3_id1
+      type: popupLight
+      iconId: brightness-5
+      displayNameEntity: Licht Dim
+      item: NSPanel1.Licht
+      item_brightness: NSPanel1.Licht.Helligkeit
+      min_brightness: 1
+      max_brightness: 255
+    - entity: page3_id2
+      type: popupLight
+      iconId: gradient-horizontal
+      displayNameEntity: Licht TW
+      item: NSPanel1.Licht
+      item_brightness: NSPanel1.Licht.Helligkeit
+      min_brightness: 1
+      max_brightness: 255
+      item_temperature: NSPanel1.Licht.Farbtemperatur
+      min_temperature: 0
+      max_temperature: 255
+    - entity: page3_id3
+      type: popupLight
+      iconId: palette
+      displayNameEntity: Licht RGB
+      item: NSPanel1.Licht
+      item_color: NSPanel1.Licht.Farbe
+    - entity: page3_id4
+      type: delete # means display no element
+    - entity: page3_id5
+      type: popupLight
+      iconId: lightbulb-on-50
+      displayNameEntity: Licht TW+RGB
+      item: NSPanel1.Licht
+      item_brightness: NSPanel1.Licht.Helligkeit
+      min_brightness: 1
+      max_brightness: 255
+      item_temperature: NSPanel1.Licht.Farbtemperatur
+      min_temperature: 0
+      max_temperature: 255
+      item_color: NSPanel1.Licht.Farbe
 
-  - pageType: cardGrid
-    heading: cardGrid Demo 2
-    entities:
-      - entity: page4_id0
-        type: shutter
-        item: NSPanel1.Rolladen.move
-        item_stop: NSPanel1.Rolladen.stop
-        item_pos: NSPanel1.Rolladen.pos
-        item_status: NSPanel1.Rolladen.move
-        iconId: window-shutter
-        displayNameEntity: Rolladen
-      - entity: page4_id1
-        type: text
-        item: NSPanel1.Text
-        iconId: text
-        displayNameEntity: Text
-      - entity: page4_id2
-        type: input_sel
-        item: NSPanel1.Auswahl
-        iconId: format-list-bulleted
-        displayNameEntity: Auswahl
-        options: Szene1?Szene2?Szene3?Szene4?Szene5
-      - entity: page4_id4
-        type: popupShutter
-        item: NSPanel1.Rolladen.move
-        item_stop: NSPanel1.Rolladen.stop
-        item_pos: NSPanel1.Rolladen.pos
-        item_tilt: NSPanel1.Rolladen.tilt
-        iconId: window-shutter-settings
-        displayNameEntity: Jalousie
-      - entity: page4_id5
-        type: timer
-        item: NSPanel1.timer
-        iconId: timer
-        displayNameEntity: Timer
- 
-  - pageType: cardMedia
-    entity: page5
-    heading: cardMedia Demo
-    item_title: NSPanel1.Media.Title
-    item_author: NSPanel1.Media.Author
-    item_volume: NSPanel1.Media.Volume
-    item_play: NSPanel1.Media.Play
-    item_pause: NSPanel1.Media.Pause
-    item_next: NSPanel1.Media.Next
-    item_back: NSPanel1.Media.Back
-    item_shuffle: NSPanel1.Media.Shuffle
-    item_onOff: # item to switch player on/off
-    item_shuffle: 
-    entities: # up to six elements
-        - entity: Preset1
-          type: preset # direct access
-          icon: 'diamond'
-          value: 'Rockantenne'
-          item: NSPanel1.Media.Preset1
-        - entity: Preset2
-          type: delete # hide element
-        - entity: Preset3
-          type: delete # hide element
-        - entity: Preset4
-          type: input_sel # popup input select
-          displayNameEntity: 'Sender wählen'
-          icon: 'radio'
-          item: NSPanel1.Media.Preset2
-          options: radio NRW?Bayern 1?WDR 2?SWR 3?NDR 2?Antenne Bayern?1Live?Bayern 3?Radio Bob?Hit Radio FFH?SWR4 BW?SWR1 BW
+- pageType: cardGrid
+  heading: cardGrid Demo 2
+  entities:
+    - entity: page4_id0
+      type: shutter
+      item: NSPanel1.Rolladen.move
+      item_stop: NSPanel1.Rolladen.stop
+      item_pos: NSPanel1.Rolladen.pos
+      item_status: NSPanel1.Rolladen.move
+      iconId: window-shutter
+      displayNameEntity: Rolladen
+    - entity: page4_id1
+      type: text
+      item: NSPanel1.Text
+      iconId: text
+      displayNameEntity: Text
+    - entity: page4_id2
+      type: input_sel
+      item: NSPanel1.Auswahl
+      iconId: format-list-bulleted
+      displayNameEntity: Auswahl
+      options: Szene1?Szene2?Szene3?Szene4?Szene5
+    - entity: page4_id4
+      type: popupShutter
+      item: NSPanel1.Rolladen.move
+      item_stop: NSPanel1.Rolladen.stop
+      item_pos: NSPanel1.Rolladen.pos
+      item_tilt: NSPanel1.Rolladen.tilt
+      iconId: window-shutter-settings
+      displayNameEntity: Jalousie
+    - entity: page4_id5
+      type: timer
+      item: NSPanel1.timer
+      iconId: timer
+      displayNameEntity: Timer
 
-  - pageType: cardThermo
-    entity: page6
-    heading: cardThermo Demo
-    item_temp_current: NSPanel1.Heizung.Istwert # an item for the actual temperature
-    item_temp_set: NSPanel1.Heizung.Sollwert # an item for the set temperature
-    item_mode: NSPanel1.Heizung.Betriebsart # an item for comfort / standby (3x bit or 1x byte, optional) RTR Betriebsmodus (1-4)
-    item_night: # an item for night (3x bit or 1x byte, optional)
-    item_frost: # an item for frost (3x bit or 1x byte, optional)
-    item_state: # an item for the current state of the actuator (optional) RTR Betriebszustand -> raumtemp.eg.wohnen.rtr.reglerstatus.allgemein
-    item_text: # an item for additional text, (optional)
-    minSetValue: 5     # min Value which can be set (decimal degrees)
-    maxSetValue: 30    # max Value which can be set (decimal degrees)
-    stepSetValue: 0.5    # step for Value which can be set (decimal degrees)
-    popupThermoMode1: false
+- pageType: cardMedia
+  entity: page5
+  heading: cardMedia Demo
+  item_title: NSPanel1.Media.Title
+  item_author: NSPanel1.Media.Author
+  item_volume: NSPanel1.Media.Volume
+  item_play: NSPanel1.Media.Play
+  item_pause: NSPanel1.Media.Pause
+  item_next: NSPanel1.Media.Next
+  item_back: NSPanel1.Media.Back
+  item_shuffle: NSPanel1.Media.Shuffle
+  item_onOff: # item to switch player on/off
+  item_shuffle: 
+  entities: # up to six elements
+      - entity: Preset1
+        type: preset # direct access
+        icon: 'diamond'
+        value: 'Rockantenne'
+        item: NSPanel1.Media.Preset1
+      - entity: Preset2
+        type: delete # hide element
+      - entity: Preset3
+        type: delete # hide element
+      - entity: Preset4
+        type: input_sel # popup input select
+        displayNameEntity: 'Sender wählen'
+        icon: 'radio'
+        item: NSPanel1.Media.Preset2
+        options: radio NRW?Bayern 1?WDR 2?SWR 3?NDR 2?Antenne Bayern?1Live?Bayern 3?Radio Bob?Hit Radio FFH?SWR4 BW?SWR1 BW
 
-  - pageType: cardAlarm
-    entity: page7
-    title: cardAlarm Demo # only shown if no mode is active
-    # icon in bottom left corner (for all modes)
-    icon2: 'cube'
-    icon2OnColor: 'Green'
-    icon2OffColor: 'White'
-    item_icon2: NSPanel1.Alarm.Aktion
-    # elements on right side
-    entities:
-        - entity: Anwesend
-          item: NSPanel1.Alarm.Modus1
-          password: #Passwort für das Entsperren, leer = kein Passwort
-          icon: home
-          color: White
-        - entity: Abwesend
-          item: NSPanel1.Alarm.Modus2
-          password: 123
-          icon: home-lock
-          color: Yellow
-        - entity: Urlaub
-          item: NSPanel1.Alarm.Modus3
-          password: 123456
-          icon: hiking
-          color: Red
-        - entity: Gäste
-          item: NSPanel1.Alarm.Modus4
-          password: 
-          icon: home
-          color: Green
-          flashing: True # jeder Wert aktiviert das blinken
+- pageType: cardThermo
+  entity: page6
+  heading: cardThermo Demo
+  item_temp_current: NSPanel1.Heizung.Istwert # an item for the actual temperature
+  item_temp_set: NSPanel1.Heizung.Sollwert # an item for the set temperature
+  item_mode: NSPanel1.Heizung.Betriebsart # an item for comfort / standby (3x bit or 1x byte, optional) RTR Betriebsmodus (1-4)
+  item_night: # an item for night (3x bit or 1x byte, optional)
+  item_frost: # an item for frost (3x bit or 1x byte, optional)
+  item_state: # an item for the current state of the actuator (optional) RTR Betriebszustand -> raumtemp.eg.wohnen.rtr.reglerstatus.allgemein
+  item_text: # an item for additional text, (optional)
+  minSetValue: 5     # min Value which can be set (decimal degrees)
+  maxSetValue: 30    # max Value which can be set (decimal degrees)
+  stepSetValue: 0.5    # step for Value which can be set (decimal degrees)
+  popupThermoMode1: false
 
-  - pageType: cardQR
-    entity: page8
-    heading: cardQR Demo
-    iconColor: White
-    hidePassword: false
-    item_SSID: NSPanel1.wlan.SSID
-    item_Password: NSPanel1.wlan.PW
+- pageType: cardAlarm
+  entity: page7
+  title: cardAlarm Demo # only shown if no mode is active
+  # icon in bottom left corner (for all modes)
+  icon2: 'cube'
+  icon2OnColor: 'Green'
+  icon2OffColor: 'White'
+  item_icon2: NSPanel1.Alarm.Aktion
+  # elements on right side
+  entities:
+      - entity: Anwesend
+        item: NSPanel1.Alarm.Modus1
+        password: #Passwort für das Entsperren, leer = kein Passwort
+        icon: home
+        color: White
+      - entity: Abwesend
+        item: NSPanel1.Alarm.Modus2
+        password: 123
+        icon: home-lock
+        color: Yellow
+      - entity: Urlaub
+        item: NSPanel1.Alarm.Modus3
+        password: 123456
+        icon: hiking
+        color: Red
+      - entity: Gäste
+        item: NSPanel1.Alarm.Modus4
+        password: 
+        icon: home
+        color: Green
+        flashing: True # jeder Wert aktiviert das blinken
 
-  - pageType: cardPower
-    entity: page9
-    heading: cardPower Demo
-    itemHomeAbove: NSPanel1.Power.Home
-    itemHomeBelow: NSPanel1.Power.Home
-    iconHome: 'battery-charging-60'
-    colorHome: 'Green' # otherwise default is used
-    entities:
-        - entity: LeftTop # empty element are not displayed
-        - entity: LeftMiddle
-          item: NSPanel1.Power.Links # item
-          displayNameEntity: Links
-          icon: 'solar-power-variant'
-          speed: 0 # TODO: use item to change speed?
-        - entity: LeftBottom
-        - entity: RightTop
-        - entity: RightMiddle
-          item: NSPanel1.Power.Rechts1
-          displayNameEntity: Rechts
-          icon: 'car'
-          color: 'Green'
-          speed: 2 # use -1 for other direction
-        - entity: RightBottom
-          item: NSPanel1.Power.Rechts2
-          icon: 'car'
-          color: 'Red'
-          speed: -1
+- pageType: cardQR
+  entity: page8
+  heading: cardQR Demo
+  iconColor: White
+  hidePassword: false
+  item_SSID: NSPanel1.wlan.SSID
+  item_Password: NSPanel1.wlan.PW
 
-  - pageType: cardChart
-    entity: page10
-    heading: cardChart Demo
-    Color: Red
-    item: NSPanel1.chart
-    yAxisLabel: scaled to maximum
+- pageType: cardPower
+  entity: page9
+  heading: cardPower Demo
+  itemHomeAbove: NSPanel1.Power.Home
+  itemHomeBelow: NSPanel1.Power.Home
+  iconHome: 'battery-charging-60'
+  colorHome: 'Green' # otherwise default is used
+  entities:
+      - entity: LeftTop # empty element are not displayed
+      - entity: LeftMiddle
+        item: NSPanel1.Power.Links # item
+        displayNameEntity: Links
+        icon: 'solar-power-variant'
+        speed: 0 # TODO: use item to change speed?
+      - entity: LeftBottom
+      - entity: RightTop
+      - entity: RightMiddle
+        item: NSPanel1.Power.Rechts1
+        displayNameEntity: Rechts
+        icon: 'car'
+        color: 'Green'
+        speed: 2 # use -1 for other direction
+      - entity: RightBottom
+        item: NSPanel1.Power.Rechts2
+        icon: 'car'
+        color: 'Red'
+        speed: -1
 
-  - pageType: cardLChart
-    entity: page11
-    heading: cardLChart Demo
-    Color: Green
-    item: NSPanel1.chart
-    yAxisLabel: AxisLabel
+- pageType: cardChart
+  entity: page10
+  heading: cardChart Demo
+  Color: Red
+  item: NSPanel1.chart
+  yAxisLabel: scaled to maximum
 
-  - pageType: cardUnlock
-    entity: page12
-    title: cardUnlock Demo # only shown if no mode is active
-    icon: lock
-    color: Red
-    # up to 4 pages with different passwords, empty password not supported
-    entities:
-        - entity: cardChart # can be a hidden card (if implemented)
-          page: page10
-          password: 1234
+- pageType: cardLChart
+  entity: page11
+  heading: cardLChart Demo
+  Color: Green
+  item: NSPanel1.chart
+  yAxisLabel: AxisLabel
+
+- pageType: cardUnlock
+  entity: page12
+  title: cardUnlock Demo # only shown if no mode is active
+  icon: lock
+  color: Red
+  # up to 4 pages with different passwords, empty password not supported
+  entities:
+      - entity: cardChart # can be a hidden card (if implemented)
+        page: page10
+        password: 1234
