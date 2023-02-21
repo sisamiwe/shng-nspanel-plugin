@@ -252,13 +252,21 @@ item_structs:
             statusIcon:
                 nspanel_update@instance: status
                 Left:
-                    type: dict
+                    type: str
                     nspanel_update@instance: ..:.
-                    initial_value: "{'icon': 'email', 'color': 'White'}"
+                    initial_value: 'email'
+                    color:
+                        type: str
+                        nspanel_update@instance: ...:.
+                        initial_value: 'White'
                 Right:
-                    type: dict
+                    type: str
                     nspanel_update@instance: ..:.
-                    initial_value: "{'icon': 'phone', 'color': 'White'}"
+                    initial_value: 'phone'
+                    color:
+                        type: str
+                        nspanel_update@instance: ...:.
+                        initial_value: 'White'
 
             Wetter_Heute:
                 nspanel_update@instance: weather

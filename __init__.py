@@ -724,26 +724,26 @@ class NSPanel(MqttPlugin):
         return self.locale.get(group, {}).get(entry, {}).get('de-DE')  # TODO configure in plugin.yaml
 
     def send_current_time(self):
-        secondLineItem = self.panel_config[0].get('itemSecondLine', '')
+        secondLineItem = self.panel_config[self.current_page].get('itemSecondLine', '')
         secondLine = self.items.return_item(secondLineItem)()
         if secondLine is None:
             secondLine = ''
-        timeFormat = self.panel_config[0].get('timeFormat', "%H:%M")
+        timeFormat = self.panel_config[self.current_page].get('timeFormat', "%H:%M")
         self.publish_tasmota_topic(payload=f"time~{self.shtime.now().strftime(timeFormat)}~{secondLine}")
 
     def send_current_date(self):
-        dateFormat = self.panel_config[0].get('dateFormat', "%A, %-d. %B %Y")
+        dateFormat = self.panel_config[self.current_page].get('dateFormat', "%A, %-d. %B %Y")
         # replace some variables to get localized strings
         dateFormat = dateFormat.replace('%A',
                                         self.shtime.weekday_name())  # TODO add code after merge in main repository .replace('%B', self.shtime.current_monthname())
         self.publish_tasmota_topic(payload=f"date~{self.shtime.now().strftime(dateFormat)}")
 
     def send_screensavertimeout(self):
-        screensavertimeout = self.panel_config[0].get('timeout', 10)
+        screensavertimeout = self.panel_config[self.current_page].get('timeout', 10)
         self.publish_tasmota_topic(payload=f"timeout~{screensavertimeout}")
 
     def send_panel_brightness(self):
-        brightness_screensaver = self.panel_config[0].get('brightness', 10)
+        brightness_screensaver = self.panel_config[self.current_page].get('brightness', 10)
         brightness_active = self.brightness
         dbc = Colors.GetColor(self.defaultBackgroundColor)
         # same value for both values will break sleep timer of the firmware # comment from HA code
@@ -883,14 +883,14 @@ class NSPanel(MqttPlugin):
                         self.display_display_update = False
                     else:
                         # Normal startup
-                        self.HandleScreensaver()
+                        self.GeneratePage(0)
                 else:
                     # startup without check
-                    self.HandleScreensaver()
+                    self.GeneratePage(0)
 
             elif method == 'sleepReached':
                 # event,sleepReached,cardEntities
-                self.HandleScreensaver()
+                self.GeneratePage(0)
 
             elif method == 'pageOpenDetail':
                 # event,pageOpenDetail,popupLight,entity
@@ -906,22 +906,19 @@ class NSPanel(MqttPlugin):
                 self.HandleHardwareButton(method)
 
     def HandleScreensaver(self):
-        self.panel_status['screensaver_active'] = True
-        self._set_item_value('item_screensaver_active', self.panel_status['screensaver_active'])
-        self.current_page = 1
         self.lastPayload = [""]
-        screensaver = self.panel_config[0].get('pageType', 'screensaver')
-        self.publish_tasmota_topic(payload=f"pageType~{screensaver}")
         self.send_current_time()
         self.send_current_date()
         self.HandleScreensaverIconUpdate()
         self.HandleScreensaverWeatherUpdate()
 
-    def get_status_icons(self) -> str:
-        self.logger.debug("get_status_icons called")
-        screensaver = self.panel_config[0]
-        iconLeft = self.items.return_item(screensaver.get('statusIconLeft', None))()
-        iconRight = self.items.return_item(screensaver.get('statusIconRight', None))()
+    def HandleScreensaverIconUpdate(self):
+        self.logger.info('Function HandleScreensaverIconUpdate')
+        screensaver = self.panel_config[self.current_page]
+        iconLeft = self.getItemValue(screensaver.get('statusIconLeft', ''))
+        iconLeftColor = self.getItemValue(screensaver.get('statusIconLeftColor', ''))
+        iconRight = self.getItemValue(screensaver.get('statusIconRight', ''))
+        iconRightColor = self.getItemValue(screensaver.get('statusIconRightColor', ''))
         iconSize = screensaver.get('statusIconBig', True)
         if iconSize:
             iconSize = 1
@@ -929,24 +926,14 @@ class NSPanel(MqttPlugin):
             iconSize = ''
 
         # Left Icon
-        icon1 = ''
-        icon1Color = 'White'
-        if isinstance(iconLeft, dict):
-            icon1 = Icons.GetIcon(iconLeft.get('icon', ''))
-            icon1Color = Colors.GetColor(iconLeft.get('color', 'White'))
+        icon1 = Icons.GetIcon(iconLeft)
+        icon1Color = Colors.GetColor(iconLeftColor)
         # Right Icon
-        icon2 = ''
-        icon2Color = 'White'
-        if isinstance(iconRight, dict):
-            icon2 = Icons.GetIcon(iconRight.get('icon', ''))
-            icon2Color = Colors.GetColor(iconRight.get('color', 'White'))
+        icon2 = Icons.GetIcon(iconRight)
+        icon2Color = Colors.GetColor(iconRightColor)
         icon1Font = iconSize
         icon2Font = iconSize
-        return f"{icon1}~{icon1Color}~{icon2}~{icon2Color}~{icon1Font}~{icon2Font}"
-
-    def HandleScreensaverIconUpdate(self):
-        self.logger.info('Function HandleScreensaverIconUpdate')
-        status_icons = self.get_status_icons()
+        status_icons = f"{icon1}~{icon1Color}~{icon2}~{icon2Color}~{icon1Font}~{icon2Font}"
         self.publish_tasmota_topic(payload=f"statusUpdate~{status_icons}")
 
     def getWeatherIcon(self, weathercondition):
@@ -980,7 +967,7 @@ class NSPanel(MqttPlugin):
 
     def HandleScreensaverWeatherUpdate(self):
         self.logger.info('Function HandleScreensaverWeatherUpdate')
-        screensaver_config = self.panel_config[0]
+        screensaver_config = self.panel_config[self.current_page]
         entities = screensaver_config.get('entities', {})
 
         if entities:
@@ -1073,7 +1060,7 @@ class NSPanel(MqttPlugin):
         self.logger.debug(f"GenerateScreensaverNotify called with item={value}")
 
         if not self.panel_status['screensaver_active']:
-            self.HandleScreensaver()
+            self.GeneratePage(0)
 
         heading = value.get('heading', '')
         text = value.get('text', '')
@@ -1113,11 +1100,11 @@ class NSPanel(MqttPlugin):
 
         if buttonAction == 'bExit':
             if pageName == 'popupNotify' and self.panel_status['screensaver_active']:
-                self.HandleScreensaver()
+                self.GeneratePage(0)
             else:
-                if len(words) <= 4 or not self.panel_config[0].get('doubleTapToUnlock', False) or int(words[4]) >= 2:
+                if len(words) <= 4 or not self.panel_config[self.current_page].get('doubleTapToUnlock', False) or int(words[4]) >= 2:
                     self.lastPayload = [""]
-                    self.GeneratePage(self.current_page)
+                    self.GeneratePage(self.current_page+1)
 
         elif buttonAction == 'OnOff':
             value = int(words[4])
@@ -1504,32 +1491,47 @@ class NSPanel(MqttPlugin):
 
         self.logger.debug(f"GeneratePage called with page={page}")
 
-        self.panel_status['screensaver_active'] = False
-        self._set_item_value('item_screensaver_active', self.panel_status['screensaver_active'])
-        page_content = self.panel_config[page]
+        if page == 0:
+            self.panel_status['screensaver_active'] = True
+        else:
+            self.panel_status['screensaver_active'] = False
 
-        if page_content['pageType'] == 'cardEntities':
+        self._set_item_value('item_screensaver_active', self.panel_status['screensaver_active'])
+
+        self.current_page = page
+        pageType = self.panel_config[page]['pageType']
+
+        # special handling for cardUnlock
+        if pageType == 'cardUnlock':
+            pageType = 'cardAlarm'
+
+        self.publish_tasmota_topic(payload=f"pageType~{pageType}")
+
+        if pageType[:11] == 'screensaver':
+            self.HandleScreensaver()
+
+        elif pageType == 'cardEntities':
             self.SendToPanel(self.GenerateEntitiesPage(page))
 
-        elif page_content['pageType'] == 'cardThermo':
+        elif pageType == 'cardThermo':
             self.SendToPanel(self.GenerateThermoPage(page))
 
-        elif page_content['pageType'] == 'cardGrid':
+        elif pageType == 'cardGrid':
             self.SendToPanel(self.GenerateGridPage(page))
 
-        elif page_content['pageType'] == 'cardMedia':
+        elif pageType == 'cardMedia':
             self.SendToPanel(self.GenerateMediaPage(page))
 
-        elif page_content['pageType'] == 'cardAlarm' or page_content['pageType'] == 'cardUnlock':
+        elif pageType == 'cardAlarm':
             self.SendToPanel(self.GenerateAlarmPage(page))
 
-        elif page_content['pageType'] == 'cardQR':
+        elif pageType == 'cardQR':
             self.SendToPanel(self.GenerateQRPage(page))
 
-        elif page_content['pageType'] == 'cardPower':
+        elif pageType == 'cardPower':
             self.SendToPanel(self.GeneratePowerPage(page))
 
-        elif page_content['pageType'] == 'cardChart' or page_content['pageType'] == 'cardLChart':
+        elif pageType == 'cardChart' or pageType == 'cardLChart':
             self.SendToPanel(self.GenerateChartPage(page))
 
     def GenerateDetailPage(self, page, entity: str):
@@ -1552,14 +1554,12 @@ class NSPanel(MqttPlugin):
     def GenerateEntitiesPage(self, page) -> list:
         self.logger.debug(f"GenerateEntitiesPage called with page={page}")
         out_msgs = list()
-        out_msgs.append('pageType~cardEntities')
         out_msgs.append(self.GeneratePageElements(page))
         return out_msgs
 
     def GenerateGridPage(self, page) -> list:
         self.logger.debug(f"GenerateGridPage called with page={page}")
         out_msgs = list()
-        out_msgs.append('pageType~cardGrid')
         out_msgs.append(self.GeneratePageElements(page))
         return out_msgs
 
@@ -1567,7 +1567,6 @@ class NSPanel(MqttPlugin):
         self.logger.debug(f"GenerateThermoPage called with page={page}")
 
         out_msgs = list()
-        out_msgs.append('pageType~cardThermo')
 
         page_content = self.panel_config[page]
 
@@ -1674,7 +1673,6 @@ class NSPanel(MqttPlugin):
             iconShuffle = Icons.GetIcon('shuffle')
 
         out_msgs = list()
-        out_msgs.append('pageType~cardMedia')
 
         # entityUpd~Kitchen~button~navigation.up~U~65535~~~delete~~~~~~media_player.kitchen~I'm a Hurricane~~Wellmess~~100~A~64704~B~media_pl~media_player.kitchen~C~17299~Kitchen~
         PageData = (
@@ -1725,7 +1723,6 @@ class NSPanel(MqttPlugin):
         self.logger.debug(f"GenerateAlarmPage called with page={page}")
 
         out_msgs = list()
-        out_msgs.append('pageType~cardAlarm')
 
         page_content = self.panel_config[page]
         # default values
@@ -1796,7 +1793,6 @@ class NSPanel(MqttPlugin):
         self.logger.debug(f"GenerateQRPage called with page={page}")
 
         out_msgs = list()
-        out_msgs.append('pageType~cardQR')
 
         page_content = self.panel_config[page]
         heading = page_content.get('heading', 'Default')
@@ -1855,7 +1851,6 @@ class NSPanel(MqttPlugin):
                 f"Page definition contains too many Entities. Max allowed entities for page={page_content['pageType']} is {maxItems}")
 
         out_msgs = list()
-        out_msgs.append('pageType~cardPower')
 
         textHomeBelow = self.items.return_item(page_content['itemHomeBelow'])()
         textHomeAbove = self.items.return_item(page_content['itemHomeAbove'])()
@@ -1918,7 +1913,6 @@ class NSPanel(MqttPlugin):
         page_content = self.panel_config[page]
 
         out_msgs = list()
-        out_msgs.append(f"pageType~{page_content['pageType']}")
 
         series_list = list(self.items.return_item(page_content['item'])())
 

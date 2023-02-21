@@ -6,7 +6,9 @@
   doubleTapToUnlock: True
   alternativeLayout: False # display second line instead of 4 day forecase
   statusIconLeft: NSPanel1.Screensaver.statusIcon.Left
+  statusIconLeftColor: Green
   statusIconRight: NSPanel1.Screensaver.statusIcon.Right
+  statusIconRightColor: Red
   itemSecondLine: NSPanel1.Screensaver.secondLine
   entities:
     # Links groß
@@ -58,6 +60,69 @@
     - icon: lightbulb
       item: NSPanel1.Licht
       iconColor: item
+
+- pageType: screensaver
+  timeout: 60       # 0 disable, max. 65 sec
+  brightness: 25     # 0-100%
+  timeFormat: '%H:%M'
+  dateFormat: '%d. %B %Y'
+  doubleTapToUnlock: False
+  alternativeLayout: True # display second icon/text instead of 4 day forecast
+  statusIconLeft: ''
+  statusIconRight: arrow-right-bold
+  itemSecondLine: NSPanel1.Screensaver.secondLine
+  entities:
+    - heading: Heute
+      icon: NSPanel1.Screensaver.Wetter_Heute.Icon
+      text: NSPanel1.Screensaver.Wetter_Heute.Text
+      iconColor: weather
+    - icon: thermometer
+      text: 22 °C
+      iconColor: Green
+    - heading: NSPanel1.Screensaver.Wetter_Tag1
+      icon: NSPanel1.Screensaver.Wetter_Tag1.Icon
+      text: NSPanel1.Screensaver.Wetter_Tag1.Text
+      iconColor: weather
+    - heading: NSPanel1.Screensaver.Wetter_Tag2
+      icon: NSPanel1.Screensaver.Wetter_Tag2.Icon
+      text: NSPanel1.Screensaver.Wetter_Tag2.Text
+      iconColor: weather
+    - heading: NSPanel1.Screensaver.Wetter_Tag3
+      icon: NSPanel1.Screensaver.Wetter_Tag3.Icon
+      text: NSPanel1.Screensaver.Wetter_Tag3.Text
+      iconColor: weather
+
+- pageType: screensaver
+  timeout: 60       # 0 disable, max. 65 sec
+  brightness: 25     # 0-100%
+  timeFormat: '%H:%M'
+  dateFormat: '%A, %d. %B'
+  doubleTapToUnlock: False
+  alternativeLayout: False # display second icon/text instead of 4 day forecast
+  statusIconLeft: ''
+  statusIconRight: arrow-right-bold
+  itemSecondLine: NSPanel1.Screensaver.secondLine
+  entities:
+    - heading: Heute
+      icon: NSPanel1.Screensaver.Wetter_Heute.Icon
+      text: NSPanel1.Screensaver.Wetter_Heute.Text
+      iconColor: weather
+    - heading: NSPanel1.Screensaver.Wetter_Tag1
+      icon: NSPanel1.Screensaver.Wetter_Tag1.Icon
+      text: NSPanel1.Screensaver.Wetter_Tag1.Text
+      iconColor: weather
+    - heading: NSPanel1.Screensaver.Wetter_Tag2
+      icon: NSPanel1.Screensaver.Wetter_Tag2.Icon
+      text: NSPanel1.Screensaver.Wetter_Tag2.Text
+      iconColor: weather
+    - heading: NSPanel1.Screensaver.Wetter_Tag3
+      icon: NSPanel1.Screensaver.Wetter_Tag3.Icon
+      text: NSPanel1.Screensaver.Wetter_Tag3.Text
+      iconColor: weather
+    - heading: NSPanel1.Screensaver.Wetter_Tag4
+      icon: NSPanel1.Screensaver.Wetter_Tag4.Icon
+      text: NSPanel1.Screensaver.Wetter_Tag4.Text
+      iconColor: weather
 
 - pageType: cardEntities
   heading: cardEntities Demo 1
@@ -237,7 +302,6 @@
   item_back: NSPanel1.Media.Back
   item_shuffle: NSPanel1.Media.Shuffle
   item_onOff: # item to switch player on/off
-  item_shuffle: 
   entities: # up to six elements
       - entity: Preset1
         type: preset # direct access
