@@ -100,7 +100,7 @@ class NSPanel(MqttPlugin):
             self.full_topic += '/'
 
         # define properties
-        self.current_page = 1
+        self.current_page = 0
         self.panel_status = {'online': False, 'online_timeout': datetime.now(), 'uptime': '-', 'sensors': {},
                              'relay': {}, 'screensaver_active': False}
         self.custom_msg_queue = queue.Queue(maxsize=50)  # Queue containing last 50 messages containing "CustomRecv"
@@ -705,19 +705,17 @@ class NSPanel(MqttPlugin):
         return next_page number
         """
 
-        self.current_page += 1
-        if self.current_page >= len(self.panel_config):
-            self.current_page -= len(self.panel_config)
+        no_pages = self.no_of_cards
+        if self.current_page < no_pages:
+            self.current_page += 1
         self.logger.debug(f"next_page={self.current_page}")
 
     def _previous_page(self):
         """
         return previous_page number
         """
-
-        self.current_page -= 1
-        if self.current_page < 1:
-            self.current_page += len(self.panel_config)
+        if self.current_page > 0:
+            self.current_page -= 1
         self.logger.debug(f"previous_page={self.current_page}")
 
     def _get_locale(self, group, entry):
@@ -725,7 +723,7 @@ class NSPanel(MqttPlugin):
 
     def send_current_time(self):
         secondLineItem = self.panel_config[self.current_page].get('itemSecondLine', '')
-        secondLine = self.items.return_item(secondLineItem)()
+        secondLine = self.getItemValue(secondLineItem)
         if secondLine is None:
             secondLine = ''
         timeFormat = self.panel_config[self.current_page].get('timeFormat', "%H:%M")
@@ -734,8 +732,7 @@ class NSPanel(MqttPlugin):
     def send_current_date(self):
         dateFormat = self.panel_config[self.current_page].get('dateFormat', "%A, %-d. %B %Y")
         # replace some variables to get localized strings
-        dateFormat = dateFormat.replace('%A',
-                                        self.shtime.weekday_name())  # TODO add code after merge in main repository .replace('%B', self.shtime.current_monthname())
+        dateFormat = dateFormat.replace('%A', self.shtime.weekday_name()).replace('%B', current_monthname(self.shtime))
         self.publish_tasmota_topic(payload=f"date~{self.shtime.now().strftime(dateFormat)}")
 
     def send_screensavertimeout(self):
@@ -1194,6 +1191,10 @@ class NSPanel(MqttPlugin):
                 self.current_page = 1
                 self.GeneratePage(self.current_page)
 
+            elif pageName == 'bUp':
+                self.current_page = self.panel_config[self.current_page].get('parent', 0)
+                self.GeneratePage(self.current_page)
+
             elif pageName == 'bNext':
                 self._next_page()
                 self.GeneratePage(self.current_page)
@@ -1223,8 +1224,8 @@ class NSPanel(MqttPlugin):
                     # popupTimer appears without interaction
                 # button / light / switch / text / etc.
                 else:
-                    item_name = entity['item']
-                    item = self.items.return_item(item_name)
+                    item_name = entity.get('item', None)
+                    item = self.getItemValue(item_name)
                     if item is not None:
                         if entity['type'] == 'text':
                             self.logger.debug(f"item={item.id()} will get no update because it's text")
@@ -1246,6 +1247,9 @@ class NSPanel(MqttPlugin):
                         else:
                             # Reload Page with new item value
                             self.SendToPanel(self.GeneratePageElements(self.current_page))
+
+                    if entity['type'] == 'navigate':
+                        self.GeneratePage(entity.get('page', 0))
 
         elif buttonAction == 'tempUpd':
             value = int(words[4]) / 10
@@ -1667,7 +1671,7 @@ class NSPanel(MqttPlugin):
         shuffle_item = self.items.return_item(page_content.get('iconShuffle', None))
         if shuffle_item is None or shuffle_item() == '':
             iconShuffle = 'disable'
-        elif shuffle == 0:
+        elif shuffle_item() == 0:
             iconShuffle = Icons.GetIcon('shuffle-disabled')
         else:
             iconShuffle = Icons.GetIcon('shuffle')
@@ -1993,9 +1997,10 @@ class NSPanel(MqttPlugin):
             if idx > maxItems:
                 break
 
+            entityType = entity['type']
             item = self.items.return_item(entity.get('item', None))
             value = item() if item else entity.get('optionalValue', 0)
-            if entity['type'] in ['switch', 'light']:
+            if entityType in ['switch', 'light']:
                 value = int(value)
 
             iconName = entity.get('iconId', '')
@@ -2007,7 +2012,7 @@ class NSPanel(MqttPlugin):
             iconid = Icons.GetIcon(iconName, inactive)
             iconColor = entity.get('iconColor', self.defaultColor)
             if page_content['pageType'] == 'cardGrid':
-                if entity['type'] == 'text':
+                if entityType == 'text':
                     iconid = str(value)[:4]  # max 4 characters
                 elif value:
                     iconColor = entity.get('onColor', self.defaultOnColor)
@@ -2015,11 +2020,13 @@ class NSPanel(MqttPlugin):
                     iconColor = entity.get('offColor', self.defaultOffColor)
 
             elif page_content['pageType'] == 'cardEntities':
-                if entity['type'] == 'number':
+                if entityType[:8] == 'navigate':
+                    entityType = 'button'
+                if entityType == 'number':
                     min_value = entity.get('min_value', 0)
                     max_value = entity.get('max_value', 100)
                     value = f"{value}|{min_value}|{max_value}"
-                elif entity['type'] == 'button':
+                elif entityType == 'button':
                     value = entity.get('optionalValue', 'Press')
 
             displayNameEntity = entity.get('displayNameEntity', '')
@@ -2027,7 +2034,7 @@ class NSPanel(MqttPlugin):
             iconColor = Colors.GetColor(str(iconColor))
             pageData = (
                 f"{pageData}~"
-                f"{entity['type']}~"
+                f"{entityType}~"
                 f"{entity['entity']}~"
                 f"{iconid}~"
                 f"{iconColor}~"
@@ -2232,17 +2239,6 @@ class NSPanel(MqttPlugin):
 
         self.logger.debug(f"GetNavigationString called with page={page}")
 
-        # left navigation arrow | right navigation arrow
-        # X | X
-        # 0 = no arrow
-        # 1 | 1 = right and left navigation arrow
-        # 2 | 0 = (right) up navigation arrow
-        # 2 | 2 = (right) up navigation arrow | (left) home navigation icon
-
-        # ToDo: Handling of SubPages
-        # if (activePage.subPage):
-        #     return '2|2'
-
         iconleft = Icons.GetIcon('arrow-left-bold')
         iconright = Icons.GetIcon('arrow-right-bold')
         iconup = Icons.GetIcon('arrow-up-bold')
@@ -2255,7 +2251,7 @@ class NSPanel(MqttPlugin):
         elif page == self.no_of_cards - 1:
             left = f"bPrev~{iconleft}"
             right = f"bHome~{iconhome}"
-        elif page == -1 or page == -2:
+        elif page == -1 or page == -2 or page > self.no_of_cards:
             left = f"bUp~{iconup}"
             right = f"bHome~{iconhome}"
         else:
@@ -2278,9 +2274,14 @@ class NSPanel(MqttPlugin):
 
     @property
     def no_of_cards(self):
+        count = -1
         cards = self.panel_config
         if cards:
-            return len(cards)
+            for card in cards:
+                if not card.get('parent', False):
+                    count += 1
+
+        return count
 
     ################################################################
     #  Simulation of mqtt messages of NSPanel
@@ -2388,3 +2389,43 @@ def getWeatherCondition(weatherid, day: bool = True):
             return 'clear_night'
     else:
         return [k for k, v in condition_classes.items() if weatherid in v][0]
+
+
+def current_monthname(shtime, offset=0):
+    """
+    Return the name of the current month for a given date
+    :param shtime: shtime from smarthomeng
+    :param offset: negative number for previous months, positive for future ones
+    :type offset: int
+    :return: monthname NAME
+    :rtype: str
+    """
+    month = shtime.current_month(offset)
+    if month == 1:
+        monthname = "Januar"
+    elif month == 2:
+        monthname = "Februar"
+    elif month == 3:
+        monthname = "März"
+    elif month == 4:
+        monthname = "April"
+    elif month == 5:
+        monthname = "Mai"
+    elif month == 6:
+        monthname = "Juni"
+    elif month == 7:
+        monthname = "Juli"
+    elif month == 8:
+        monthname = "August"
+    elif month == 9:
+        monthname = "September"
+    elif month == 10:
+        monthname = "Oktober"
+    elif month == 11:
+        monthname = "November"
+    elif month == 12:
+        monthname = "Dezember"
+    else:
+        monthname = "?"
+
+    return monthname

@@ -63,7 +63,7 @@
 
 - pageType: screensaver
   timeout: 60       # 0 disable, max. 65 sec
-  brightness: 25     # 0-100%
+  brightness: 5     # 0-100%
   timeFormat: '%H:%M'
   dateFormat: '%d. %B %Y'
   doubleTapToUnlock: False
@@ -164,11 +164,11 @@
   heading: cardEntities Demo 2
   entities:
     - entity: page1_id0
-      type: button
-      item: NSPanel1.Button
+      type: navigate
+      page: 17
       iconId: gesture-tap
       displayNameEntity: Button
-      optionalValue: Mach was
+      optionalValue: Gehe zu Seite 17
       onValue: True
       offValue: True
     - entity: page1_id2
@@ -289,6 +289,11 @@
       item: NSPanel1.timer
       iconId: timer
       displayNameEntity: Timer
+    - entity: page4_id6
+      type: navigate
+      page: 16
+      iconId: star
+      displayNameEntity: Subpage
 
 - pageType: cardMedia
   entity: page5
@@ -426,3 +431,37 @@
       - entity: cardChart # can be a hidden card (if implemented)
         page: page10
         password: 1234
+
+- pageType: cardGrid
+  parent: 7
+  heading: Subpage Demo
+  entities:
+    - entity: page13_id0
+      type: light
+      iconId: lightbulb
+      displayNameEntity: Licht 1
+    - entity: page13_id1
+      type: light
+      iconId: lightbulb
+      displayNameEntity: Licht 2
+    - entity: page13_id2
+      type: light
+      iconId: lightbulb
+      displayNameEntity: Licht 3
+
+- pageType: cardGrid
+  parent: 4
+  heading: Subpage Demo
+  entities:
+    - entity: page14_id0
+      type: light
+      iconId: window-shutter
+      displayNameEntity: Rolladen 1
+    - entity: page14_id1
+      type: light
+      iconId: window-shutter
+      displayNameEntity: Rolladen 2
+    - entity: page14_id2
+      type: light
+      iconId: window-shutter
+      displayNameEntity: Rolladen 3
