@@ -6977,7 +6977,6 @@ class ColorThemes(object):
         'colorScale8':      {'red': 251, 'green': 158, 'blue': 117},
         'colorScale9':      {'red': 248, 'green': 131, 'blue': 111},
         'colorScale10':     {'red': 248, 'green': 105, 'blue': 107},
-
         # Auto-Weather-Colors
         'clear_night':      {'red': 150, 'green': 150, 'blue': 100},  # 50% grey
         'cloudy':           {'red':  75, 'green':  75, 'blue':  75},  # grey-blue
@@ -6994,6 +6993,29 @@ class ColorThemes(object):
         'sunny':            {'red': 255, 'green': 255, 'blue':   0},  # bright-yellow
         'windy':            {'red': 150, 'green': 150, 'blue': 150},  # 50% grey
         'windy_variant':    {'red': 150, 'green': 150, 'blue': 150}   # 50% grey
+    }
+    
+    state2color = {
+        "on": {'red': 253, 'green': 216, 'blue':  53},
+        "unlocked": {'red': 253, 'green': 216, 'blue':  53},
+        "above_horizon": {'red': 253, 'green': 216, 'blue':  53},
+        "home": {'red': 253, 'green': 216, 'blue':  53},
+        "active": {'red': 253, 'green': 216, 'blue':  53},
+        "disarmed": 3334,
+        "arming": 62880,
+        "armed_home": 55907,
+        "armed_away": 55907,
+        "armed_night": 55907,
+        "armed_vacation": 55907,
+        "pending": 55907,
+        "triggered": 55907,
+        "auto": 1024, 
+        "heat_cool": 1024,
+        "heat": 64512,
+        "off": 35921,
+        "cool": 11487,
+        "dry":  60897,
+        "fan_only":  35921
     }
 
     def GetColor(self, color) -> int:
