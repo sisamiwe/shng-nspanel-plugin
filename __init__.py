@@ -71,7 +71,6 @@ class NSPanel(MqttPlugin):
 
         # get the parameters for the plugin (as defined in metadata plugin.yaml):
         try:
-            self.webif_pagelength = self.get_parameter_value('webif_pagelength')
             self.tasmota_topic = self.get_parameter_value('topic')
             self.telemetry_period = self.get_parameter_value('telemetry_period')
             self.config_file_location = self.get_parameter_value('config_file_location')

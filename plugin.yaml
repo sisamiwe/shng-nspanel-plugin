@@ -6,11 +6,11 @@ plugin:
         de: 'Plugin zur Steuerung von NSPanels, die mit Tasmota und LoveLaceUI ausgestattet sind. Die Kommunikation erfolgt über das MQTT Module von SmartHomeNG.'
         en: 'Plugin to control NSPanels equipped with Tasmota firmware and LoveLaceUI. Communication is handled through the MQTT module of SmartHomeNG.'
     maintainer: sisamiwe
-#    tester:                         # Who tests this plugin?
+    tester: stoepf, polecat                        # Who tests this plugin?
     state: develop                   # change to ready when done with development
 #    keywords: iot iot
 #    documentation: https://github.com/smarthomeNG/smarthome/wiki/CLI-Plugin        # url of documentation (wiki) page
-#    support: https://knx-user-forum.de/forum/supportforen/smarthome-py
+    support: https://knx-user-forum.de/forum/supportforen/smarthome-py
 
     version: 1.0.0                  # Plugin version
     sh_minversion: 1.8              # minimum shNG version to use this plugin
@@ -48,10 +48,10 @@ parameters:
 
     config_file_location:
         type: str
-        default: 'plugins/priv_nspanel/nspanel_pages_demo.yaml'
+        default: 'plugins/nspanel/nspanel_pages_demo.yaml'
         description:
-            de: 'Speicherort der Konfigurationsdatei relativ zum smarthome Ordner bspw: /usr/local/smarthome/plugins/_priv_nspanel/nspanel_pages.yaml'
-            en: 'Location of Config_file relatively to smarthome directory e.g. /usr/local/smarthome/plugins/_priv_nspanel/nspanel_pages.yaml'
+            de: 'Speicherort der Konfigurationsdatei relativ zum smarthome Ordner bspw: /usr/local/smarthome/plugins/nspanel/nspanel_pages.yaml'
+            en: 'Location of Config_file relatively to smarthome directory e.g. /usr/local/smarthome/plugins/nspanel/nspanel_pages.yaml'
 
     model:
         type: str
@@ -120,27 +120,6 @@ parameters:
         description:
             de: ...
             en: ...
-
-    webif_pagelength:
-        type: int
-        valid_list:
-          - -1
-          - 0
-          - 25
-          - 50
-          - 100
-        description:
-            de: 'Anzahl an Items, die standardmäßig in einer Web Interface Tabelle pro Seite angezeigt werden.
-                 0 = automatisch, -1 = alle'
-            en: 'Amount of items being listed in a web interface table per page by default.
-                 0 = automatic, -1 = all'
-        description_long:
-            de: 'Anzahl an Items, die standardmäßig in einer Web Interface Tabelle pro Seite angezeigt werden.\n
-                 Bei 0 wird die Tabelle automatisch an die Höhe des Browserfensters angepasst.\n
-                 Bei -1 werden alle Tabelleneinträge auf einer Seite angezeigt.'
-            en: 'Amount of items being listed in a web interface table per page by default.\n
-                 0 adjusts the table height automatically based on the height of the browser windows.\n
-                 -1 shows all table entries on one page.'
 
 item_attributes:
 

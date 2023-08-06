@@ -7,9 +7,6 @@
 #  https://www.smarthomeNG.de
 #  https://knx-user-forum.de/forum/supportforen/smarthome-py
 #
-#  Sample plugin for new plugins to run with SmartHomeNG version 1.5 and
-#  upwards.
-#
 #  SmartHomeNG is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
 #  the Free Software Foundation, either version 3 of the License, or
@@ -72,17 +69,6 @@ class WebInterface(SmartPluginWebIf):
         :return: contents of the template after beeing rendered
         """
         self.plugin.get_broker_info()
-        # try to get the webif pagelength from the module.yaml configuration
-        global_pagelength = cherrypy.config.get("webif_pagelength")
-        if global_pagelength:
-            pagelength = global_pagelength
-            self.logger.debug("Global pagelength {}".format(pagelength))
-        # try to get the webif pagelength from the plugin specific plugin.yaml configuration
-        try:
-            pagelength = self.plugin.webif_pagelength
-            # self.logger.debug("Plugin pagelength {}".format(pagelength))
-        except Exception:
-            pass
         tmpl = self.tplenv.get_template('index.html')
 
         items = []
@@ -91,7 +77,6 @@ class WebInterface(SmartPluginWebIf):
         
         # add values to be passed to the Jinja2 template eg: tmpl.render(p=self.plugin, interface=interface, ...)
         return tmpl.render(p=self.plugin,
-                           webif_pagelength=pagelength,
                            items=items,
                            custom_msg_list=list(self.plugin.custom_msg_queue.queue),
                            item_count=len(items)
